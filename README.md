@@ -1,96 +1,27 @@
-# DOLIFARM FOR [DOLIBARR ERP & CRM](https://www.dolibarr.org)
+# doliFarm Core
 
-## Features
+**doliFarm** is a comprehensive Farm Management Information System (FMIS) built as a modular extension for Dolibarr. It is designed to digitize agricultural operations, ensuring full traceability from soil to harvest.
 
-Description of the module...
+## 🚜 Core Modules
+- **Farm Dossier**: Centralized management of agricultural production cycles.
+- **Plot Management**: Detailed tracking of plots, soil data, and mapping.
+- **Crop Planning**: Strategic planning of crops and harvesting schedules.
+- **Machinery & Assets**: Maintenance and usage logs for farm equipment.
+- **Agrodrug & Input Tracking**: Management of fertilizers and phytosanitary products with safety period monitoring.
+- **Cost Estimation**: Advanced financial tools for agricultural cost analysis.
 
-<!--
-![Screenshot dolifarm](img/screenshot_dolifarm.png?raw=true "Dolifarm"){imgmd}
--->
+## 🛠 Technical Architecture
+- **Backend**: PHP (Dolibarr Framework)
+- **Database**: MariaDB/MySQL (SQL scripts included in `/sql`)
+- **Integration**: Designed to work alongside **doliAgroPass** for sustainability indexing.
 
-Other external modules are available on [Dolistore.com](https://www.dolistore.com).
+## 🚀 Installation
+1. Move the `dolifarm` folder to your Dolibarr `htdocs/custom/` directory.
+2. Enable the module in **Home -> Setup -> Modules**.
+3. Configure extrafields and dictionaries via the module setup page.
 
-## Translations
+## 📄 License
+This project is licensed under the **AGPLv3 License** to protect the SaaS business model while maintaining open-source integrity.
 
-Translations can be completed manually by editing files in the module directories under `langs`.
-
-<!--
-This module contains also a sample configuration for Transifex, under the hidden directory [.tx](.tx), so it is possible to manage translation using this service.
-
-For more information, see the [translator's documentation](https://wiki.dolibarr.org/index.php/Translator_documentation).
-
-There is a [Transifex project](https://transifex.com/projects/p/dolibarr-module-template) for this module.
--->
-
-
-## Installation
-
-Prerequisites: You must have Dolibarr ERP & CRM software installed. You can download it from [Dolistore.org](https://www.dolibarr.org).
-You can also get a ready-to-use instance in the cloud from https://saas.dolibarr.org
-
-
-### From the ZIP file and GUI interface
-
-If the module is a ready-to-deploy zip file, so with a name `module_xxx-version.zip` (e.g., when downloading it from a marketplace like [Dolistore](https://www.dolistore.com)),
-go to menu `Home> Setup> Modules> Deploy external module` and upload the zip file.
-
-<!--
-
-Note: If this screen tells you that there is no "custom" directory, check that your setup is correct:
-
-- In your Dolibarr installation directory, edit the `htdocs/conf/conf.php` file and check that following lines are not commented:
-
-    ```php
-    //$dolibarr_main_url_root_alt ...
-    //$dolibarr_main_document_root_alt ...
-    ```
-
-- Uncomment them if necessary (delete the leading `//`) and assign the proper value according to your Dolibarr installation
-
-    For example :
-
-    - UNIX:
-        ```php
-        $dolibarr_main_url_root_alt = '/custom';
-        $dolibarr_main_document_root_alt = '/var/www/Dolibarr/htdocs/custom';
-        ```
-
-    - Windows:
-        ```php
-        $dolibarr_main_url_root_alt = '/custom';
-        $dolibarr_main_document_root_alt = 'C:/My Web Sites/Dolibarr/htdocs/custom';
-        ```
--->
-
-<!--
-
-### From a GIT repository
-
-Clone the repository in `$dolibarr_main_document_root_alt/dolifarm`
-
-```shell
-cd ....../custom
-git clone git@github.com:gitlogin/dolifarm.git dolifarm
-```
-
--->
-
-### Final steps
-
-Using your browser:
-
-  - Log into Dolibarr as a super-administrator
-  - Go to "Setup"> "Modules"
-  - You should now be able to find and enable the module
-
-
-
-## Licenses
-
-### Main code
-
-GPLv3 or (at your option) any later version. See file COPYING for more information.
-
-### Documentation
-
-All texts and readme's are licensed under [GFDL](https://www.gnu.org/licenses/fdl-1.3.en.html).
+---
+Developed by **Luigi Grillo**.
