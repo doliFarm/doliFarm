@@ -1,0 +1,269 @@
+# Dolibarr language file - Source file is en_US - dolifarm
+CHARSET=UTF-8
+
+# ==============================================================================
+# MODULE IDENTITY
+# ==============================================================================
+Module100000Name = Fascicoli
+Dolifarm = Fascicoli
+Module100000Desc = Modulo per la gestione di Aziende Agricole, Fascicoli, Appezzamenti e Macchinari.
+
+# ==============================================================================
+# MENUS
+# ==============================================================================
+DoliFarmArea = Area Gestione Agricola
+DoliFarmFarmDossier = Fascicolo Aziendale
+DoliFarmFarmDossiers = Fascicoli Aziendali
+DoliFarmPlot = Appezzamento
+DoliFarmPlots = Appezzamenti
+DoliFarmMachine = Macchina Agricola
+DoliFarmMachines = Macchine Agricole
+DoliFarmAgroDrug = Fitosanitario
+DoliFarmCrops = Colture
+DoliFarmEstimateCosts = Stime Costi
+
+MenuNewFarmDossier = Nuovo Fascicolo
+MenuListFarmDossier = Elenco Fascicoli
+MenuNewPlot = Nuovo Appezzamento
+MenuListPlot = Elenco Appezzamenti
+MenuNewMachine = Nuova Macchina
+MenuListMachine = Elenco Macchine
+
+# ==============================================================================
+# GENERIC FIELDS & ACTIONS
+# ==============================================================================
+Ref = Riferimento
+Label = Etichetta/Descrizione
+Status = Stato
+DateCreation = Data Creazione
+DateModification = Data Modifica
+UserAuthor = Autore
+UserModif = Modificato da
+Note = Note
+Confirm = Conferma
+Validate = Convalidare
+ReOpen = Riapri
+Events = Eventi
+Documents = Documenti
+Notes = Note
+Contacts = Contatti
+
+# ==============================================================================
+# FASCICOLO AZIENDALE (FARM DOSSIER)
+# ==============================================================================
+NewDoliFarmFarmDossier = Nuovo Fascicolo Aziendale
+ListDoliFarmFarmDossiers = Lista Fascicoli Aziendali
+EditDoliFarmFarmDossier = Modifica Fascicolo
+ShowDoliFarmFarmDossier = Dettaglio Fascicolo
+DeleteDoliFarmFarmDossier = Elimina Fascicolo
+ConfirmDeleteDoliFarmFarmDossier = Sei sicuro di voler eliminare questo fascicolo? Attenzione: l'operazione sarà bloccata se ci sono appezzamenti o macchine collegati.
+
+# Fields
+YearValidity = Anno di Validità
+DateImport = Data Importazione
+SourceFile = File Sorgente
+Validator = Tecnico Validatore
+ValidationStatus = Stato Validazione
+
+# Tabs Custom
+Terreni = Appezzamenti
+Macchine = Macchine
+
+# ==============================================================================
+# Appezzamenti (PLOTS)
+# ==============================================================================
+NewDoliFarmPlot = Nuovo Appezzamento
+ListDoliFarmPlot = Lista Appezzamenti
+EditDoliFarmPlot = Modifica Appezzamento
+ShowDoliFarmPlot = Dettaglio Appezzamento
+DeleteDoliFarmPlot = Elimina Appezzamento
+ConfirmDeleteDoliFarmPlot = Sei sicuro di voler eliminare questo Appezzamento?
+
+# Fields
+Cadastralcomune = Comune Catastale
+Cadastralsheet = Foglio
+Cadastralparcel = Particella
+Cadastralsub = Subalterno
+Mapreference = Riferimento Mappa
+Sizetotal = Sup. Totale (ha)
+Sizesau = S.A.U. (ha)
+FkOwner = Proprietario (Anagrafica)
+Ownershiptype = Titolo Possesso
+FkDossier = Fascicolo di Riferimento
+Fkstatusbio = Stato Biologico
+Dateconversionstart = Inizio Conversione Bio
+DateconversionEnd = Fine Conversione Bio
+Geolat: Latitudine
+Geolon: Longitudine
+# Actions in Tab
+AddPlot = Aggiungi Appezzamento
+
+# ==============================================================================
+# MACCHINE (MACHINES)
+# ==============================================================================
+NewDoliFarmMachine = Nuova Macchina
+ListDoliFarmMachine = Lista Macchine
+EditDoliFarmMachine = Modifica Macchina
+ShowDoliFarmMachine = Dettaglio Macchina
+DeleteDoliFarmMachine = Elimina Macchina
+ConfirmDeleteDoliFarmMachine = Sei sicuro di voler eliminare questa macchina?
+
+# Fields
+RefTarga = Riferimento / Targa
+MachLabel = Modello / Descrizione
+MachType = Tipologia
+PowerKW = Potenza (kW)
+FuelType = Alimentazione
+YearRegistration = Anno Immatricolazione
+
+# Actions in Tab
+AddMachine = Aggiungi Macchina
+
+# ==============================================================================
+# DICTIONARIES (VALUES)
+# ==============================================================================
+DolifarmOwnershipNature=Natura del Possesso (Titolo)
+DolifarmBioStatus=Stato Biologico
+DolifarmMachineType=Tipologia Macchina Agricola
+DolifarmFuelType=Tipo di Alimentazione/Carburante
+
+# Ownership / Titoli
+PLOT_OWNED = Proprietà
+PLOT_RENTED = Affitto
+PLOT_USE = Comodato d'Uso
+
+# Machine Types
+MACH_TRACTOR = Trattrice
+MACH_TOOL = Attrezzo Agricolo
+MACH_COMBINE = Mietitrebbia
+MACH_TRAILER = Rimorchio
+
+# Fuel Types
+DIESEL = Diesel
+PETROL = Benzina
+ELECTRIC = Elettrico
+HYBRID = Ibrido
+NONE = Nessuna (Attrezzo)
+
+# ==============================================================================
+# ERRORS & WARNINGS
+# ==============================================================================
+ErrorDossierRequired = È obbligatorio selezionare un Fascicolo Aziendale.
+ErrorSocRequired = È obbligatorio selezionare un'Azienda.
+ErrorOwnerRequired = È obbligatorio indicare il Proprietario (Anagrafica).
+ErrorReferencedByObjects = Impossibile eliminare: questo oggetto è referenziato da altri record (es. Appezzamenti o Macchine).
+
+# ==============================================================================
+# PERMISSIONS
+# ==============================================================================
+Permission3001 = Leggi Fascicoli
+Permission3002 = Crea/Modifica Fascicoli
+Permission3003 = Elimina Fascicoli
+Permission3004 = Leggi Appezzamenti
+Permission3005 = Crea/Modifica Appezzamenti
+Permission3006 = Elimina Appezzamenti
+Permission3007 = Leggi Macchine
+Permission3008 = Crea/Modifica Macchine
+Permission3009 = Elimina Macchine
+
+
+# Stime Standard
+EstimateStd_PlowingMedium=Aratura (Standard Medio Impasto)
+EstimateStd_Harrowing=Erpicatura (Standard)
+EstimateStd_Hoeing=Sarchiatura Meccanica
+EstimateStd_SowingDirect=Semina Diretta (Conto Terzi)
+EstimateStd_Transplanting=Trapianto Manuale/Agevolato
+EstimateStd_TreatmentPesticide=Trattamento Fitosanitario (Atomizzatore)
+EstimateStd_TreatmentFertiliser=Spandiconcime
+EstimateStd_HarvestGeneric=Raccolta Meccanizzata Generica
+
+
+###################################################################################
+# Gruppi creati in automatico 
+###################################################################################
+Agronomists = Agronomi
+Auditors = Valutatori
+Farmers = Agricoltori
+
+###################################################################################
+# MISC
+###################################################################################
+TE_FARM=Azienda Agricola
+DolifarmCropPlans = Piani di Produzione Correnti
+FarmDossiersActive = Fascicoli Aziendali attivi
+TopPlannedProducts = Top Produzione Prevista per prodotto
+
+###################################################################################
+# CROPS
+###################################################################################
+#CEREALI (Cereals)
+CROP_WHEAT_DURUM = Grano Duro
+CROP_WHEAT_SOFT = Grano Tenero
+CROP_BARLEY = Orzo
+CROP_MAIZE = Mais
+CROP_RICE = Riso
+CROP_OATS = Avena
+CROP_RYE = Segale
+CROP_SORGHUM = Sorgo
+CROP_SPELT = Farro
+#LEGUMINOSE (Legumes)
+CROP_CHICKPEA = Ceci
+CROP_LENTIL = Lenticchie
+CROP_PEA_PROTEIN = Pisello Proteico
+CROP_FAVA_BEAN = Fave / Favino
+CROP_SOYBEAN = Soia
+CROP_BEAN_BORLOTTO = Fagiolo Borlotto
+CROP_LUPIN = Lupino
+#INDUSTRIALI (Industrial)
+CROP_SUNFLOWER = Girasole
+CROP_RAPESEED = Colza
+CROP_HEMP_IND = Canapa Industriale
+CROP_TOBACCO = Tabacco
+CROP_SUGAR_BEET = Barbabietola da Zucchero
+#FORAGGERE (Forage)
+CROP_ALFALFA = Erba Medica (Alfalfa)
+CROP_CLOVER_RED = Trifoglio Rosso
+CROP_RYEGRASS = Loietto
+CROP_VETCH = Veccia
+#ORTICOLE (Vegetables)
+CROP_TOMATO_IND = Pomodoro da Industria
+CROP_TOMATO_TABLE = Pomodoro da Mensa
+CROP_POTATO = Patata
+CROP_ONION = Cipolla
+CROP_GARLIC = Aglio
+CROP_CARROT = Carota
+CROP_ZUCCHINI = Zucchina
+CROP_PUMPKIN = Zucca
+CROP_MELON = Melone
+CROP_WATERMELON = Anguria (Cocomero)
+CROP_EGGPLANT = Melanzana
+CROP_PEPPER = Peperone
+CROP_LETTUCE = Lattuga
+CROP_SPINACH = Spinacio
+CROP_ARTICHOKE = Carciofo
+CROP_ASPARAGUS = Asparago
+CROP_BROCCOLI = Broccoli
+CROP_CAULIFLOWER = Cavolfiore
+#ARBOREE (Tree Crops/Fruits)
+CROP_VINE_WINE = Vite da Vino
+CROP_VINE_TABLE = Vite da Tavola (Uva da tavola)
+CROP_OLIVE_OIL = Olivo da Olio
+CROP_OLIVE_TABLE = Olivo da Mensa
+CROP_APPLE = Melo
+CROP_PEAR = Pero
+CROP_PEACH = Pesco
+CROP_APRICOT = Albicocco
+CROP_CHERRY = Ciliegio
+CROP_PLUM = Susino
+CROP_KIWI = Kiwi
+CROP_CITRUS_ORANGE = Arancio
+CROP_CITRUS_LEMON = Limone
+#GUSCIO (Nuts)
+CROP_HAZELNUT = Nocciolo
+CROP_WALNUT = Noce
+CROP_ALMOND = Mandorlo
+CROP_PISTACHIO = Pistacchio
+#OFFICINALI (Herbs)
+CROP_LAVENDER = Lavanda
+CROP_BASIL = Basilico
+CROP_SAFFRON = Zafferano

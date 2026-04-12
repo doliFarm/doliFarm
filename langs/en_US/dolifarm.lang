@@ -1,0 +1,42 @@
+# Translation file
+
+#
+# Generic
+#
+
+# Module label 'ModuleDolifarmName'
+ModuleDolifarmName = Dolifarm
+# Module description 'ModuleDolifarmDesc'
+ModuleDolifarmDesc = Dolifarm description
+
+#
+# Admin page
+#
+DolifarmSetup = Dolifarm setup
+Settings = Settings
+DolifarmSetupPage = Dolifarm setup page
+NewSection=New section
+DOLIFARM_MYPARAM1 = My param 1
+DOLIFARM_MYPARAM1Tooltip = My param 1 tooltip
+DOLIFARM_MYPARAM2=My param 2
+DOLIFARM_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+DolifarmAbout = About Dolifarm
+DolifarmAboutPage = Dolifarm about page
+
+#
+# Sample page
+#
+DolifarmArea = Home Dolifarm
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description

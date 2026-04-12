@@ -1,0 +1,1 @@
+ALTER TABLE llx_dolifarm_farmdossier_extrafields ADD UNIQUE INDEX uk_farmdossier_fk_object(fk_object);
