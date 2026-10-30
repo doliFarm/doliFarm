@@ -1,5 +1,13 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.1.1
+
+Correzioni emerse dall'aggiornamento di un'installazione esistente alla 1.1.0. Dopo l'aggiornamento disattivare e riattivare il modulo.
+
+- Attivazione: gli indici sulle colonne aggiunte dagli script update_*.sql (conduzione e riferimento catastale degli appezzamenti, CAA e validità del fascicolo) passano dai .key.sql agli update_*.sql; sulle installazioni vecchie l'attivazione falliva.
+- Appezzamenti: i record senza uuid ne ricevono uno, così l'indice unico sull'uuid può essere creato; corretto il prefisso della tabella nel controllo di unicità.
+- Widget: un errore SQL viene mostrato nel riquadro invece di bloccare l'intera pagina.
+
 ## 1.1.0
 
 Requisito minimo: Dolibarr 23. Dopo l'aggiornamento disattivare e riattivare il modulo per applicare tabelle, indici e costanti.
