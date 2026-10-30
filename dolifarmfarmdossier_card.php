@@ -483,6 +483,15 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 		}
 	*/
+	// Farm and its CUAA (tax code, idprof4 of the third party), the key of the dossier at AGEA
+	if ($object->fk_soc > 0 && $object->fetch_thirdparty() > 0) {
+		$morehtmlref .= $object->thirdparty->getNomUrl(1);
+		if (!empty($object->thirdparty->idprof4)) {
+			$morehtmlref .= ' <span class="opacitymedium">- '.$langs->trans("CUAA").':</span> '.dol_escape_htmltag($object->thirdparty->idprof4);
+		} else {
+			$morehtmlref .= ' '.img_warning($langs->trans("CUAAMissingHelp")).' <span class="opacitymedium">'.$langs->trans("CUAAMissing").'</span>';
+		}
+	}
 	$morehtmlref .= '</div>';
 
 
