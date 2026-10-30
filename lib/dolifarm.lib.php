@@ -29,11 +29,7 @@
  */
 function dolifarmAdminPrepareHead()
 {
-	global $langs, $conf;
-
-	// global $db;
-	// $extrafields = new ExtraFields($db);
-	// $extrafields->fetch_name_optionals_label('myobject');
+	global $db, $langs, $conf;
 
 	$langs->load("dolifarm@dolifarm");
 
@@ -45,25 +41,28 @@ function dolifarmAdminPrepareHead()
 	$head[$h][2] = 'settings';
 	$h++;
 
-	/*
-	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/myobject_extrafields.php", 1));
-	$head[$h][1] = $langs->trans("ExtraFields");
-	$nbExtrafields = (isset($extrafields->attributes['myobject']['label']) && is_countable($extrafields->attributes['myobject']['label'])) ? count($extrafields->attributes['myobject']['label']) : 0;
-	if ($nbExtrafields > 0) {
-		$head[$h][1] .= '<span class="badge marginleftonlyshort">' . $nbExtrafields . '</span>';
+	// Extrafields of each object (page admin/<element>_extrafields.php, table of the object as element type)
+	$extrafields = new ExtraFields($db);
+	foreach (array(
+		'dolifarmfarmdossier' => array('DoliFarmFarmDossier', 'dolifarm_farmdossier'),
+		'dolifarmplot' => array('DoliFarmPlot', 'dolifarm_plot'),
+		'dolifarmlivestock' => array('DoliFarmLivestock', 'dolifarm_livestock'),
+		'dolifarmbuilding' => array('DoliFarmBuilding', 'dolifarm_building'),
+		'dolifarmmachine' => array('DoliFarmMachine', 'dolifarm_machine'),
+		'dolifarmagrodrug' => array('DoliFarmAgroDrug', 'dolifarm_agrodrug'),
+		'dolifarmcrops' => array('DoliFarmCrops', 'dolifarm_crops'),
+		'dolifarmestimatecosts' => array('DoliFarmEstimateCosts', 'dolifarm_dolifarmestimatecosts'),
+	) as $element => $info) {
+		$extrafields->fetch_name_optionals_label($info[1]);
+		$nbExtrafields = (isset($extrafields->attributes[$info[1]]['label']) && is_countable($extrafields->attributes[$info[1]]['label'])) ? count($extrafields->attributes[$info[1]]['label']) : 0;
+		$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/".$element."_extrafields.php", 1));
+		$head[$h][1] = $langs->trans("ExtraFields").' '.$langs->trans($info[0]);
+		if ($nbExtrafields > 0) {
+			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbExtrafields.'</span>';
+		}
+		$head[$h][2] = $element.'_extrafields';
+		$h++;
 	}
-	$head[$h][2] = 'myobject_extrafields';
-	$h++;
-
-	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/myobjectline_extrafields.php", 1));
-	$head[$h][1] = $langs->trans("ExtraFieldsLines");
-	$nbExtrafields = (isset($extrafields->attributes['myobjectline']['label']) && is_countable($extrafields->attributes['myobjectline']['label'])) ? count($extrafields->attributes['myobject']['label']) : 0;
-	if ($nbExtrafields > 0) {
-		$head[$h][1] .= '<span class="badge marginleftonlyshort">' . $nbExtrafields . '</span>';
-	}
-	$head[$h][2] = 'myobject_extrafieldsline';
-	$h++;
-	*/
 
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/about.php", 1));
 	$head[$h][1] = $langs->trans("About");
@@ -86,30 +85,38 @@ function dolifarmAdminPrepareHead()
 }
 
 /**
- * Recupera l'ID del tipo terzo "TE_FARM" in modo performante (cached)
+ * Recupera l'ID di un tipo di terzo (dizionario llx_c_typent) dal suo codice (cached).
+ * Gli ID dei tipi aggiunti da doliFarm cambiano da un'installazione all'altra.
+ *
+ * @param   DoliDB  $db     Database handler
+ * @param   string  $code   Codice del tipo di terzo (es. 'TE_FARM')
+ * @return  int             ID del tipo terzo o 0 se non trovato
+ */
+function dolifarmGetTypentId($db, $code)
+{
+    static $cache = array();
+
+    if (isset($cache[$code])) {
+        return $cache[$code];
+    }
+
+    $cache[$code] = 0;
+    $sql = "SELECT id FROM ".MAIN_DB_PREFIX."c_typent WHERE code = '".$db->escape($code)."'";
+    $resql = $db->query($sql);
+    if ($resql && ($obj = $db->fetch_object($resql))) {
+        $cache[$code] = (int) $obj->id;
+    }
+
+    return $cache[$code];
+}
+
+/**
+ * Recupera l'ID del tipo terzo "TE_FARM"
  *
  * @param   DoliDB  $db     Database handler
  * @return  int             ID del tipo terzo o 0 se non trovato
  */
 function getFarmTypeId($db)
 {
-    static $farm_type_id_cache = -1;
-
-    // Se abbiamo già cercato l'ID in questa esecuzione, lo restituiamo subito
-    if ($farm_type_id_cache !== -1) {
-        return $farm_type_id_cache;
-    }
-
-    $sql = "SELECT id FROM ".MAIN_DB_PREFIX."c_typent WHERE code = 'TE_FARM'";
-    $resql = $db->query($sql);
-    
-    if ($resql && $db->num_rows($resql)) {
-        $obj = $db->fetch_object($resql);
-        $farm_type_id_cache = (int)$obj->id;
-    } else {
-        // Fallback robusto: se non esiste, impostiamo 0
-        $farm_type_id_cache = 0;
-    }
-
-    return $farm_type_id_cache;
+    return dolifarmGetTypentId($db, 'TE_FARM');
 }

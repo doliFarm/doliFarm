@@ -47,7 +47,7 @@ class DoliFarmCrops extends CommonObject
 	 * @var string		Prefix to check for any trigger code of any business class to prevent bad value for trigger code.
 	 * @see CommonTrigger::call_trigger()
 	 */
-	public $TRIGGER_PREFIX = 'DOLIFARM_MYOBJECT';	// Will be used to build trgiger keys 'DOLIFARM_MYOBJECT_MODIFY', ...
+	public $TRIGGER_PREFIX = 'DOLIFARM_CROPS';	// Trigger codes: DOLIFARM_CROPS_MODIFY, ...
 
 	/**
 	 * @var string 		Name of table without prefix where object is stored. This is also the key used for extrafields management (so extrafields know the link to the parent table).
@@ -596,7 +596,7 @@ class DoliFarmCrops extends CommonObject
 
 			if (!$error && !$notrigger) {
 				// Call trigger
-				$result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+				$result = $this->call_trigger($this->TRIGGER_PREFIX.'_VALIDATE', $user);
 				if ($result < 0) {
 					$error++;
 				}
@@ -686,7 +686,7 @@ class DoliFarmCrops extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'DOLIFARM_MYOBJECT_UNVALIDATE');
+		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, $this->TRIGGER_PREFIX.'_UNVALIDATE');
 	}
 
 	/**
@@ -710,7 +710,7 @@ class DoliFarmCrops extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'DOLIFARM_MYOBJECT_CANCEL');
+		return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, $this->TRIGGER_PREFIX.'_CANCEL');
 	}
 
 	/**
@@ -734,7 +734,7 @@ class DoliFarmCrops extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'DOLIFARM_MYOBJECT_REOPEN');
+		return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, $this->TRIGGER_PREFIX.'_REOPEN');
 	}
 
 	/**
@@ -1103,15 +1103,14 @@ class DoliFarmCrops extends CommonObject
 		global $langs, $conf;
 		$langs->load("dolifarm@dolifarm");
 
-		if (!getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
-			$conf->global->DOLIFARM_MYOBJECT_ADDON = 'mod_dolifarmcrops_standard';
-		}
+		// Own constant of the object (the ModuleBuilder one, DOLIFARM_MYOBJECT_ADDON, was shared by all objects)
+		$addon = getDolGlobalString('DOLIFARM_DOLIFARMCROPS_ADDON', 'mod_dolifarmcrops_standard');
 
-		if (getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
+		if ($addon) {
 			$mybool = false;
 
-			$file = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON').".php";
-			$classname = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON');
+			$file = $addon.".php";
+			$classname = $addon;
 
 			// Include file with class
 			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
@@ -1173,7 +1172,7 @@ class DoliFarmCrops extends CommonObject
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
 			} else {
-				$modele = getDolGlobalString('MYOBJECT_ADDON_PDF', 'standard_dolifarmcrops');
+				$modele = getDolGlobalString('DOLIFARM_DOLIFARMCROPS_ADDON_PDF', 'standard_dolifarmcrops');
 			}
 		}
 

@@ -8,6 +8,7 @@ require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
 dol_include_once('/dolifarm/class/dolifarmplot.class.php');
 dol_include_once('/dolifarm/class/dolifarmmachine.class.php');
+dol_include_once('/dolifarm/lib/dolifarm.lib.php');
 
 class DoliFarmImporter
 {
@@ -16,6 +17,7 @@ class DoliFarmImporter
     public $error;
     public $errors = array();
     public $output_log = array();
+    public $picto;
 
     public function __construct($db, $user)
     {
@@ -48,7 +50,7 @@ class DoliFarmImporter
         try {
             // 1. Azienda (Soggetto)
             $socId = $this->findOrCreateThirdparty($xml->Soggetto);
-            if ($socId < 0) throw new Exception("Errore gestione Azienda (VAT: " . (string)$xml->Soggetto->PartitaIVA . "): " . $this->error);
+            if ($socId < 0) throw new Exception("Errore gestione Azienda (CUAA: " . self::normalizeCuaa((string) $xml->Soggetto->CUAA) . ", P.IVA: " . (string) $xml->Soggetto->PartitaIVA . "): " . $this->error);
             $this->log("Azienda ID processata: $socId");
 
             // 2. Fascicolo (Dossier)
@@ -95,40 +97,125 @@ class DoliFarmImporter
 
     // --- HELPER METHODS ---
 
+    /**
+     * Find the farm by CUAA (stored in idprof4, "Cod. Fisc." for Italy), then by VAT number; create it if not found
+     *
+     * @param   SimpleXMLElement    $node   Node Soggetto: CUAA (or CodiceFiscale), PartitaIVA, RagioneSociale, optional Nazione (ISO code)
+     * @return  int                         Id of the third party, <0 if KO
+     */
     private function findOrCreateThirdparty($node)
     {
-        $vat = $this->db->escape(trim((string)$node->PartitaIVA));
-        $name = trim((string)$node->RagioneSociale);
+        $cuaa = self::normalizeCuaa((string) $node->CUAA);
+        if ($cuaa === '') {
+            $cuaa = self::normalizeCuaa((string) $node->CodiceFiscale);
+        }
+        $vat = strtoupper(preg_replace('/\s+/', '', (string) $node->PartitaIVA));
+        $name = trim((string) $node->RagioneSociale);
 
-        if (empty($vat)) {
-             $this->error = "Partita IVA mancante nel nodo XML";
-             return -1;
+        if ($cuaa === '' && $vat === '') {
+            $this->error = "CUAA e partita IVA mancanti nel nodo Soggetto";
+            return -1;
+        }
+        // CUAA: tax code of a person (16 characters) or of a company (11 digits)
+        if ($cuaa !== '' && !preg_match('/^([A-Z0-9]{16}|[0-9]{11})$/', $cuaa)) {
+            $this->error = "CUAA non valido: ".$cuaa;
+            return -1;
         }
 
-        // Cerca per Partita IVA
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "societe WHERE tva_intra = '" . $vat . "'";
-        $resql = $this->db->query($sql);
-        if ($resql && $obj = $this->db->fetch_object($resql)) {
-            return $obj->rowid;
+        $socid = 0;
+        if ($cuaa !== '') {
+            $socid = $this->findThirdpartyBy("s.idprof4 = '".$this->db->escape($cuaa)."'");
+        }
+        if (!$socid && $vat !== '') {
+            // VAT stored with or without the country prefix
+            $vatnum = preg_replace('/^[A-Z]{2}/', '', $vat);
+            $socid = $this->findThirdpartyBy("s.tva_intra IN ('".$this->db->escape($vatnum)."', '".$this->db->escape('IT'.$vatnum)."')");
+        }
+        if ($socid < 0) {
+            return -1;
         }
 
-        // Se non trova, crea
+        if ($socid > 0) {
+            // Found by VAT number: complete the CUAA if it was missing
+            $soc = new Societe($this->db);
+            if ($cuaa !== '' && $soc->fetch($socid) > 0 && empty($soc->idprof4)) {
+                $soc->idprof4 = $cuaa;
+                if ($soc->update($socid, $this->user) < 0) {
+                    $this->error = $soc->error." ".implode(',', $soc->errors);
+                    return -1;
+                }
+                $this->log("CUAA ".$cuaa." aggiunto al soggetto terzo ".$soc->name);
+            }
+            return $socid;
+        }
+
+        if ($name === '') {
+            $this->error = "Ragione sociale mancante per il nuovo soggetto terzo";
+            return -1;
+        }
+
+        $countrycode = strtoupper(trim((string) $node->Nazione));
+        if (!preg_match('/^[A-Z]{2}$/', $countrycode)) {
+            $countrycode = 'IT';
+        }
+
         $newSoc = new Societe($this->db);
         $newSoc->name = $name;
+        $newSoc->idprof4 = $cuaa;
         $newSoc->tva_intra = $vat;
-        $newSoc->client = 1; // Prospect/Customer
+        $newSoc->client = 1; // Customer
         $newSoc->code_client = -1; // Auto generate code
-        $newSoc->country_id = 10; // Default Italy (ID 10) - TO IMPROVE: Logic based on country code in XML
-        
-        // Imposta tipo azienda agricola se presente nel dizionario (opzionale)
-        // $newSoc->typent_id = ...
+        $newSoc->country_id = (int) dol_getIdFromCode($this->db, $countrycode, 'c_country', 'code', 'rowid');
+        $typentid = dolifarmGetTypentId($this->db, 'TE_FARM');
+        if ($typentid > 0) {
+            $newSoc->typent_id = $typentid;
+        }
 
         $id = $newSoc->create($this->user);
         if ($id < 0) {
             $this->error = $newSoc->error . " " . implode(',', $newSoc->errors);
             return -1;
         }
+        $this->log("Creato il soggetto terzo ".$name.($cuaa !== '' ? " (CUAA ".$cuaa.")" : ""));
         return $id;
+    }
+
+    /**
+     * Id of the third party of the current entities matching a condition
+     *
+     * @param   string  $where  SQL condition on the table societe (alias s), already escaped
+     * @return  int             Id, 0 if not found, <0 if KO or more than one match
+     */
+    private function findThirdpartyBy($where)
+    {
+        $sql = "SELECT s.rowid FROM ".MAIN_DB_PREFIX."societe as s";
+        $sql .= " WHERE ".$where." AND s.entity IN (".getEntity('societe').")";
+        $resql = $this->db->query($sql);
+        if (!$resql) {
+            $this->error = $this->db->lasterror();
+            return -1;
+        }
+        $num = $this->db->num_rows($resql);
+        if ($num > 1) {
+            $this->error = "Più soggetti terzi corrispondono allo stesso CUAA o partita IVA: correggere l'anagrafica prima di importare";
+            return -1;
+        }
+        if ($num == 1) {
+            $obj = $this->db->fetch_object($resql);
+            return (int) $obj->rowid;
+        }
+        return 0;
+    }
+
+    /**
+     * CUAA without spaces, in capitals
+     *
+     * @param   string  $value  Value read from the file
+     * @return  string
+     */
+    public static function normalizeCuaa($value)
+    {
+        return strtoupper(preg_replace('/\s+/', '', $value));
     }
 
     private function processDossier($node, $socId)
@@ -148,6 +235,9 @@ class DoliFarmImporter
         if ($res > 0) {
             // Update existing
             $dossier->year_validity = $year;
+            if ($year > 0) {
+                $dossier->date_validity_end = dol_mktime(12, 0, 0, 12, 31, $year);
+            }
             $dossier->fk_soc = $socId; // Ensure link is correct
             if ($dossier->update($this->user) < 0) { 
                 $this->error = $dossier->error; 
@@ -162,6 +252,17 @@ class DoliFarmImporter
         $dossier->year_validity = $year;
         $dossier->status = 0; // DRAFT
         $dossier->date_import = dol_now();
+        // Signature date of the validation sheet (required): optional node DataValidazione (YYYY-MM-DD)
+        $dateSignature = trim((string) $node->DataValidazione);
+        if ($dateSignature !== '' && strtotime($dateSignature) !== false) {
+            $dossier->date_signature = dol_stringtotime($dateSignature);
+        } else {
+            $dossier->date_signature = $dossier->date_import;
+            $this->log("Data di validazione assente nel file: usata la data di importazione");
+        }
+        if ($year > 0) {
+            $dossier->date_validity_end = dol_mktime(12, 0, 0, 12, 31, $year);
+        }
         
         $id = $dossier->create($this->user);
         if ($id < 0) {
@@ -183,6 +284,7 @@ class DoliFarmImporter
 
         // Controllo esistenza SQL diretto (usando il nome tabella corretto del nuovo schema)
         $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "dolifarm_plot WHERE ref = '" . $this->db->escape($unique_ref) . "'";
+        $sql .= " AND entity IN (" . getEntity($plot->element) . ")";
         $res = $this->db->query($sql);
         
         if ($this->db->num_rows($res) > 0) {
@@ -235,6 +337,7 @@ class DoliFarmImporter
 
         // Controllo SQL diretto (usando il nome tabella corretto del nuovo schema)
         $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "dolifarm_machine WHERE ref = '" . $this->db->escape($ref) . "'";
+        $sql .= " AND entity IN (" . getEntity($mach->element) . ")";
         $res = $this->db->query($sql);
         
         if ($this->db->num_rows($res) > 0) {

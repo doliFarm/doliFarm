@@ -7,7 +7,11 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';
 // Carichiamo le classi necessarie
 dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
 dol_include_once('/dolifarm/lib/dolifarm_farmdossier.lib.php');
-dol_include_once('/dolitrace/class/dolitracecropplan.class.php');
+if (isModEnabled('dolitrace')) {
+	dol_include_once('/dolitrace/class/dolitracecropplan.class.php');
+}
+
+$langs->loadLangs(array('dolifarm@dolifarm'));
 
 $id = GETPOSTINT('id');
 $action = GETPOST('action', 'aZ09');
@@ -17,7 +21,18 @@ $object = new DoliFarmFarmDossier($db);
 if ($id > 0) $object->fetch($id);
 
 // Security
-if ($object->id <= 0) accessforbidden();
+if (!isModEnabled('dolifarm') || !isModEnabled('dolitrace') || !class_exists('DoliTraceCropplan')) {
+	accessforbidden('Module dolitrace not enabled');
+}
+if (!$user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read')) {
+	accessforbidden();
+}
+if ($object->id <= 0) {
+	accessforbidden();
+}
+if (!empty($object->entity) && !in_array((int) $object->entity, explode(',', getEntity('dolifarmfarmdossier')))) {
+	accessforbidden();
+}
 
 /* View */
 $title = $object->ref . " - " . $langs->trans("CropPlans");
@@ -28,7 +43,7 @@ $head = dolifarmfarmdossierPrepareHead($object);
 print dol_get_fiche_head($head, 'cropplans', $langs->trans("FarmDossier"), -1, $object->picto);
 
 // Banner
-$linkback = '<a href="' . dol_buildpath('/dolifarm/farmdossier_list.php', 1) . '">' . $langs->trans("BackToList") . '</a>';
+$linkback = '<a href="' . dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1) . '">' . $langs->trans("BackToList") . '</a>';
 dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref');
 
 print '<div class="fichecenter">';

@@ -71,7 +71,7 @@ class mod_dolifarmfarmdossier_advanced extends ModeleNumRefDoliFarmFarmDossier
 		$text .= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 		$text .= '<input type="hidden" name="token" value="'.newToken().'">';
 		$text .= '<input type="hidden" name="action" value="updateMask">';
-		$text .= '<input type="hidden" name="maskconst" value="DOLIFARM_MYOBJECT_ADVANCED_MASK">';
+		$text .= '<input type="hidden" name="maskconst" value="DOLIFARM_DOLIFARMFARMDOSSIER_ADVANCED_MASK">';
 		$text .= '<table class="nobordernopadding centpercent">';
 
 		$tooltip = $langs->trans("GenericMaskCodes", $langs->transnoentities("DoliFarmFarmDossier"), $langs->transnoentities("DoliFarmFarmDossier"));
@@ -86,7 +86,7 @@ class mod_dolifarmfarmdossier_advanced extends ModeleNumRefDoliFarmFarmDossier
 
 		// prefix configuration
 		$text .= '<tr><td>'.$langs->trans("Mask").':</td>';
-		$text .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="maskvalue" value="'.getDolGlobalString('DOLIFARM_MYOBJECT_ADVANCED_MASK').'">', $tooltip, 1, 'help').'</td>';
+		$text .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="maskvalue" value="'.getDolGlobalString('DOLIFARM_DOLIFARMFARMDOSSIER_ADVANCED_MASK').'">', $tooltip, 1, 'help').'</td>';
 		$text .= '<td class="left" rowspan="2">&nbsp; <input type="submit" class="button button-edit" value="'.$langs->trans("Modify").'" name="Button"></td>';
 		$text .= '</tr>';
 
@@ -137,7 +137,7 @@ class mod_dolifarmfarmdossier_advanced extends ModeleNumRefDoliFarmFarmDossier
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 		// We get cursor rule
-		$mask = getDolGlobalString('DOLIFARM_MYOBJECT_ADVANCED_MASK');
+		$mask = getDolGlobalString('DOLIFARM_DOLIFARMFARMDOSSIER_ADVANCED_MASK');
 
 		if (!$mask) {
 			$this->error = 'NotConfigured';

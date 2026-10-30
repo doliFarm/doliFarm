@@ -113,6 +113,11 @@ $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $
 $optioncss = GETPOST('optioncss', 'aZ'); // Option for the css output (always '' except when 'print')
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
 
+// Back from the "+" button on the third party field: the new id comes as fk_societe
+if ($action == 'create' && GETPOSTINT('fk_societe') > 0 && !GETPOSTISSET('fk_soc')) {
+	$_GET['fk_soc'] = GETPOSTINT('fk_societe');
+}
+
 // Initialize a technical objects
 $object = new DoliFarmFarmDossier($db);
 $extrafields = new ExtraFields($db);
@@ -142,22 +147,12 @@ if (empty($action) && empty($id) && empty($ref)) {
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be 'include', not 'include_once'.
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-	$permissionnote = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_dellink.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiondellink = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+$permissionnote = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_setnotes.inc.php
+$permissiondellink = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_dellink.inc.php
 
 $upload_dir = $conf->dolifarm->multidir_output[isset($object->entity) ? $object->entity : 1].'/dolifarmfarmdossier';
 
@@ -201,6 +196,12 @@ if (empty($reshook)) {
 
 	$triggermodname = $object->TRIGGER_PREFIX.'_MODIFY'; // Name of trigger action code to execute when we modify record. Used in actions_addupdatedelete.inc.php
 
+	// Notes are not in the common fields of the creation form: read them here (as in core cards)
+	if ($action == 'add' && !$cancel) {
+		$object->note_public = GETPOST('note_public', 'restricthtml');
+		$object->note_private = GETPOST('note_private', 'restricthtml');
+	}
+
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
@@ -227,8 +228,8 @@ if (empty($reshook)) {
 	*/
 
 	// Actions to send emails
-	$triggersendname = 'DOLIFARM_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	$triggersendname = $object->TRIGGER_PREFIX.'_SENTBYMAIL';
+	$autocopy = 'MAIN_MAIL_AUTOCOPY_'.strtoupper($object->element).'_TO';
 	$trackid = 'dolifarmfarmdossier'.$object->id;
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
@@ -295,6 +296,38 @@ if ($action == 'create') {
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+
+	// The "+" button on the third party opens the creation with the type "Farm" already set,
+	// otherwise the new third party would be hidden by the filter of the field
+	$farmtypentid = dolifarmGetTypentId($db, 'TE_FARM');
+	if ($farmtypentid > 0) {
+		print '<script>
+		jQuery(document).ready(function() {
+			jQuery(".field_fk_soc a.butActionNew").attr("href", function(i, href) {
+				return href.replace("?action=create&", "?action=create&typent_id='.((int) $farmtypentid).'&");
+			});
+		});
+		</script>';
+	}
+
+	// Public note
+	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+	print '<tr class="field_note_public">';
+	print '<td class="titlefieldcreate tdtop">'.$langs->trans('NotePublic').'</td>';
+	print '<td class="valuefieldcreate">';
+	$doleditor = new DolEditor('note_public', GETPOST('note_public', 'restricthtml'), '', 80, 'dolibarr_notes', 'In', false, false, getDolGlobalString('FCKEDITOR_ENABLE_NOTE_PUBLIC') ? 1 : 0, ROWS_3, '90%');
+	print $doleditor->Create(1);
+	print '</td></tr>';
+
+	// Private note
+	if (empty($user->socid)) {
+		print '<tr class="field_note_private">';
+		print '<td class="titlefieldcreate tdtop">'.$langs->trans('NotePrivate').'</td>';
+		print '<td class="valuefieldcreate">';
+		$doleditor = new DolEditor('note_private', GETPOST('note_private', 'restricthtml'), '', 80, 'dolibarr_notes', 'In', false, false, getDolGlobalString('FCKEDITOR_ENABLE_NOTE_PRIVATE') ? 1 : 0, ROWS_3, '90%');
+		print $doleditor->Create(1);
+		print '</td></tr>';
+	}
 
 	// Other attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
@@ -440,9 +473,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 		}
 	*/
+	// Farm and its CUAA (tax code, idprof4 of the third party), the key of the dossier at AGEA
+	if ($object->fk_soc > 0 && $object->fetch_thirdparty() > 0) {
+		$morehtmlref .= $object->thirdparty->getNomUrl(1);
+		if (!empty($object->thirdparty->idprof4)) {
+			$morehtmlref .= ' <span class="opacitymedium">- '.$langs->trans("CUAA").':</span> '.dol_escape_htmltag($object->thirdparty->idprof4);
+		} else {
+			$morehtmlref .= ' '.img_warning($langs->trans("CUAAMissingHelp")).' <span class="opacitymedium">'.$langs->trans("CUAAMissing").'</span>';
+		}
+	}
 	$morehtmlref .= '</div>';
 
 
+	// Overdue and near expiry dates of the object
+	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+	$morehtmlref .= dolifarmExpiryObjectWarnings($object);
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 

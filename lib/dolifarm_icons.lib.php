@@ -32,6 +32,10 @@ function dolifarm_get_fa_icon($element_type, $full_tag = false) {
         'farmdossier'           => 'fa-file-contract',               // Alias
         'dolifarmestimatecosts' => 'fa-coins',              // Stima Costi
         'estimatecosts'         => 'fa-coins',              // Alias
+        'dolifarmlivestock'     => 'fa-paw',                // Consistenza zootecnica
+        'livestock'             => 'fa-paw',                // Alias
+        'dolifarmbuilding'      => 'fa-warehouse',          // Fabbricati
+        'building'              => 'fa-warehouse',          // Alias
 
         // --- DOLITRACE ---
         'dolitrace'             => 'fa-route',              // Modulo DoliTrace

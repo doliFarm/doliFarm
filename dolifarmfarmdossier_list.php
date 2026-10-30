@@ -203,20 +203,16 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 ));*/
 
 $object->fields = dol_sort_array($object->fields, 'position');
+
+// Expiry dates of the object: badge overdue / near in the list
+dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+$expiryfields = dolifarmExpiryFieldsOf($object->element);
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write');
-	$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-	$permissiontodelete = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write');
+$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete');
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) {
@@ -683,7 +679,7 @@ $newcardbutton .= dolGetButtonTitle($langs->trans('ViewKanban'), '', 'fa fa-th-l
 //$newcardbutton .= dolGetButtonTitle($langs->trans('ViewKanbanGroupBy'), '', 'fa fa-grip-vertical imgforviewmode', $_SERVER["PHP_SELF"].'?mode=kanbangroupby&groupby=p.fk_opp_status'.preg_replace('/(&|\?)*(mode|groupby)=[^&]+/', '', $param), '', ($mode == 'kanbangroupby' ? 2 : 1), array('morecss' => 'reposition'));
 //$newcardbutton .= dolGetButtonTitle($langs->trans('HierarchicView'), '', 'fa fa-stream paddingleft imgforviewmode', $_SERVER["PHP_SELF"].'?mode=hierarchy'.preg_replace('/(&|\?)*(mode|groupby)=[^&]+/', '', $param), '', (($mode == 'hierarchy') ? 2 : 1), array('morecss' => 'reposition'));
 $newcardbutton .= dolGetButtonTitleSeparator();
-$newcardbutton .= dolGetButtonTitle($langs->trans('New'), '', 'fa fa-plus-circle', dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?action=create&backtopage='.urlencode($_SERVER['PHP_SELF']), '', $permissiontoadd);
+$newcardbutton .= dolGetButtonTitle($langs->trans('New'), '', 'fa fa-plus-circle', dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?action=create', '', $permissiontoadd);
 
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, $object->picto, 0, $newcardbutton, '', $limit, 0, 0, 1);
 
@@ -965,6 +961,9 @@ while ($i < $imaxinloop) {
 						print '<div class="small lineheightsmall twolinesmax-normallineheight">';
 					}
 					print $object->showOutputField($val, $key, (string) $object->$key, '');
+					if (isset($expiryfields[$key]) && (int) $object->status != 9) {
+						print dolifarmExpiryBadge($object->$key, $expiryfields[$key]['milestone']);
+					}
 					if ($val['type'] == 'html') {
 						print '</div>';
 					}

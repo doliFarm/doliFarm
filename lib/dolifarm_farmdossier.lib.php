@@ -30,7 +30,7 @@
  */
 function dolifarmfarmdossierPrepareHead($object)
 {
-    global $db, $langs, $conf;
+    global $db, $langs, $conf, $user;
 
     $langs->load("dolifarm@dolifarm");
 
@@ -51,20 +51,22 @@ function dolifarmfarmdossierPrepareHead($object)
     // ----------------------------------------------------------------------
     // TAB 2: Piani di produzione (Cropplans)
     // ----------------------------------------------------------------------
-    // Calcolo badge: Conta i cropplan collegati a questo dossier
-    $nbCropplans = 0;
-    $sql = "SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX."dolitrace_cropplan WHERE fk_dossier = ".((int)$object->id);
-    $resql = $db->query($sql);
-    if ($resql && $obj = $db->fetch_object($resql)) {
-        $nbCropplans = $obj->nb;
+    if (isModEnabled('dolitrace')) {
+        // Calcolo badge: Conta i cropplan collegati a questo dossier
+        $nbCropplans = 0;
+        $sql = "SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX."dolitrace_cropplan WHERE fk_dossier = ".((int)$object->id);
+        $resql = $db->query($sql);
+        if ($resql && $obj = $db->fetch_object($resql)) {
+            $nbCropplans = $obj->nb;
+        }
+        $head[$h][0] = dol_buildpath('/dolifarm/farmdossier_cropplans.php', 1).'?id='.$object->id;
+        $head[$h][1] = $langs->trans("CropPlans");
+        if ($nbCropplans > 0) {
+            $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbCropplans.'</span>';
+        }
+        $head[$h][2] = 'cropplans';
+        $h++;
     }
-    $head[$h][0] = dol_buildpath('/dolifarm/farmdossier_cropplans.php', 1).'?id='.$object->id;
-    $head[$h][1] = $langs->trans("CropPlans");
-    if ($nbCropplans > 0) {
-        $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbCropplans.'</span>';
-    }
-    $head[$h][2] = 'cropplans';
-    $h++;
     
     // ----------------------------------------------------------------------
     // TAB 2: TERRENI (Plots)
@@ -103,6 +105,26 @@ function dolifarmfarmdossierPrepareHead($object)
     }
     $head[$h][2] = 'machines';
     $h++;
+
+    // Livestock and buildings of the dossier
+    foreach (array('livestock' => 'DoliFarmLivestocks', 'building' => 'DoliFarmBuildings') as $tabkey => $tablabel) {
+        if (!$user->hasRight('dolifarm', 'dolifarm'.$tabkey, 'read')) {
+            continue;
+        }
+        $nbRecords = 0;
+        $sql = "SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX."dolifarm_".$tabkey." WHERE fk_dossier = ".((int) $object->id);
+        $resql = $db->query($sql);
+        if ($resql && $obj = $db->fetch_object($resql)) {
+            $nbRecords = (int) $obj->nb;
+        }
+        $head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmfarmdossier_".$tabkey.".php", 1), ['id' => $object->id]);
+        $head[$h][1] = $langs->trans($tablabel);
+        if ($nbRecords > 0) {
+            $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbRecords.'</span>';
+        }
+        $head[$h][2] = $tabkey;
+        $h++;
+    }
 
     // ----------------------------------------------------------------------
     // TAB 4: CONTATTI (Contacts)

@@ -108,84 +108,16 @@ if (!$user->admin) {
 }
 
 
-// Enter here all parameters in your setup page
+// Parameters of the module (FormSetup items)
 
-// Setup conf for selection of an URL
-$item = $formSetup->newItem('DOLIFARM_MYPARAM1');
-$item->fieldParams['isMandatory'] = 1;
-$item->fieldAttr['placeholder'] = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
-$item->cssClass = 'minwidth500';
-
-// Setup conf for selection of a simple string input
-$item = $formSetup->newItem('DOLIFARM_MYPARAM2');
-$item->defaultFieldValue = 'default value';
-$item->fieldAttr['placeholder'] = 'A placeholder here';
-$item->helpText = 'Tooltip text';
-
-// Setup conf for selection of a simple textarea input but we replace the text of field title
-$item = $formSetup->newItem('DOLIFARM_MYPARAM3');
-$item->nameText = $item->getNameText().' more html text ';
-
-// Setup conf for a selection of a Thirdparty
-$item = $formSetup->newItem('DOLIFARM_MYPARAM4');
-$item->setAsThirdpartyType();
-
-// Setup conf for a selection of a boolean
-$formSetup->newItem('DOLIFARM_MYPARAM5')->setAsYesNo();	 // ->fieldParams['alertifoff'] = 1 or ->fieldParams['alertifon'] = 1;
-
-// Setup conf for a selection of an Email template of type thirdparty
-$formSetup->newItem('DOLIFARM_MYPARAM6')->setAsEmailTemplate('thirdparty');
-
-// Setup conf for a selection of a secured key
-//$formSetup->newItem('DOLIFARM_MYPARAM7')->setAsSecureKey();
-
-// Setup conf for a selection of a Product
-$formSetup->newItem('DOLIFARM_MYPARAM8')->setAsProduct();
-
-// Add a title for a new section
-$formSetup->newItem('NewSection')->setAsTitle();
-
-$TField = array(
-	'test01' => $langs->trans('test01'),
-	'test02' => $langs->trans('test02'),
-	'test03' => $langs->trans('test03'),
-	'test04' => $langs->trans('test04'),
-	'test05' => $langs->trans('test05'),
-	'test06' => $langs->trans('test06'),
-);
-
-// Setup conf for a simple combo list
-$formSetup->newItem('DOLIFARM_MYPARAM9')->setAsSelect($TField);
-
-// Setup conf for a multiselect combo list
-$item = $formSetup->newItem('DOLIFARM_MYPARAM10');
-$item->setAsMultiSelect($TField);
-$item->helpText = $langs->transnoentities('DOLIFARM_MYPARAM10');
-
-// Setup conf for a category selection
-$formSetup->newItem('DOLIFARM_CATEGORY_ID_XXX')->setAsCategory('product');
-
-// Setup conf DOLIFARM_MYPARAM10
-$item = $formSetup->newItem('DOLIFARM_MYPARAM10');
-$item->setAsColor();
-$item->defaultFieldValue = '#FF0000';
-//$item->fieldValue = '';
-//$item->fieldAttr = array() ; // fields attribute only for compatible fields like input text
-//$item->fieldOverride = false; // set this var to override field output will override $fieldInputOverride and $fieldOutputOverride too
-//$item->fieldInputOverride = false; // set this var to override field input
-//$item->fieldOutputOverride = false; // set this var to override field output
-
-$item = $formSetup->newItem('DOLIFARM_MYPARAM11')->setAsHtml();
-$item->nameText = $item->getNameText().' more html text ';
-$item->fieldInputOverride = '';
-$item->helpText = $langs->transnoentities('HelpMessage');
-$item->cssClass = 'minwidth500';
-
-$item = $formSetup->newItem('DOLIFARM_MYPARAM12');
-$item->fieldOverride = "Value forced, can't be modified";
-$item->cssClass = 'minwidth500';
-
-//$item = $formSetup->newItem('DOLIFARM_MYPARAM13')->setAsDate();	// Not yet implemented
+// Expiry dates: days before the date when it is shown as near, agenda events
+$formSetup->newItem('ExpiryDates')->setAsTitle();
+$item = $formSetup->newItem('DOLIFARM_EXPIRY_DAYS');
+$item->defaultFieldValue = '60';
+$item->cssClass = 'maxwidth75';
+$item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
+$item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
+$item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
 // End of definition of parameters
 
@@ -196,9 +128,20 @@ $setupnotempty += count($formSetup->items);
 $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
 
 $moduledir = 'dolifarm';
+// Objects with a numbering module (constants DOLIFARM_<OBJECT>_ADDON and DOLIFARM_<OBJECT>_ADVANCED_MASK)
 $myTmpObjects = array();
-// TODO Scan list of objects to fill this array
-$myTmpObjects['myobject'] = array('label' => 'MyObject', 'includerefgeneration' => 0, 'includedocgeneration' => 0, 'class' => 'MyObject');
+foreach (array(
+	'dolifarmfarmdossier' => 'DoliFarmFarmDossier',
+	'dolifarmplot' => 'DoliFarmPlot',
+	'dolifarmlivestock' => 'DoliFarmLivestock',
+	'dolifarmbuilding' => 'DoliFarmBuilding',
+	'dolifarmmachine' => 'DoliFarmMachine',
+	'dolifarmagrodrug' => 'DoliFarmAgroDrug',
+	'dolifarmcrops' => 'DoliFarmCrops',
+) as $tmpkey => $tmpclass) {
+	dol_include_once('/dolifarm/class/'.$tmpkey.'.class.php');
+	$myTmpObjects[$tmpkey] = array('label' => $langs->trans($tmpclass), 'includerefgeneration' => 1, 'includedocgeneration' => 0, 'class' => $tmpclass);
+}
 
 $tmpobjectkey = GETPOST('object', 'aZ09');
 if ($tmpobjectkey && !array_key_exists($tmpobjectkey, $myTmpObjects)) {
@@ -216,6 +159,22 @@ if (versioncompare(explode('.', DOL_VERSION), array(15)) < 0 && $action == 'upda
 }
 
 include DOL_DOCUMENT_ROOT.'/core/actions_setmoduleoptions.inc.php';
+
+// The expiry threshold must be a number of days
+if ($action == 'update' && GETPOSTISSET('DOLIFARM_EXPIRY_DAYS')) {
+	dolibarr_set_const($db, 'DOLIFARM_EXPIRY_DAYS', max(0, GETPOSTINT('DOLIFARM_EXPIRY_DAYS')), 'chaine', 0, '', $conf->entity);
+}
+
+// Put the agenda events of the expiry dates in step with the data (data saved before, imports)
+if ($action == 'syncexpiry') {
+	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+	$nbsync = dolifarmExpirySyncAll($db, $user);
+	if ($nbsync < 0) {
+		setEventMessages($langs->trans("ExpirySyncError"), null, 'errors');
+	} else {
+		setEventMessages($langs->trans("ExpirySyncDone", $nbsync), null, 'mesgs');
+	}
+}
 
 if ($action == 'updateMask') {
 	$maskconst = GETPOST('maskconst', 'aZ09');
@@ -356,6 +315,13 @@ if (!empty($formSetup->items)) {
 	print '<br>';
 }
 
+if (isModEnabled('agenda') && getDolGlobalInt('DOLIFARM_EXPIRY_AGENDA', 1)) {
+	print '<div class="opacitymedium">'.$langs->trans("ExpirySyncHelp").'</div>';
+	print '<div class="tabsAction">';
+	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=syncexpiry&token='.newToken().'">'.$langs->trans("ExpirySync").'</a>';
+	print '</div>';
+}
+
 
 foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 	if (!empty($myTmpObjectArray['includerefgeneration'])) {
@@ -363,7 +329,7 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 
 		$setupnotempty++;
 
-		print load_fiche_titre($langs->trans("NumberingModules", $myTmpObjectArray['label']), '', '');
+		print load_fiche_titre($langs->trans("NumberingModules").": ".$myTmpObjectArray['label'], '', '');
 
 		print '<table class="noborder centpercent">';
 		print '<tr class="liste_titre">';
@@ -421,7 +387,7 @@ foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
 
 								print '<td class="center">';
 								$constforvar = 'DOLIFARM_'.strtoupper($myTmpObjectKey).'_ADDON';
-								$defaultifnotset = 'thevaluetousebydefault';
+								$defaultifnotset = 'mod_'.$myTmpObjectKey.'_standard'; // Same default as getNextNumRef() of the classes
 								$activenumberingmodel = getDolGlobalString($constforvar, $defaultifnotset);
 								if ($activenumberingmodel == $file) {
 									print img_picto($langs->trans("Activated"), 'switch_on');

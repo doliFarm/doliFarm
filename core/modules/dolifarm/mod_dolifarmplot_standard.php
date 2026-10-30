@@ -41,7 +41,7 @@ class mod_dolifarmplot_standard extends ModeleNumRefDoliFarmPlot
 	/**
 	 * @var string
 	 */
-	public $prefix = 'MYOBJECT';
+	public $prefix = 'APPEZ';
 
 	/**
 	 * @var string Error code (or message)
@@ -156,8 +156,8 @@ class mod_dolifarmplot_standard extends ModeleNumRefDoliFarmPlot
 			return -1;
 		}
 
-		//$date=time();
-		$date = $object->date_creation;
+		// The ref is given at creation, when date_creation is not set yet
+		$date = empty($object->date_creation) ? dol_now() : $object->date_creation;
 		$yymm = dol_print_date($date, "%y%m");
 
 		if ($max >= (pow(10, 4) - 1)) {

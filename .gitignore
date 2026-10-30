@@ -19,7 +19,6 @@
 # Other
 *.back
 /.editorconfig
-/.gitattributes
 
 
 # Backup e residui di sviluppo manuale
@@ -34,3 +33,8 @@ Thumbs.db
 
 # Log
 *.log
+
+# Output locali di Claude (Cowork)
+Claude outputs/
+# Documenti di progettazione interni: non pubblicare
+/docs/

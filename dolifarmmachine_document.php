@@ -138,16 +138,8 @@ if ($id > 0 || !empty($ref)) {
 }
 
 // Permissions
-// (There are several ways to check permission.)
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmmachine', 'read');
-	$permissiontoadd  = $user->hasRight('dolifarm', 'dolifarmmachine', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd  = 1;
-}
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmmachine', 'read');
+$permissiontoadd  = $user->hasRight('dolifarm', 'dolifarmmachine', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_linkedfiles.inc.php
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

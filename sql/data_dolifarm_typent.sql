@@ -62,3 +62,24 @@ SELECT
     'dolifarm'
 FROM DUAL
 WHERE NOT EXISTS (SELECT code FROM llx_c_typent WHERE code = 'TE_GROSS');
+-- 5. TE_CAA: Centro di Assistenza Agricola (filtro del campo CAA nel fascicolo)
+INSERT IGNORE INTO llx_c_typent (id, code, libelle, active, module)
+SELECT
+    (SELECT COALESCE(MAX(id), 0) + 1 FROM llx_c_typent),
+    'TE_CAA',
+    'Centro di Assistenza Agricola (CAA)',
+    1,
+    'dolifarm'
+FROM DUAL
+WHERE NOT EXISTS (SELECT code FROM llx_c_typent WHERE code = 'TE_CAA');
+
+-- 6. TE_BIOCTRL: Organismo di controllo biologico (filtro del campo nel fascicolo)
+INSERT IGNORE INTO llx_c_typent (id, code, libelle, active, module)
+SELECT
+    (SELECT COALESCE(MAX(id), 0) + 1 FROM llx_c_typent),
+    'TE_BIOCTRL',
+    'Organismo di controllo bio',
+    1,
+    'dolifarm'
+FROM DUAL
+WHERE NOT EXISTS (SELECT code FROM llx_c_typent WHERE code = 'TE_BIOCTRL');

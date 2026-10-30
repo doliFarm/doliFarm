@@ -8,7 +8,6 @@ SET FOREIGN_KEY_CHECKS=0;
 -- 1. DIZIONARIO: TIPO DI POSSESSO TERRENO (Ownership)
 -- Riferito da: llx_dolifarm_plot.fk_ownership
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_ownership;
 CREATE TABLE IF NOT EXISTS llx_dolifarm_c_ownership (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
@@ -32,8 +31,7 @@ INSERT IGNORE INTO llx_dolifarm_c_ownership (code, label, active, position) VALU
 -- 2. DIZIONARIO: STATO BIOLOGICO (Bio Status)
 -- Riferito da: llx_dolifarm_plot.fk_status_bio
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_biostatus;
-CREATE TABLE llx_dolifarm_c_biostatus (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_biostatus (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -58,8 +56,7 @@ INSERT IGNORE INTO llx_dolifarm_c_biostatus (code, label, description, active, p
 -- 3. DIZIONARIO: TIPO MACCHINA (Machine Type)
 -- Riferito da: llx_dolifarm_machine.fk_type
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_machinetype;
-CREATE TABLE llx_dolifarm_c_machinetype (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_machinetype (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -89,8 +86,7 @@ INSERT IGNORE INTO llx_dolifarm_c_machinetype (code, label, active, position) VA
 -- 4. DIZIONARIO AGGIUNTIVO: TIPO CARBURANTE (Opzionale ma utile)
 -- Riferito da: llx_dolifarm_machine.fuel_type
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_fueltype;
-CREATE TABLE llx_dolifarm_c_fueltype (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_fueltype (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -116,9 +112,8 @@ INSERT IGNORE INTO llx_dolifarm_c_fueltype (code, label, active) VALUES
 -- ==============================================================================
 
 -- Eliminazione tabella se esiste per rigenerazione pulita
-DROP TABLE IF EXISTS llx_dolifarm_c_operation_type;
 
-CREATE TABLE llx_dolifarm_c_operation_type (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_operation_type (
   rowid       integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
   code        varchar(32) NOT NULL,
   label       varchar(128) NOT NULL,
@@ -168,3 +163,62 @@ INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category
 ('MOWING',          'Sfalerciatura / Trinciatura', 1, 'MAINTENANCE');
 
 SET FOREIGN_KEY_CHECKS=1;
+
+
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_paying_agency (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(32) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    active      TINYINT DEFAULT 1,
+    module      VARCHAR(32) DEFAULT NULL,
+    position    INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_paying_agency_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_paying_agency (code, label, active, position) VALUES
+('AGEA', 'AGEA - Agenzia per le Erogazioni in Agricoltura', 1, 10),
+('AGREA', 'AGREA - Emilia-Romagna', 1, 20),
+('APPAG', 'APPAG - Provincia autonoma di Trento', 1, 30),
+('ARCEA', 'ARCEA - Calabria', 1, 40),
+('ARGEA', 'ARGEA - Sardegna', 1, 50),
+('ARPEA', 'ARPEA - Piemonte', 1, 60),
+('ARTEA', 'ARTEA - Toscana', 1, 70),
+('AVEPA', 'AVEPA - Veneto', 1, 80),
+('OPLO', 'OPLO - Lombardia', 1, 90),
+('OPPAB', 'OPPAB - Provincia autonoma di Bolzano', 1, 100);
+
+-- Comuni with their cadastral (Belfiore) code, data in data_dolifarm_cadastral_comune.sql (ISTAT, CC-BY 4.0)
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_cadastral_comune (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(4) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    province    VARCHAR(2) DEFAULT NULL,
+    istat_code  VARCHAR(6) DEFAULT NULL,
+    active      TINYINT DEFAULT 1,
+    UNIQUE INDEX uk_dolifarm_c_cadastral_comune_code (code)
+) ENGINE=InnoDB;
+
+-- Livestock species (consistenza zootecnica)
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_livestock_species (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(32) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    active      TINYINT DEFAULT 1,
+    module      VARCHAR(32) DEFAULT NULL,
+    position    INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_livestock_species_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_livestock_species (code, label, active, position) VALUES
+('BOVINI', 'Bovini', 1, 10),
+('BUFALINI', 'Bufalini', 1, 20),
+('OVINI', 'Ovini', 1, 30),
+('CAPRINI', 'Caprini', 1, 40),
+('SUINI', 'Suini', 1, 50),
+('EQUINI', 'Equini', 1, 60),
+('ASININI', 'Asinini', 1, 70),
+('AVICOLI', 'Avicoli', 1, 80),
+('CUNICOLI', 'Cunicoli', 1, 90),
+('API', 'Api', 1, 100),
+('ACQUACOLTURA', 'Acquacoltura', 1, 110),
+('ALTRO', 'Altre specie', 1, 900);

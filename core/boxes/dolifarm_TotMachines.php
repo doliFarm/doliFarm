@@ -20,7 +20,7 @@ include_once DOL_DOCUMENT_ROOT."/core/boxes/modules_boxes.php";
 /**
  * Class to manage the box
  */
-class dolifarmWidgetTotMachines extends ModeleBoxes
+class dolifarm_TotMachines extends ModeleBoxes
 {
     public $boxcode = "dolifarmboxTotMachines";
     public $boximg = "dolifarm@dolifarm";

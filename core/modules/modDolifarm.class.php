@@ -77,7 +77,7 @@ class modDolifarm extends DolibarrModules
 		$this->editor_squarred_logo = '';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@dolifarm'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.0';
+		$this->version = '1.1.0';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -93,7 +93,7 @@ class modDolifarm extends DolibarrModules
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -123,7 +123,6 @@ class modDolifarm extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'afterlogin',
-				       'hookcontext2',
 				   ),
 				   'entity' => '0',
 			),
@@ -169,7 +168,7 @@ class modDolifarm extends DolibarrModules
 		// Prerequisites
 		$this->phpmin = array(7, 2); // Minimum version of PHP required by module
 		// $this->phpmax = array(8, 0); // Maximum version of PHP required by module
-		$this->need_dolibarr_version = array(19, -3); // Minimum version of Dolibarr required by module
+		$this->need_dolibarr_version = array(23, 0); // Minimum version of Dolibarr required by module (dolBuildUrl() from v23)
 		// $this->max_dolibarr_version = array(19, -3); // Maximum version of Dolibarr required by module
 		$this->need_javascript_ajax = 0;
 
@@ -184,7 +183,11 @@ class modDolifarm extends DolibarrModules
 		// Example: $this->const=array(1 => array('DOLIFARM_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
 		//                             2 => array('DOLIFARM_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
-		$this->const = array();
+		// Created only if missing, so the values set in the setup are kept
+		$this->const = array(
+			1 => array('DOLIFARM_EXPIRY_DAYS', 'chaine', '60', 'Days before an expiry date when it is shown as near', 0, 'current', 0),
+			2 => array('DOLIFARM_EXPIRY_AGENDA', 'chaine', '1', 'Agenda events for the expiry dates', 0, 'current', 0),
+		);
 
 		// Some keys to add into the overwriting translation tables
 		/*$this->overwrite_translation = array(
@@ -270,7 +273,9 @@ class modDolifarm extends DolibarrModules
                 'dolifarm_c_biostatus',
                 'dolifarm_c_machinetype',
                 'dolifarm_c_fueltype',
-                'dolifarm_c_operation_type' // [NUOVO] Tabella Tipi Operazione
+                'dolifarm_c_operation_type', // [NUOVO] Tabella Tipi Operazione
+                'dolifarm_c_paying_agency',
+                'dolifarm_c_livestock_species'
             ),
             
             // Label of tables
@@ -279,7 +284,9 @@ class modDolifarm extends DolibarrModules
                 'DictionaryBioStatus',
                 'DictionaryMachineType',
                 'DictionaryFuelType',
-                'DictionaryOperationType'   // [NUOVO] Chiave da tradurre in dolifarm.lang
+                'DictionaryOperationType',   // [NUOVO] Chiave da tradurre in dolifarm.lang
+                'DictionaryPayingAgency',
+                'DictionaryLivestockSpecies'
             ),
             
             // Request to select fields
@@ -288,7 +295,9 @@ class modDolifarm extends DolibarrModules
                 'SELECT rowid, code, label, description, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_biostatus',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_machinetype',
                 'SELECT rowid, code, label, active FROM '.MAIN_DB_PREFIX.'dolifarm_c_fueltype',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type' // [NUOVO]
+                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type', // [NUOVO]
+                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_paying_agency',
+                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_livestock_species'
             ),
             
             // Sort order
@@ -297,7 +306,9 @@ class modDolifarm extends DolibarrModules
                 'position ASC, code ASC',
                 'position ASC, code ASC',
                 'code ASC',
-                'position ASC, code ASC' // [NUOVO]
+                'position ASC, code ASC', // [NUOVO]
+                'position ASC, code ASC',
+                'position ASC, code ASC'
             ),
             
             // List of fields (result of select to show dictionary)
@@ -306,7 +317,9 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label',
+                'code,label'
             ),
             
             // List of fields (list of fields to edit a record)
@@ -315,7 +328,9 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label',
+                'code,label'
             ),
             
             // List of fields (list of fields for insert)
@@ -324,14 +339,16 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label',
+                'code,label'
             ),
             
             // Name of columns with primary key (try to always name it 'rowid')
-            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
+            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
             
             // Condition to show each dictionary (Always 1 if the module is active)
-            'tabcond' => array(1, 1, 1, 1, 1),
+            'tabcond' => array(1, 1, 1, 1, 1, 1, 1),
             
             // Tooltip for every fields of dictionaries
             'tabhelp' => array(
@@ -339,7 +356,9 @@ class modDolifarm extends DolibarrModules
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'description' => $langs->trans('Description')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')) // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')), // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'))
             )
         );
 
@@ -372,6 +391,11 @@ class modDolifarm extends DolibarrModules
 			 4 => array(
                 'file' => 'dolifarmwidgettopplannedproducts.php@dolifarm',
                 'note' => $langs->trans('BoxProductsPlanOverview'),
+                'enabledbydefaulton' => 'dolifarm',
+            ),
+            5 => array(
+                'file' => 'dolifarm_Expiry.php@dolifarm',
+                'note' => $langs->trans('BoxExpiryDescription'),
                 'enabledbydefaulton' => 'dolifarm',
             ),
         );
@@ -496,6 +520,36 @@ class modDolifarm extends DolibarrModules
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (5 * 10) + 2 + 1);
 		$this->rights[$r][1] = 'Delete DoliFarmEstimateCosts object of Dolifarm';
 		$this->rights[$r][4] = 'dolifarmestimatecosts';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (6 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Read livestock of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmlivestock';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (6 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Create/Update livestock of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmlivestock';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (6 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Delete livestock of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmlivestock';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (7 * 10) + 0 + 1);
+		$this->rights[$r][1] = 'Read buildings of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmbuilding';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (7 * 10) + 1 + 1);
+		$this->rights[$r][1] = 'Create/Update buildings of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmbuilding';
+		$this->rights[$r][5] = 'write';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf('%02d', (7 * 10) + 2 + 1);
+		$this->rights[$r][1] = 'Delete buildings of the farm dossier';
+		$this->rights[$r][4] = 'dolifarmbuilding';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 
@@ -623,6 +677,42 @@ class modDolifarm extends DolibarrModules
 			'object' => 'DoliFarmPlot'
 		);
 		 */
+		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMLIVESTOCK */
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'type' => 'left',
+			'titre' => 'DoliFarmLivestocks',
+			'prefix' => img_picto('', dolifarm_get_fa_icon('livestock'), 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarmlivestock',
+			'url' => '/dolifarm/dolifarmlivestock_list.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmlivestock", "read")',
+			'target' => '',
+			'user' => 2,
+			'object' => 'DoliFarmLivestock'
+		);
+		/* END MODULEBUILDER LEFTMENU DOLIFARMLIVESTOCK */
+		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMBUILDING */
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'type' => 'left',
+			'titre' => 'DoliFarmBuildings',
+			'prefix' => img_picto('', dolifarm_get_fa_icon('building'), 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarmbuilding',
+			'url' => '/dolifarm/dolifarmbuilding_list.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmbuilding", "read")',
+			'target' => '',
+			'user' => 2,
+			'object' => 'DoliFarmBuilding'
+		);
+		/* END MODULEBUILDER LEFTMENU DOLIFARMBUILDING */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMMACHINE */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',
@@ -1003,6 +1093,12 @@ class modDolifarm extends DolibarrModules
 				));
 			}
 		}
+
+		// Sheet of a plot (essential data and QR code to the card)
+		$sql = array_merge($sql, array(
+			"DELETE FROM ".$this->db->prefix()."document_model WHERE nom = 'scheda_dolifarmplot' AND type = 'dolifarmplot' AND entity = ".((int) $conf->entity),
+			"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity, libelle) VALUES('scheda_dolifarmplot', 'dolifarmplot', ".((int) $conf->entity).", 'Scheda')",
+		));
 
 		require_once DOL_DOCUMENT_ROOT . '/user/class/usergroup.class.php';
 

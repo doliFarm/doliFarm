@@ -25,7 +25,6 @@
  */
 
 
-file_put_contents('/tmp/actions_dolifarm_loaded.txt', date('Y-m-d H:i:s') . "\n", FILE_APPEND);
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php';
 
@@ -303,34 +302,6 @@ class ActionsDolifarm extends CommonHookActions
 
 
 	/**
-	 * Overload the restrictedArea function : check permission on an object
-	 *
-	 * @param	array<string,mixed>	$parameters		Hook metadata (context, etc...)
-	 * @param   CommonObject    	$object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	string				$action			Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer <0 if KO,
-	 *												=0 if OK but we want to process standard actions too,
-	 *												>0 if OK and we want to replace standard actions.
-	 */
-	public function restrictedArea($parameters, $object, &$action, $hookmanager)
-	{
-		global $user;
-
-		if ($parameters['features'] == 'myobject') {
-			if ($user->hasRight('dolifarm', 'myobject', 'read')) {
-				$this->results['result'] = 1;
-				return 1;
-			} else {
-				$this->results['result'] = 0;
-				return 1;
-			}
-		}
-
-		return 0;
-	}
-
-	/**
 	 * Execute action completeTabsHead
 	 *
 	 * @param	array<string,mixed>	$parameters		Array of parameters
@@ -385,25 +356,5 @@ class ActionsDolifarm extends CommonHookActions
 	}
 
 
-	/**
-	 * Overload the showLinkToObjectBlock function : add or replace array of object linkable
-	 *
-	 * @param	array<string,mixed>	$parameters		Hook metadata (context, etc...)
-	 * @param	CommonObject		$object			The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	?string				$action			Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer < 0 on error, 0 on success, 1 to replace standard code
-	 */
-	public function showLinkToObjectBlock($parameters, &$object, &$action, $hookmanager)
-	{
-		$myobject = new MyObject($object->db);
-		$this->results = array('myobject@dolifarm' => array(
-			'enabled' => isModEnabled('dolifarm'),
-			'perms' => 1,
-			'label' => 'LinkToMyObject',
-			'sql' => "SELECT t.rowid, t.ref, t.ref as 'name' FROM " . $this->db->prefix() . $myobject->table_element. " as t "),);
-
-		return 1;
-	}
 	/* Add other hook methods here... */
 }

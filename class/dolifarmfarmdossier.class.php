@@ -47,7 +47,7 @@ class DoliFarmFarmDossier extends CommonObject
      * @var string      Prefix to check for any trigger code of any business class to prevent bad value for trigger code.
      * @see CommonTrigger::call_trigger()
      */
-    public $TRIGGER_PREFIX = 'DOLIFARM_MYOBJECT';   // Will be used to build trgiger keys 'DOLIFARM_MYOBJECT_MODIFY', ...
+    public $TRIGGER_PREFIX = 'DOLIFARM_FARMDOSSIER';	// Trigger codes: DOLIFARM_FARMDOSSIER_MODIFY, ...
 
     /**
      * @var string      Name of table without prefix where object is stored. This is also the key used for extrafields management (so extrafields know the link to the parent table).
@@ -132,25 +132,43 @@ class DoliFarmFarmDossier extends CommonObject
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
         "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 1, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
-        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "fk_user_validator" => array("type" => "integer:User:user/class/user.class.php", "label" => "Fkuservalidator", "picto" => "user", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "year_validity" => array("type" => "int", "label" => "Yearvalidity", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1",),
-        "date_import" => array("type" => "datetime", "label" => "Dateimport", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
-        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
-        "source_file" => array("type" => "varchar(255)", "label" => "Sourcefile", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
-        "note" => array("type" => "text", "label" => "Note", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
-        "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
-        "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php:1", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        // Replaced by the CAA operator (contact of the dossier) and by date_signature/date_validity_end: kept in DB only
+        "fk_user_validator" => array("type" => "integer:User:user/class/user.class.php", "label" => "Validator", "picto" => "user", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "0",),
+        "year_validity" => array("type" => "int", "label" => "YearValidity", "enabled" => "1", 'position' => 26, 'notnull' => 0, "visible" => "0",),
+        // Header of the AGEA validation sheet
+        "paying_agency" => array("type" => "sellist:dolifarm_c_paying_agency:label:code::active=1", "label" => "PayingAgency", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth300 widthcentpercentminusx",),
+        "act_type" => array("type" => "integer", "label" => "ActType", "enabled" => "1", 'position' => 31, 'notnull' => 0, "visible" => "-1", "arrayofkeyval" => array("1" => "ActTypeRegistration", "2" => "ActTypeUpdate"),),
+        "sheet_number" => array("type" => "varchar(32)", "label" => "ValidationSheetNumber", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth200",),
+        "protocol" => array("type" => "varchar(64)", "label" => "ValidationProtocol", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "css" => "maxwidth300", "csslist" => "tdoverflowmax150",),
+        "date_signature" => array("type" => "date", "label" => "DossierDateValidation", "enabled" => "1", 'position' => 34, 'notnull' => 1, "visible" => "1",),
+        "date_validity_end" => array("type" => "date", "label" => "DossierValidUntil", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "1", "help" => "DossierValidUntilHelp",),
+        "date_reference" => array("type" => "date", "label" => "DateReferenceConsistency", "enabled" => "1", 'position' => 36, 'notnull' => 0, "visible" => "-1",),
+        // Mandate to the CAA (the operator is a contact of the dossier, type CAAOPERATOR)
+        "fk_soc_caa" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "CAA", "picto" => "company", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150",),
+        "date_mandate" => array("type" => "date", "label" => "DateMandate", "enabled" => "1", 'position' => 41, 'notnull' => 0, "visible" => "-1",),
+        // Technical-economic orientation
+        "ote_code" => array("type" => "varchar(16)", "label" => "OTECode", "enabled" => "1", 'position' => 44, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth100", "help" => "OTECodeHelp",),
+        "economic_size" => array("type" => "price", "label" => "EconomicSize", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1", "help" => "EconomicSizeHelp",),
+        // Organic control body
+        "fk_soc_bio_body" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "BioControlBody", "picto" => "company", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150",),
+        "date_bio_membership" => array("type" => "date", "label" => "DateBioMembership", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-1",),
+        "date_import" => array("type" => "datetime", "label" => "DateImport", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "-5",),
+        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "5", "arrayofkeyval" => array("0" => "Draft", "1" => "Enabled", "9" => "Disabled"),),
+        "source_file" => array("type" => "varchar(255)", "label" => "SourceFile", "enabled" => "1", 'position' => 91, 'notnull' => 0, "visible" => "-5",),
+        "note" => array("type" => "text", "label" => "Note", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "0",),
+        "note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+        "note_private" => array("type" => "html", "label" => "NotePrivate", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         
-        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1",),
+        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-2",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-2",),
         
-        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         "fk_user_modif" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserModif", "picto" => "user", "enabled" => "1", 'position' => 70, 'notnull' => -1, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         "import_key" => array("type" => "varchar(14)", "label" => "ImportId", "enabled" => "1", 'position' => 900, 'notnull' => 0, "visible" => "-2",),
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-1",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-1",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "0",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "0",),
     );
     public $rowid;
     public $ref;
@@ -158,6 +176,19 @@ class DoliFarmFarmDossier extends CommonObject
     public $fk_soc;
     public $fk_user_validator;
     public $year_validity;
+    public $paying_agency;
+    public $act_type;
+    public $sheet_number;
+    public $protocol;
+    public $date_signature;
+    public $date_validity_end;
+    public $date_reference;
+    public $fk_soc_caa;
+    public $date_mandate;
+    public $ote_code;
+    public $economic_size;
+    public $fk_soc_bio_body;
+    public $date_bio_membership;
     public $date_import;
     public $status;
     public $source_file;
@@ -233,6 +264,18 @@ class DoliFarmFarmDossier extends CommonObject
             $this->fields['entity']['enabled'] = 0;
         }
 
+        // Farm, CAA and organic control body: list only third parties of the matching type.
+        // The filter needs the id of the type, which differs between installations.
+        dol_include_once('/dolifarm/lib/dolifarm.lib.php');
+        foreach (array('fk_soc' => 'TE_FARM', 'fk_soc_caa' => 'TE_CAA', 'fk_soc_bio_body' => 'TE_BIOCTRL') as $key => $typentcode) {
+            $typentid = dolifarmGetTypentId($this->db, $typentcode);
+            if ($typentid > 0 && isset($this->fields[$key])) {
+                // Type is 'integer:Class:path[:createbutton[:filter]]': the filter is the 5th part
+                $nbparts = count(explode(':', $this->fields[$key]['type']));
+                $this->fields[$key]['type'] .= str_repeat(':', max(1, 5 - $nbparts)).'(t.fk_typent:=:'.$typentid.')';
+            }
+        }
+
         // Example to show how to set values of fields definition dynamically
         /*if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read')) {
             $this->fields['myfield']['visible'] = 1;
@@ -271,6 +314,13 @@ class DoliFarmFarmDossier extends CommonObject
         if (! isset($this->entity)) {
             global $conf;
             $this->entity = $conf->entity;
+        }
+        // Status is not in the creation form: a new dossier starts as draft
+        if ($this->status === null || $this->status === '') {
+            $this->status = self::STATUS_DRAFT;
+        }
+        if ($this->checkValidityDates() < 0) {
+            return -1;
         }
 
         $result = $this->createCommon($user, $notrigger);
@@ -508,7 +558,33 @@ class DoliFarmFarmDossier extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        if ($this->checkValidityDates() < 0) {
+            return -1;
+        }
         return $this->updateCommon($user, $notrigger);
+    }
+
+    /**
+     * Set the default end of validity (one year after the signature of the validation sheet)
+     * and check that it is not before the signature date.
+     *
+     * @return int     Return integer <0 if KO, >0 if OK
+     */
+    public function checkValidityDates()
+    {
+        global $langs;
+
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+
+        if (empty($this->date_validity_end) && !empty($this->date_signature)) {
+            $this->date_validity_end = dol_time_plus_duree((int) $this->date_signature, 1, 'y');
+        }
+        if (!empty($this->date_validity_end) && !empty($this->date_signature) && $this->date_validity_end < $this->date_signature) {
+            $langs->load('dolifarm@dolifarm');
+            $this->error = $langs->trans('ErrorValidUntilBeforeSignature');
+            return -1;
+        }
+        return 1;
     }
 
     /**
@@ -602,7 +678,7 @@ class DoliFarmFarmDossier extends CommonObject
 
             if (!$error && !$notrigger) {
                 // Call trigger
-                $result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+                $result = $this->call_trigger($this->TRIGGER_PREFIX.'_VALIDATE', $user);
                 if ($result < 0) {
                     $error++;
                 }
@@ -692,7 +768,7 @@ class DoliFarmFarmDossier extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'DOLIFARM_MYOBJECT_UNVALIDATE');
+        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, $this->TRIGGER_PREFIX.'_UNVALIDATE');
     }
 
     /**
@@ -716,7 +792,7 @@ class DoliFarmFarmDossier extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'DOLIFARM_MYOBJECT_CANCEL');
+        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, $this->TRIGGER_PREFIX.'_CANCEL');
     }
 
     /**
@@ -740,7 +816,7 @@ class DoliFarmFarmDossier extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'DOLIFARM_MYOBJECT_REOPEN');
+        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, $this->TRIGGER_PREFIX.'_REOPEN');
     }
 
     /**
@@ -1076,15 +1152,14 @@ class DoliFarmFarmDossier extends CommonObject
         global $langs, $conf;
         $langs->load("dolifarm@dolifarm");
 
-        if (!getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
-            $conf->global->DOLIFARM_MYOBJECT_ADDON = 'mod_dolifarmfarmdossier_standard';
-        }
+        // Own constant of the object (the ModuleBuilder one, DOLIFARM_MYOBJECT_ADDON, was shared by all objects)
+        $addon = getDolGlobalString('DOLIFARM_DOLIFARMFARMDOSSIER_ADDON', 'mod_dolifarmfarmdossier_standard');
 
-        if (getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
+        if ($addon) {
             $mybool = false;
 
-            $file = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON').".php";
-            $classname = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON');
+            $file = $addon.".php";
+            $classname = $addon;
 
             // Include file with class
             $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
