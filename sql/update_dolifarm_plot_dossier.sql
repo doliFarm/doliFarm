@@ -13,5 +13,9 @@ ALTER TABLE llx_dolifarm_plot ADD COLUMN size_conducted double(24,8);
 ALTER TABLE llx_dolifarm_plot ADD COLUMN zone_zvn smallint;
 ALTER TABLE llx_dolifarm_plot ADD COLUMN zone_natura2000 varchar(64);
 
+-- Indexes on these columns: here and not in the .key.sql, which runs before this script
+ALTER TABLE llx_dolifarm_plot ADD INDEX idx_dolifarm_plot_conduction_end (date_conduction_end);
+ALTER TABLE llx_dolifarm_plot ADD INDEX idx_dolifarm_plot_cadastral_reference (cadastral_reference);
+
 -- The owner is optional in the form (it may not be a third party of the database)
 ALTER TABLE llx_dolifarm_plot MODIFY fk_owner integer NULL;

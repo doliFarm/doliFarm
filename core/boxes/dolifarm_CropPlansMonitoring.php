@@ -174,7 +174,13 @@ class dolifarm_CropPlansMonitoring extends ModeleBoxes
                 $i++;
             }
         } else {
-            dol_print_error($this->db);
+            // The error is shown in the widget: the rest of the page stays usable
+            $this->info_box_contents[0][0] = array(
+                'td' => 'class="nohover left"',
+                'maxlength' => 500,
+                'text' => '<span class="error">'.$langs->trans("Error").': '.dol_escape_htmltag($this->db->lasterror()).'</span>',
+                'asis' => 1,
+            );
         }
     }
 
