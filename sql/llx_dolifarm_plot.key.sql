@@ -3,7 +3,9 @@
 ALTER TABLE llx_dolifarm_plot DROP INDEX uk_dolifarm_plot_ref;
 ALTER TABLE llx_dolifarm_plot ADD UNIQUE INDEX uk_dolifarm_plot_ref_entity (ref, entity);
 ALTER TABLE llx_dolifarm_plot ADD INDEX idx_dolifarm_plot_dossier (fk_dossier);
-ALTER TABLE llx_dolifarm_plot ADD  UNIQUE INDEX uk_dolitrace_plot_uuid (uuid);
+-- Plots saved without uuid (demo data, old imports) get one, otherwise the unique index cannot be created
+UPDATE llx_dolifarm_plot SET uuid = MD5(CONCAT(rowid, '-', RAND(), '-', NOW())) WHERE uuid IS NULL OR uuid = '';
+ALTER TABLE llx_dolifarm_plot ADD UNIQUE INDEX uk_dolitrace_plot_uuid (uuid);
 -- Foreign Keys
 ALTER TABLE llx_dolifarm_plot ADD CONSTRAINT fk_dolifarm_plot_soc FOREIGN KEY (fk_soc) REFERENCES llx_societe(rowid);
 ALTER TABLE llx_dolifarm_plot ADD CONSTRAINT fk_dolifarm_plot_dossier FOREIGN KEY (fk_dossier) REFERENCES llx_dolifarm_farmdossier(rowid) ON DELETE RESTRICT;
