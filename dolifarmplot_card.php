@@ -585,48 +585,18 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         $somethingshown = $formactions->showactions($object, $object->element.'@'.$object->module, (is_object($object->thirdparty) ? $object->thirdparty->id : 0), 1, '', $MAXEVENT, '', $morehtmlcenter);
     }
 
-    // GENERAZIONE QR del Plot. Verifichiamo che l'UUID esista (dovrebbe sempre esserci se salvato)
-    if (!empty($object->uuid)) {
-        // 1. Contenuto del QR
-        $qr_content = $object->uuid;
-        
-        require_once DOL_DOCUMENT_ROOT.'/includes/tecnickcom/tcpdf/tcpdf_barcodes_2d.php';
-        // 3. GENERAZIONE DEL CODICE
-        $qr_image_data = '';
-        if (class_exists('TCPDF2DBarcode')) {
-            // Generazione Immagine in Base64
-            $barcodeobj = new TCPDF2DBarcode($qr_content, 'QRCODE,H');
-            $pngData = $barcodeobj->getBarcodePngData(3, 3, array(0,0,0)); // W=4, H=4
-            $qr_image_data = 'data:image/png;base64,' . base64_encode($pngData);
-        }
+    // QR code with the link to this card (the same as on the PDF sheet); the UUID is already shown as a field
+    require_once DOL_DOCUMENT_ROOT.'/includes/tecnickcom/tcpdf/tcpdf_barcodes_2d.php';
+    $qr_url = dol_buildpath('/dolifarm/dolifarmplot_card.php', 2).'?id='.((int) $object->id);
+    $barcodeobj = new TCPDF2DBarcode($qr_url, 'QRCODE,M');
+    $qr_image_data = 'data:image/png;base64,'.base64_encode($barcodeobj->getBarcodePngData(3, 3, array(0, 0, 0)));
 
-        // 4. DISPLAY
-        print '<div class="box-flex-container" style="text-align:center; padding:20px; box-sizing: border-box;">';
-        
-           // Visualizzazione UUID
-           print '<div style="margin: 10px 0; font-family:monospace; color:#666;">';
-           print '<span class="fa fa-fingerprint"></span> <b>'.$langs->trans("DigitalPassport").':</b><br>';
-           print $object->uuid;
-           // Immagine QR Code
-           print '<div style="margin: 10px auto;">';
-           if ($qr_image_data) {
-               print '<img src="' . $qr_image_data . '" alt="QR Code" style="border: 1px solid #eee; padding: 5px; background: white;">';
-           } else {
-               // Messaggio di debug utile se fallisce ancora
-               print '<div class="error" style="font-size:0.8em; color:red;">';
-               print 'Errore: Libreria Barcode non trovata.<br>Percorsi controllati:<br>';
-               foreach($tcpdf_paths as $p) print basename(dirname($p)).'/'.basename($p)."<br>";
-               print '</div>';
-           }
-           print '</div>';
-
-        print '</div>'; // Chiusura box container
-
-    } else {
-        print '<div class="opacitymedium" style="text-align:center; padding:20px;">';
-        print $langs->trans("SaveToGeneratePassport");
-        print '</div>';
-    }
+    print '<div class="box-flex-container" style="text-align:center; padding:20px; box-sizing: border-box;">';
+    print '<div>';
+    print '<img src="'.$qr_image_data.'" alt="QR Code" title="'.dol_escape_htmltag($qr_url).'" style="border: 1px solid #eee; padding: 5px; background: white;">';
+    print '<div class="opacitymedium small">'.$langs->trans("PlotSheetScanToOpen").'</div>';
+    print '</div>';
+    print '</div>';
 
     print '<div class="clearboth"></div>';
 
