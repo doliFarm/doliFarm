@@ -1012,6 +1012,12 @@ class modDolifarm extends DolibarrModules
 			}
 		}
 
+		// Sheet of a plot (essential data and QR code to the card)
+		$sql = array_merge($sql, array(
+			"DELETE FROM ".$this->db->prefix()."document_model WHERE nom = 'scheda_dolifarmplot' AND type = 'dolifarmplot' AND entity = ".((int) $conf->entity),
+			"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity, libelle) VALUES('scheda_dolifarmplot', 'dolifarmplot', ".((int) $conf->entity).", 'Scheda')",
+		));
+
 		require_once DOL_DOCUMENT_ROOT . '/user/class/usergroup.class.php';
 
         // Definizione dei gruppi necessari

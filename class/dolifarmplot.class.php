@@ -130,13 +130,13 @@ class DoliFarmPlot extends CommonObject
      */
     public $fields = array(
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "4", "noteditable" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
         "uuid" => array("type" => "varchar(36)", "label" => "Uuid", "enabled" => "1", 'position' => 18, 'notnull' => 0, "visible" => "5",),
 
         "label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
         
-        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 25, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 21, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         // Linked to Dictionary: llx_dolifarm_c_ownership
         // Syntax: sellist:TableName:LabelField:KeyField::Filter
@@ -367,8 +367,12 @@ class DoliFarmPlot extends CommonObject
             $this->status = self::STATUS_DRAFT;
         }
 
-        if ($this->checkConductionDates() < 0) {
+        if ($this->checkPlotData() < 0) {
             return -1;
+        }
+        // Plots have no validation step: the final ref is given at creation
+        if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
+            $this->ref = $this->getNextNumRef();
         }
         $result = $this->createCommon($user, $notrigger);
 
@@ -605,25 +609,42 @@ class DoliFarmPlot extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
-        if ($this->checkConductionDates() < 0) {
+        if ($this->checkPlotData() < 0) {
             return -1;
+        }
+        // Plots created before the ref was given at creation
+        if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
+            $this->ref = $this->getNextNumRef();
         }
         return $this->updateCommon($user, $notrigger);
     }
 
     /**
-     * Check that the end of conduction is not before its start
+     * Check the consistency of the data before saving: periods (end not before start)
+     * and dossier belonging to the third party of the plot
      *
      * @return int     Return integer <0 if KO, >0 if OK
      */
-    public function checkConductionDates()
+    public function checkPlotData()
     {
         global $langs;
 
+        $langs->load('dolifarm@dolifarm');
         if (!empty($this->date_conduction_start) && !empty($this->date_conduction_end) && $this->date_conduction_end < $this->date_conduction_start) {
-            $langs->load('dolifarm@dolifarm');
             $this->error = $langs->trans('ErrorConductionEndBeforeStart');
             return -1;
+        }
+        if (!empty($this->date_conversion_start) && !empty($this->date_conversion_end) && $this->date_conversion_end < $this->date_conversion_start) {
+            $this->error = $langs->trans('ErrorConversionEndBeforeStart');
+            return -1;
+        }
+        if (!empty($this->fk_dossier) && !empty($this->fk_soc)) {
+            $sql = "SELECT fk_soc FROM ".$this->db->prefix()."dolifarm_farmdossier WHERE rowid = ".((int) $this->fk_dossier);
+            $resql = $this->db->query($sql);
+            if ($resql && ($obj = $this->db->fetch_object($resql)) && (int) $obj->fk_soc != (int) $this->fk_soc) {
+                $this->error = $langs->trans('ErrorDossierOfAnotherThirdParty');
+                return -1;
+            }
         }
         return 1;
     }
@@ -1219,6 +1240,33 @@ class DoliFarmPlot extends CommonObject
     }
 
     /**
+     * Create a document onto disk according to template module.
+     *
+     * @param   string      $modele         Force template to use ('' to not force)
+     * @param   Translate   $outputlangs    Object lang to use for translation
+     * @param   int<0,1>    $hidedetails    Hide details of lines
+     * @param   int<0,1>    $hidedesc       Hide description
+     * @param   int<0,1>    $hideref        Hide ref
+     * @param   ?array<string,mixed>  $moreparams     Array to provide more information
+     * @return  int<0,1>                    0 if KO, 1 if OK
+     */
+    public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+    {
+        $outputlangs->load("dolifarm@dolifarm");
+
+        if (!dol_strlen($modele)) {
+            $modele = getDolGlobalString('DOLIFARM_DOLIFARMPLOT_ADDON_PDF', 'scheda_dolifarmplot');
+            if (!empty($this->model_pdf)) {
+                $modele = $this->model_pdf;
+            }
+        }
+
+        $modelpath = "core/modules/dolifarm/doc/";
+
+        return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
+    }
+
+    /**
      * Returns the reference to the following non used object depending on the active numbering module.
      *
      * @return string              Object free reference
@@ -1228,15 +1276,14 @@ class DoliFarmPlot extends CommonObject
         global $langs, $conf;
         $langs->load("dolifarm@dolifarm");
 
-        if (!getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
-            $conf->global->DOLIFARM_MYOBJECT_ADDON = 'mod_dolifarmplot_standard';
-        }
+        // Own constant of the plots (the ModuleBuilder one, DOLIFARM_MYOBJECT_ADDON, was shared by all objects)
+        $addon = getDolGlobalString('DOLIFARM_DOLIFARMPLOT_ADDON', 'mod_dolifarmplot_standard');
 
-        if (getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
+        if ($addon) {
             $mybool = false;
 
-            $file = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON').".php";
-            $classname = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON');
+            $file = $addon.".php";
+            $classname = $addon;
 
             // Include file with class
             $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);

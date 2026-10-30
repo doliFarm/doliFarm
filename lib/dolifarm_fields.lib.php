@@ -15,7 +15,8 @@
  * Same behaviour as core/tpl/commonfields_{add,edit,view}.tpl.php (visibility, values read back
  * from POST, showInputField/showOutputField), but only for the fields given, in the given order.
  * A layout item is either a field key or array('label' => 'LangKey', 'fields' => array(key1, key2))
- * to print several fields on one row (for example the start and end date of a period).
+ * to print several fields on one row (for example the start and end date of a period), with an optional
+ * 'prefixes' => array('FromDate', 'ToDate') to print a short label before each field.
  */
 
 /**
@@ -105,7 +106,8 @@ function dolifarmPrintFieldsTable($object, $items, $mode, $title = '', $options 
 	}
 	foreach ($items as $item) {
 		if (is_array($item)) {
-			dolifarmPrintFieldRow($object, $item['fields'], $mode, $item['label'], $options);
+			$prefixes = empty($item['prefixes']) ? array() : array_combine($item['fields'], $item['prefixes']);
+			dolifarmPrintFieldRow($object, $item['fields'], $mode, $item['label'], $options, $prefixes);
 		} else {
 			dolifarmPrintFieldRow($object, array($item), $mode, '', $options);
 		}
@@ -124,9 +126,10 @@ function dolifarmPrintFieldsTable($object, $items, $mode, $title = '', $options 
  * @param	string					$mode		'create', 'edit' or 'view'
  * @param	string					$label		Label of the row (lang key), '' to use the label of the field
  * @param	array<string,mixed>		$options	See dolifarmPrintFieldsTable()
+ * @param	array<string,string>	$prefixes	Short label (lang key) printed before a field, by field key
  * @return	void
  */
-function dolifarmPrintFieldRow($object, $keys, $mode, $label = '', $options = array())
+function dolifarmPrintFieldRow($object, $keys, $mode, $label = '', $options = array(), $prefixes = array())
 {
 	global $langs, $form;
 
@@ -193,6 +196,9 @@ function dolifarmPrintFieldRow($object, $keys, $mode, $label = '', $options = ar
 					$out = '<div class="longmessagecut">'.$out.'</div>';
 				}
 			}
+			if ($out !== '' && !empty($prefixes[$key])) {
+				$out = '<span class="opacitymedium">'.$langs->trans($prefixes[$key]).'</span> '.$out;
+			}
 		} else {
 			$value = dolifarmFieldFormValue($object, $key, $val, $mode);
 			if (!empty($val['picto'])) {
@@ -202,6 +208,9 @@ function dolifarmPrintFieldRow($object, $keys, $mode, $label = '', $options = ar
 				$out .= $object->showOutputField($val, $key, $value, '', '', '', 0);
 			} else {
 				$out .= $object->showInputField($val, $key, $value, '', '', '', 0);
+			}
+			if (!empty($prefixes[$key])) {
+				$out = '<span class="opacitymedium paddingright">'.$langs->trans($prefixes[$key]).'</span>'.$out;
 			}
 			if (count($fields) > 1) {
 				// Keep each field and its own label together when the row wraps
@@ -213,7 +222,7 @@ function dolifarmPrintFieldRow($object, $keys, $mode, $label = '', $options = ar
 		}
 	}
 	// In forms the fields of a row may wrap, so no separator that could stay alone at the end of a line
-	print implode(($mode == 'view' ? ' <span class="opacitymedium">&ndash;</span> ' : ' '), $parts);
+	print implode((($mode == 'view' && empty($prefixes)) ? ' <span class="opacitymedium">&ndash;</span> ' : ' '), $parts);
 
 	print '</td>';
 	print '</tr>'."\n";

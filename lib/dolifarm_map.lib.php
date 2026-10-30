@@ -58,7 +58,8 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
 
     $lat_safe = dol_escape_js($lat);
     $lon_safe = dol_escape_js($lon);
-    $geojson_safe = dol_escape_js($geojson_content);
+    // JS string literal (dol_escape_js would turn the double quotes of the JSON into single quotes)
+    $geojson_js = json_encode((string) $geojson_content, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
     // Caricamento Assets
     print '';
@@ -130,7 +131,7 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
                 var drawnItems = new L.FeatureGroup();
                 map.addLayer(drawnItems);
                 
-                var savedGeoJson = "{$geojson_safe}";
+                var savedGeoJson = {$geojson_js};
                 if (savedGeoJson && savedGeoJson !== "") {
                     try {
                         var parsed = JSON.parse(savedGeoJson);
