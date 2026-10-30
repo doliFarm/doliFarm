@@ -16,6 +16,7 @@ class DoliFarmImporter
     public $error;
     public $errors = array();
     public $output_log = array();
+    public $picto;
 
     public function __construct($db, $user)
     {
