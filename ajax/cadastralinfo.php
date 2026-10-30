@@ -66,6 +66,8 @@ if (!isModEnabled('dolifarm') || !$user->hasRight('dolifarm', 'dolifarmplot', 'r
 	http_response_code(403);
 	dolifarm_cadastralinfo_answer(array('success' => false, 'error' => 'NotEnoughPermissions'));
 }
+// Read only: release the session lock, so the requests of the same map run in parallel
+session_write_close();
 
 $lat = (float) price2num(GETPOST('lat', 'alpha'));
 $lon = (float) price2num(GETPOST('lon', 'alpha'));

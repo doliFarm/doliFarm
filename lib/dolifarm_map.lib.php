@@ -3,9 +3,9 @@
  * Library for DoliFarm Maps & GeoJSON handling
  * File: custom/dolifarm/lib/dolifarm_map.lib.php
  * * STRATEGIA ROBUSTA:
- * - Proxy: Punta alla card stessa (?action=wms_proxy)
+ * - Catasto: tessere da ajax/cadastralwms.php (WMS dell'Agenzia delle Entrate, parametri controllati)
  * - WMS: Versione 1.1.1 (Evita inversione assi X/Y)
- * - CRS: EPSG:3857 (Standard Google/Leaflet)
+ * - CRS del catasto: EPSG:4258 (il WMS non accetta EPSG:3857; allo zoom del catasto la differenza nella tessera è trascurabile)
  */
 
 /**
@@ -34,9 +34,8 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
     $is_editable_js = ($mode == 'edit') ? 'true' : 'false';
     $map_id = "dolifarm_map_" . $mode;
     
-    // --- STRATEGIA: PROXY INTEGRATO ---
-    // Puntiamo alla card stessa. Aggiungiamo un token fittizio per evitare cache
-    $proxy_url = dol_buildpath('/dolifarm/dolifarmplot_card.php', 1) . '?action=wms_proxy';
+    // Cadastral tiles through Dolibarr (the browser cannot use the WMS directly)
+    $proxy_url = dol_buildpath('/dolifarm/ajax/cadastralwms.php', 1);
     
     // Lookup of the cadastral parcel at a point (public WMS of the Agenzia delle Entrate)
     global $langs;
@@ -97,7 +96,7 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
                     format: "image/png",
                     transparent: true,
                     version: "1.1.1",        // <--- 1.1.1 è la chiave per la stabilità
-                    crs: L.CRS.EPSG3857,     // Web Mercator
+                    crs: L.Util.extend({}, L.CRS.EPSG4326, { code: "EPSG:4258" }), // The WMS has no EPSG:3857: tiles asked in lon/lat (ETRS89)
                     attribution: "Agenzia Entrate",
                     minZoom: 15,             // Sotto questo zoom l'Agenzia manda immagine bianca
                     maxZoom: 21,

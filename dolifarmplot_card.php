@@ -23,67 +23,6 @@
  * \brief      Page to create/edit/view dolifarmplot
  */
 
-// -----------------------------------------------------------------------------
-// [INTEGRAZIONE ROBUSTA] PROXY WMS INTERNO
-// Intercetta la chiamata alla mappa PRIMA di caricare tutto Dolibarr
-// -----------------------------------------------------------------------------
-if (isset($_GET['action']) && $_GET['action'] == 'wms_proxy') {
-    // 1. Caricamento minimale (solo per user session)
-    $res=0;
-    if (! $res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) $res = @include str_replace("..", "", $_SERVER["CONTEXT_DOCUMENT_ROOT"])."/main.inc.php";
-    if (! $res && file_exists("../main.inc.php")) $res = @include "../main.inc.php";
-    if (! $res && file_exists("../../main.inc.php")) $res = @include "../../main.inc.php";
-    if (! $res && file_exists("../../../main.inc.php")) $res = @include "../../../main.inc.php";
-    
-    // 2. Sicurezza: Stop se non loggato
-    if (!is_object($user) || empty($user->id)) { header("HTTP/1.1 403 Forbidden"); exit; }
-
-    // 3. Costruzione URL Agenzia Entrate
-    $wms_url = "https://wms.cartografia.agenziaentrate.gov.it/inspire/wms/ows01.php";
-    
-    // 4. Pulizia Parametri (Rimuove variabili Dolibarr)
-    $params = $_GET;
-    unset($params['action'], $params['token'], $params['id']);
-    
-    // 5. FIX CRITICO: Ricostruisce la query string decodificando i caratteri speciali
-    // http_build_query codifica le virgole in %2C e gli slash in %2F. 
-    // Il server WMS non lo accetta. Dobbiamo inviare i caratteri puliti.
-    $raw_query = http_build_query($params);
-    $clean_query = urldecode($raw_query); // Trasforma %2C in , e %2F in /
-    
-    $target = $wms_url . "?" . $clean_query;
-
-    // 6. Proxy cURL
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $target);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    // User-Agent: Fingiamo di essere Chrome
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    
-    $data = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $ctype = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-    curl_close($ch);
-
-    // 7. Output Immagine
-    if (ob_get_length()) ob_clean(); // Pulisce buffer
-    
-    if ($http_code == 200 && $data) {
-        if (empty($ctype) || strpos($ctype, 'html') !== false) $ctype = 'image/png';
-        header("Content-Type: " . $ctype);
-        echo $data;
-    } else {
-        // Fallback pixel vuoto
-        header("Content-Type: image/png");
-        echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
-    }
-    exit; // STOP! Non caricare il resto della pagina
-}
-// -----------------------------------------------------------------------------
-
-
 // General defined Options
 //if (! defined('CSRFCHECK_WITH_TOKEN'))     define('CSRFCHECK_WITH_TOKEN', '1');                   // Force use of CSRF protection with tokens even for GET
 
