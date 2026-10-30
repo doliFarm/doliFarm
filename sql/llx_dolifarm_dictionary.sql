@@ -8,7 +8,6 @@ SET FOREIGN_KEY_CHECKS=0;
 -- 1. DIZIONARIO: TIPO DI POSSESSO TERRENO (Ownership)
 -- Riferito da: llx_dolifarm_plot.fk_ownership
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_ownership;
 CREATE TABLE IF NOT EXISTS llx_dolifarm_c_ownership (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
@@ -32,8 +31,7 @@ INSERT IGNORE INTO llx_dolifarm_c_ownership (code, label, active, position) VALU
 -- 2. DIZIONARIO: STATO BIOLOGICO (Bio Status)
 -- Riferito da: llx_dolifarm_plot.fk_status_bio
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_biostatus;
-CREATE TABLE llx_dolifarm_c_biostatus (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_biostatus (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -58,8 +56,7 @@ INSERT IGNORE INTO llx_dolifarm_c_biostatus (code, label, description, active, p
 -- 3. DIZIONARIO: TIPO MACCHINA (Machine Type)
 -- Riferito da: llx_dolifarm_machine.fk_type
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_machinetype;
-CREATE TABLE llx_dolifarm_c_machinetype (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_machinetype (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -89,8 +86,7 @@ INSERT IGNORE INTO llx_dolifarm_c_machinetype (code, label, active, position) VA
 -- 4. DIZIONARIO AGGIUNTIVO: TIPO CARBURANTE (Opzionale ma utile)
 -- Riferito da: llx_dolifarm_machine.fuel_type
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS llx_dolifarm_c_fueltype;
-CREATE TABLE llx_dolifarm_c_fueltype (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_fueltype (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,
@@ -116,9 +112,8 @@ INSERT IGNORE INTO llx_dolifarm_c_fueltype (code, label, active) VALUES
 -- ==============================================================================
 
 -- Eliminazione tabella se esiste per rigenerazione pulita
-DROP TABLE IF EXISTS llx_dolifarm_c_operation_type;
 
-CREATE TABLE llx_dolifarm_c_operation_type (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_operation_type (
   rowid       integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
   code        varchar(32) NOT NULL,
   label       varchar(128) NOT NULL,

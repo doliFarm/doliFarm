@@ -25,7 +25,6 @@
  */
 
 
-file_put_contents('/tmp/actions_dolifarm_loaded.txt', date('Y-m-d H:i:s') . "\n", FILE_APPEND);
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php';
 

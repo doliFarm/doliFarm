@@ -56,7 +56,7 @@ if ($id > 0) {
     $object->fetch_thirdparty();
 }
 if (!isModEnabled('dolifarm')) accessforbidden('Module not enabled');
-$permissiontoread = $user->rights->dolifarm->dolifarmfarmdossier->read;
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
 if (!$permissiontoread) accessforbidden();
 
 
@@ -95,7 +95,7 @@ if ($id > 0) {
         $num = $db->num_rows($resql);
 
         // Pulsante "Nuovo Terreno" precompilato
-        if ($user->rights->dolifarm->dolifarmplot->write) {
+        if ($user->hasRight('dolifarm', 'dolifarmplot', 'write')) {
             print '<div class="tabsAction">';
             // Passiamo fk_dossier e fk_soc nell'URL per precompilare il form di creazione
             print '<a class="butAction" href="'.dol_buildpath('/dolifarm/dolifarmplot_card.php', 1).'?action=create&fk_dossier='.$object->id.'&fk_soc='.$object->fk_soc.'">';

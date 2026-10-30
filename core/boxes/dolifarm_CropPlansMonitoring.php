@@ -20,7 +20,7 @@ include_once DOL_DOCUMENT_ROOT."/core/boxes/modules_boxes.php";
 /**
  * Class to manage the box
  */
-class dolifarmWidgetCropPlansMonitoring extends ModeleBoxes
+class dolifarm_CropPlansMonitoring extends ModeleBoxes
 {
     /**
      * @var string Alphanumeric ID. Populated by the constructor.
@@ -45,7 +45,7 @@ class dolifarmWidgetCropPlansMonitoring extends ModeleBoxes
     /**
      * @var string[] Module dependencies
      */
-    public $depends = array('dolifarm');
+    public $depends = array('dolifarm', 'dolitrace');
 
     /**
      * @var string  Widget type ('graph' means the widget is a graph widget)
@@ -114,7 +114,7 @@ class dolifarmWidgetCropPlansMonitoring extends ModeleBoxes
             'limit' => 0,
             'graph' => 0,
             // Link alla lista completa (cliccando sull'icona a destra)
-            'sublink' => DOL_URL_ROOT . '/dolitrace/dolitracecropplan_list.php', 
+            'sublink' => dol_buildpath('/dolitrace/dolitracecropplan_list.php', 1), 
             // Testo tooltip che appare al passaggio del mouse sull'icona
             'subtext' => $langs->trans("ShowList"), 
             // Icona da mostrare a destra (formato: nome_icona@nome_modulo)

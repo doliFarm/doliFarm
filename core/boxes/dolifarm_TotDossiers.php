@@ -20,7 +20,7 @@ include_once DOL_DOCUMENT_ROOT."/core/boxes/modules_boxes.php";
 /**
  * Class to manage the box
  */
-class dolifarmWidgetTotDossiers extends ModeleBoxes
+class dolifarm_TotDossiers extends ModeleBoxes
 {
     /**
      * @var string Alphanumeric ID. Populated by the constructor.

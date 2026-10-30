@@ -51,20 +51,22 @@ function dolifarmfarmdossierPrepareHead($object)
     // ----------------------------------------------------------------------
     // TAB 2: Piani di produzione (Cropplans)
     // ----------------------------------------------------------------------
-    // Calcolo badge: Conta i cropplan collegati a questo dossier
-    $nbCropplans = 0;
-    $sql = "SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX."dolitrace_cropplan WHERE fk_dossier = ".((int)$object->id);
-    $resql = $db->query($sql);
-    if ($resql && $obj = $db->fetch_object($resql)) {
-        $nbCropplans = $obj->nb;
+    if (isModEnabled('dolitrace')) {
+        // Calcolo badge: Conta i cropplan collegati a questo dossier
+        $nbCropplans = 0;
+        $sql = "SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX."dolitrace_cropplan WHERE fk_dossier = ".((int)$object->id);
+        $resql = $db->query($sql);
+        if ($resql && $obj = $db->fetch_object($resql)) {
+            $nbCropplans = $obj->nb;
+        }
+        $head[$h][0] = dol_buildpath('/dolifarm/farmdossier_cropplans.php', 1).'?id='.$object->id;
+        $head[$h][1] = $langs->trans("CropPlans");
+        if ($nbCropplans > 0) {
+            $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbCropplans.'</span>';
+        }
+        $head[$h][2] = 'cropplans';
+        $h++;
     }
-    $head[$h][0] = dol_buildpath('/dolifarm/farmdossier_cropplans.php', 1).'?id='.$object->id;
-    $head[$h][1] = $langs->trans("CropPlans");
-    if ($nbCropplans > 0) {
-        $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbCropplans.'</span>';
-    }
-    $head[$h][2] = 'cropplans';
-    $h++;
     
     // ----------------------------------------------------------------------
     // TAB 2: TERRENI (Plots)

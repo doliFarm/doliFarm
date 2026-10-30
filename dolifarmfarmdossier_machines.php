@@ -55,7 +55,7 @@ if ($id > 0) {
     $object->fetch_thirdparty();
 }
 if (!isModEnabled('dolifarm')) accessforbidden('Module not enabled');
-$permissiontoread = $user->rights->dolifarm->dolifarmfarmdossier->read;
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
 if (!$permissiontoread) accessforbidden();
 
 
@@ -97,7 +97,7 @@ if ($id > 0) {
         $num = $db->num_rows($resql);
 
         // Pulsante "Nuova Macchina"
-        if ($user->rights->dolifarm->dolifarmmachine->write) {
+        if ($user->hasRight('dolifarm', 'dolifarmmachine', 'write')) {
             print '<div class="tabsAction">';
             // Passiamo fk_dossier e fk_soc nell'URL per precompilare il form
             // Nota: il file card si chiama dolifarmmachine_card.php (singolare) nel tuo sistema file

@@ -44,7 +44,7 @@ class dolifarmWidgetTopPlannedProducts extends ModeleBoxes
             'text' => $title_text,
             'limit' => 0,
             'graph' => 0,
-            'sublink' => DOL_URL_ROOT . '/dolitrace/dolitracecropplan_list.php',
+            'sublink' => dol_buildpath('/dolitrace/dolitracecropplan_list.php', 1),
             'subtext' => $langs->trans("ShowList"),
             'subpicto' => 'object_product', 
         );
