@@ -163,6 +163,17 @@ class DoliFarmImporter
         $dossier->year_validity = $year;
         $dossier->status = 0; // DRAFT
         $dossier->date_import = dol_now();
+        // Signature date of the validation sheet (required): optional node DataValidazione (YYYY-MM-DD)
+        $dateSignature = trim((string) $node->DataValidazione);
+        if ($dateSignature !== '' && strtotime($dateSignature) !== false) {
+            $dossier->date_signature = dol_stringtotime($dateSignature);
+        } else {
+            $dossier->date_signature = $dossier->date_import;
+            $this->log("Data di validazione assente nel file: usata la data di importazione");
+        }
+        if ($year > 0) {
+            $dossier->date_validity_end = dol_mktime(12, 0, 0, 12, 31, $year);
+        }
         
         $id = $dossier->create($this->user);
         if ($id < 0) {

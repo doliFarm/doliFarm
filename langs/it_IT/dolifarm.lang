@@ -67,6 +67,29 @@ SourceFile = File Sorgente
 Validator = Tecnico Validatore
 ValidationStatus = Stato Validazione
 
+# Validation sheet header
+PayingAgency = Organismo pagatore
+ActType = Tipo di atto
+ActTypeRegistration = Iscrizione
+ActTypeUpdate = Aggiornamento
+ValidationSheetNumber = Numero scheda di validazione
+ValidationProtocol = Protocollo validazione
+DossierDateValidation = Data di validazione
+DossierValidUntil = Valido fino al
+DossierValidUntilHelp = Se vuoto, viene impostato a un anno dalla data di validazione
+DateReferenceConsistency = Consistenza aggiornata al
+CAA = CAA
+DateMandate = Data sottoscrizione mandato
+OTECode = Codice OTE
+OTECodeHelp = Orientamento tecnico-economico riportato nella scheda di validazione (es. 166)
+EconomicSize = Dimensione economica
+EconomicSizeHelp = Produzione standard totale riportata nella scheda di validazione
+BioControlBody = Organismo di controllo bio
+DateBioMembership = Data adesione organismo di controllo
+ErrorValidUntilBeforeSignature = La data di fine validità non può essere precedente alla data di validazione
+DictionaryPayingAgency = Organismi pagatori
+TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = Operatore CAA
+
 # Tabs Custom
 Terreni = Appezzamenti
 Macchine = Macchine

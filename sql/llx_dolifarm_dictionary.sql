@@ -163,3 +163,26 @@ INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category
 ('MOWING',          'Sfalerciatura / Trinciatura', 1, 'MAINTENANCE');
 
 SET FOREIGN_KEY_CHECKS=1;
+
+
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_paying_agency (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(32) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    active      TINYINT DEFAULT 1,
+    module      VARCHAR(32) DEFAULT NULL,
+    position    INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_paying_agency_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_paying_agency (code, label, active, position) VALUES
+('AGEA', 'AGEA - Agenzia per le Erogazioni in Agricoltura', 1, 10),
+('AGREA', 'AGREA - Emilia-Romagna', 1, 20),
+('APPAG', 'APPAG - Provincia autonoma di Trento', 1, 30),
+('ARCEA', 'ARCEA - Calabria', 1, 40),
+('ARGEA', 'ARGEA - Sardegna', 1, 50),
+('ARPEA', 'ARPEA - Piemonte', 1, 60),
+('ARTEA', 'ARTEA - Toscana', 1, 70),
+('AVEPA', 'AVEPA - Veneto', 1, 80),
+('OPLO', 'OPLO - Lombardia', 1, 90),
+('OPPAB', 'OPPAB - Provincia autonoma di Bolzano', 1, 100);

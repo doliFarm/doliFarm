@@ -1,0 +1,26 @@
+# Dolibarr language file - Source file is en_US - dolifarm
+
+#
+# Farm dossier
+#
+PayingAgency = Organisme payeur
+ActType = Type d'acte
+ActTypeRegistration = Inscription
+ActTypeUpdate = Mise à jour
+ValidationSheetNumber = Numéro de la fiche de validation
+ValidationProtocol = Protocole de validation
+DossierDateValidation = Date de validation
+DossierValidUntil = Valable jusqu'au
+DossierValidUntilHelp = Si vide, elle est fixée à un an après la date de validation
+DateReferenceConsistency = Consistance mise à jour au
+CAA = CAA
+DateMandate = Date de signature du mandat
+OTECode = Code OTEX
+OTECodeHelp = Orientation technico-économique indiquée dans la fiche de validation (ex. 166)
+EconomicSize = Dimension économique
+EconomicSizeHelp = Production brute standard totale indiquée dans la fiche de validation
+BioControlBody = Organisme de contrôle bio
+DateBioMembership = Date d'adhésion à l'organisme de contrôle
+ErrorValidUntilBeforeSignature = La date de fin de validité ne peut pas être antérieure à la date de validation
+DictionaryPayingAgency = Organismes payeurs
+TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = Opérateur CAA

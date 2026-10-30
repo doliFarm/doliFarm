@@ -86,30 +86,38 @@ function dolifarmAdminPrepareHead()
 }
 
 /**
- * Recupera l'ID del tipo terzo "TE_FARM" in modo performante (cached)
+ * Recupera l'ID di un tipo di terzo (dizionario llx_c_typent) dal suo codice (cached).
+ * Gli ID dei tipi aggiunti da doliFarm cambiano da un'installazione all'altra.
+ *
+ * @param   DoliDB  $db     Database handler
+ * @param   string  $code   Codice del tipo di terzo (es. 'TE_FARM')
+ * @return  int             ID del tipo terzo o 0 se non trovato
+ */
+function dolifarmGetTypentId($db, $code)
+{
+    static $cache = array();
+
+    if (isset($cache[$code])) {
+        return $cache[$code];
+    }
+
+    $cache[$code] = 0;
+    $sql = "SELECT id FROM ".MAIN_DB_PREFIX."c_typent WHERE code = '".$db->escape($code)."'";
+    $resql = $db->query($sql);
+    if ($resql && ($obj = $db->fetch_object($resql))) {
+        $cache[$code] = (int) $obj->id;
+    }
+
+    return $cache[$code];
+}
+
+/**
+ * Recupera l'ID del tipo terzo "TE_FARM"
  *
  * @param   DoliDB  $db     Database handler
  * @return  int             ID del tipo terzo o 0 se non trovato
  */
 function getFarmTypeId($db)
 {
-    static $farm_type_id_cache = -1;
-
-    // Se abbiamo già cercato l'ID in questa esecuzione, lo restituiamo subito
-    if ($farm_type_id_cache !== -1) {
-        return $farm_type_id_cache;
-    }
-
-    $sql = "SELECT id FROM ".MAIN_DB_PREFIX."c_typent WHERE code = 'TE_FARM'";
-    $resql = $db->query($sql);
-    
-    if ($resql && $db->num_rows($resql)) {
-        $obj = $db->fetch_object($resql);
-        $farm_type_id_cache = (int)$obj->id;
-    } else {
-        // Fallback robusto: se non esiste, impostiamo 0
-        $farm_type_id_cache = 0;
-    }
-
-    return $farm_type_id_cache;
+    return dolifarmGetTypentId($db, 'TE_FARM');
 }

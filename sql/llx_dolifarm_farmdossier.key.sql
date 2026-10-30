@@ -27,3 +27,5 @@ ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_soc (fk_
 ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_validator (fk_user_validator);
     -- Vincoli
 ALTER TABLE llx_dolifarm_farmdossier ADD CONSTRAINT fk_dolifarm_farmdossier_soc FOREIGN KEY (fk_soc) REFERENCES llx_societe(rowid);
+ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_caa (fk_soc_caa);
+ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_validity (date_validity_end);

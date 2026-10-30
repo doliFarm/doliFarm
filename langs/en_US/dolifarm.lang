@@ -40,3 +40,28 @@ MyPageName = My page name
 #
 MyWidget = My widget
 MyWidgetDescription = My widget description
+
+#
+# Farm dossier
+#
+PayingAgency = Paying agency
+ActType = Type of act
+ActTypeRegistration = Registration
+ActTypeUpdate = Update
+ValidationSheetNumber = Validation sheet number
+ValidationProtocol = Validation protocol
+DossierDateValidation = Validation date
+DossierValidUntil = Valid until
+DossierValidUntilHelp = If empty, it is set to one year after the validation date
+DateReferenceConsistency = Holdings updated at
+CAA = CAA
+DateMandate = Mandate signature date
+OTECode = OTE code
+OTECodeHelp = Type of farming (OTE) shown in the validation sheet (e.g. 166)
+EconomicSize = Economic size
+EconomicSizeHelp = Total standard output shown in the validation sheet
+BioControlBody = Organic control body
+DateBioMembership = Control body membership date
+ErrorValidUntilBeforeSignature = The end of validity cannot be before the validation date
+DictionaryPayingAgency = Paying agencies
+TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = CAA operator

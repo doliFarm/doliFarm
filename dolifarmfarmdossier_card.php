@@ -307,6 +307,19 @@ if ($action == 'create') {
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
+	// The "+" button on the third party opens the creation with the type "Farm" already set,
+	// otherwise the new third party would be hidden by the filter of the field
+	$farmtypentid = dolifarmGetTypentId($db, 'TE_FARM');
+	if ($farmtypentid > 0) {
+		print '<script>
+		jQuery(document).ready(function() {
+			jQuery(".field_fk_soc a.butActionNew").attr("href", function(i, href) {
+				return href.replace("?action=create&", "?action=create&typent_id='.((int) $farmtypentid).'&");
+			});
+		});
+		</script>';
+	}
+
 	// Public note
 	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 	print '<tr class="field_note_public">';

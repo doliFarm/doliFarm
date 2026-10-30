@@ -270,7 +270,8 @@ class modDolifarm extends DolibarrModules
                 'dolifarm_c_biostatus',
                 'dolifarm_c_machinetype',
                 'dolifarm_c_fueltype',
-                'dolifarm_c_operation_type' // [NUOVO] Tabella Tipi Operazione
+                'dolifarm_c_operation_type', // [NUOVO] Tabella Tipi Operazione
+                'dolifarm_c_paying_agency'
             ),
             
             // Label of tables
@@ -279,7 +280,8 @@ class modDolifarm extends DolibarrModules
                 'DictionaryBioStatus',
                 'DictionaryMachineType',
                 'DictionaryFuelType',
-                'DictionaryOperationType'   // [NUOVO] Chiave da tradurre in dolifarm.lang
+                'DictionaryOperationType',   // [NUOVO] Chiave da tradurre in dolifarm.lang
+                'DictionaryPayingAgency'
             ),
             
             // Request to select fields
@@ -288,7 +290,8 @@ class modDolifarm extends DolibarrModules
                 'SELECT rowid, code, label, description, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_biostatus',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_machinetype',
                 'SELECT rowid, code, label, active FROM '.MAIN_DB_PREFIX.'dolifarm_c_fueltype',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type' // [NUOVO]
+                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type', // [NUOVO]
+                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_paying_agency'
             ),
             
             // Sort order
@@ -297,7 +300,8 @@ class modDolifarm extends DolibarrModules
                 'position ASC, code ASC',
                 'position ASC, code ASC',
                 'code ASC',
-                'position ASC, code ASC' // [NUOVO]
+                'position ASC, code ASC', // [NUOVO]
+                'position ASC, code ASC'
             ),
             
             // List of fields (result of select to show dictionary)
@@ -306,7 +310,8 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label'
             ),
             
             // List of fields (list of fields to edit a record)
@@ -315,7 +320,8 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label'
             ),
             
             // List of fields (list of fields for insert)
@@ -324,14 +330,15 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label' // [NUOVO]
+                'code,label', // [NUOVO]
+                'code,label'
             ),
             
             // Name of columns with primary key (try to always name it 'rowid')
-            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
+            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
             
             // Condition to show each dictionary (Always 1 if the module is active)
-            'tabcond' => array(1, 1, 1, 1, 1),
+            'tabcond' => array(1, 1, 1, 1, 1, 1),
             
             // Tooltip for every fields of dictionaries
             'tabhelp' => array(
@@ -339,7 +346,8 @@ class modDolifarm extends DolibarrModules
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'description' => $langs->trans('Description')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')) // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')), // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'))
             )
         );
 
