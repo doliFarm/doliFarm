@@ -29,35 +29,28 @@ print load_fiche_titre($title, '', dolifarm_get_fa_icon('dolifarm'));
 
 
 // ============================================================================
-// CONFIGURAZIONE WIDGET (MODIFICA QUI I NOMI DELLE CLASSI)
+// CONFIGURAZIONE WIDGET
 // ============================================================================
-// Verifica aprendo i file in /core/boxes/ come si chiamano esattamente le classi.
-// Esempio: "class BoxTotPlots extends ModeleBoxes" -> Il nome è "BoxTotPlots"
+// Il nome della classe coincide con il nome del file in /core/boxes/ (come
+// richiesto dal loader dei widget di Dolibarr). 'module' indica un modulo
+// esterno necessario al widget.
 // ============================================================================
 
 $widgets_to_load = array(
-    array(
-        'file'  => 'dolifarm_TotDossiers.php',      // Nome del file fisico
-        'class' => 'dolifarmWidgetTotDossiers'           // Nome della CLASS all'interno del file
-    ),
-    array(
-        'file'  => 'dolifarm_TotPlots.php',
-        'class' => 'dolifarmWidgetTotPlots'              // Verifica se è 'TotPlots', 'BoxTotPlots' o 'dolifarm_TotPlots'
-    ),
-    array(
-        'file'  => 'dolifarm_TotMachines.php',
-        'class' => 'dolifarmWidgetTotMachines'
-    ),
-    array(
-        'file'  => 'dolifarm_CropPlansMonitoring.php',
-        'class' => 'dolifarmWidgetCropPlansMonitoring'   // ATTENZIONE alla 'p' minuscola/maiuscola in Cropplans
-    ),
-    array(
-        'file'  => 'dolifarmwidgettopplannedproducts.php',
-        'class' => 'dolifarmWidgetTopPlannedProducts'   // ATTENZIONE alla 'p' minuscola/maiuscola in Cropplans
-    ),
-    
+    array('file' => 'dolifarm_TotDossiers.php'),
+    array('file' => 'dolifarm_TotPlots.php'),
+    array('file' => 'dolifarm_TotMachines.php'),
+    array('file' => 'dolifarm_CropPlansMonitoring.php', 'module' => 'dolitrace'),
+    array('file' => 'dolifarmwidgettopplannedproducts.php', 'module' => 'dolitrace'),
 );
+
+// Escludi i widget dei moduli non attivi
+foreach ($widgets_to_load as $key => $widget_info) {
+    if (!empty($widget_info['module']) && !isModEnabled($widget_info['module'])) {
+        unset($widgets_to_load[$key]);
+    }
+}
+$widgets_to_load = array_values($widgets_to_load);
 
 print '<div class="fichecenter">';
 
@@ -79,8 +72,8 @@ foreach ($widgets_to_load as $index => $widget_info) {
         print '</div><div class="fichehalfright">';
     }
 
-    $file_path = DOL_DOCUMENT_ROOT . '/custom/dolifarm/core/boxes/' . $widget_info['file'];
-    $class_name = $widget_info['class'];
+    $file_path = dol_buildpath('/dolifarm/core/boxes/'.$widget_info['file'], 0);
+    $class_name = preg_replace('/\.php$/i', '', $widget_info['file']);
 
     print '<div class="box-wrapper">';
     
