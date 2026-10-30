@@ -16,6 +16,10 @@ ALTER TABLE llx_dolifarm_farmdossier ADD COLUMN economic_size double(24,8);
 ALTER TABLE llx_dolifarm_farmdossier ADD COLUMN fk_soc_bio_body integer;
 ALTER TABLE llx_dolifarm_farmdossier ADD COLUMN date_bio_membership date;
 
+-- Indexes on these columns: here and not in the .key.sql, which runs before this script
+ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_caa (fk_soc_caa);
+ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_validity (date_validity_end);
+
 -- year_validity is no longer filled by the form
 ALTER TABLE llx_dolifarm_farmdossier MODIFY year_validity integer NULL;
 
