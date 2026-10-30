@@ -36,3 +36,5 @@ Thumbs.db
 
 # Output locali di Claude (Cowork)
 Claude outputs/
+# Documenti di progettazione interni: non pubblicare
+/docs/
