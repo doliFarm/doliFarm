@@ -249,6 +249,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	$linkback = '<a href="'.dol_buildpath('/dolifarm/dolifarmbuilding_list.php', 1).'?restore_lastsearch_values=1">'.$langs->trans("BackToList").'</a>';
 	$morehtmlref = '<div class="refidno">'.dolifarmObjectBannerRef($object).'</div>';
+	// Overdue and near expiry dates of the object
+	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+	$morehtmlref .= dolifarmExpiryObjectWarnings($object);
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 	dolifarmPrintCardLayout($object, $cardlayout, 'view');

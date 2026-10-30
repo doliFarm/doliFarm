@@ -47,7 +47,7 @@ class DoliFarmMachine extends CommonObject
      * @var string      Prefix to check for any trigger code of any business class to prevent bad value for trigger code.
      * @see CommonTrigger::call_trigger()
      */
-    public $TRIGGER_PREFIX = 'DOLIFARM_MYOBJECT';   // Will be used to build trgiger keys 'DOLIFARM_MYOBJECT_MODIFY', ...
+    public $TRIGGER_PREFIX = 'DOLIFARM_MACHINE';	// Trigger codes: DOLIFARM_MACHINE_MODIFY, ...
 
     /**
      * @var string      Name of table without prefix where object is stored. This is also the key used for extrafields management (so extrafields know the link to the parent table).
@@ -146,6 +146,9 @@ class DoliFarmMachine extends CommonObject
         "fuel_type" => array("type" => "sellist:dolifarm_c_fueltype:label:code::active=1", "label" => "FuelType", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
         
         "year_registration" => array("type" => "int", "label" => "Yearregistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
+        "date_revision_next" => array("type" => "date", "label" => "MachineRevisionNext", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "-1", "help" => "MachineRevisionNextHelp",),
+        "date_insurance_end" => array("type" => "date", "label" => "MachineInsuranceEnd", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1", "help" => "MachineInsuranceEndHelp",),
+        "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
         
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1",),
         
@@ -173,6 +176,9 @@ class DoliFarmMachine extends CommonObject
     public $power_kw;
     public $fuel_type;
     public $year_registration;
+    public $date_revision_next;
+    public $date_insurance_end;
+    public $date_sprayer_check_end;
     public $status;
     public $datec;
     public $date_valid;
@@ -614,7 +620,7 @@ class DoliFarmMachine extends CommonObject
 
             if (!$error && !$notrigger) {
                 // Call trigger
-                $result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+                $result = $this->call_trigger($this->TRIGGER_PREFIX.'_VALIDATE', $user);
                 if ($result < 0) {
                     $error++;
                 }
@@ -704,7 +710,7 @@ class DoliFarmMachine extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'DOLIFARM_MYOBJECT_UNVALIDATE');
+        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, $this->TRIGGER_PREFIX.'_UNVALIDATE');
     }
 
     /**
@@ -728,7 +734,7 @@ class DoliFarmMachine extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'DOLIFARM_MYOBJECT_CANCEL');
+        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, $this->TRIGGER_PREFIX.'_CANCEL');
     }
 
     /**
@@ -752,7 +758,7 @@ class DoliFarmMachine extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'DOLIFARM_MYOBJECT_REOPEN');
+        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, $this->TRIGGER_PREFIX.'_REOPEN');
     }
 
     /**
@@ -1163,7 +1169,7 @@ class DoliFarmMachine extends CommonObject
             if (!empty($this->model_pdf)) {
                 $modele = $this->model_pdf;
             } else {
-                $modele = getDolGlobalString('MYOBJECT_ADDON_PDF', 'standard_dolifarmmachine');
+                $modele = getDolGlobalString('DOLIFARM_DOLIFARMMACHINE_ADDON_PDF', 'standard_dolifarmmachine');
             }
         }
 

@@ -204,18 +204,10 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 $object->fields = dol_sort_array($object->fields, 'position');
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmcrops', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmcrops', 'write');
-	$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmcrops', 'delete');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-	$permissiontodelete = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmcrops', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmcrops', 'write');
+$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmcrops', 'delete');
 
 // Security check (enable the most restrictive one)
 if ($user->socid > 0) {

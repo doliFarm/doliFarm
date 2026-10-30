@@ -22,7 +22,9 @@
 --ALTER TABLE llx_dolifarm_dolifarmfarmdossier ADD CONSTRAINT llx_dolifarm_dolifarmfarmdossier_fk_field FOREIGN KEY (fk_field) REFERENCES llx_dolifarm_myotherobject(rowid);
 
 -- Indici
-ALTER TABLE llx_dolifarm_farmdossier ADD UNIQUE INDEX uk_dolifarm_farmdossier_ref (ref);
+-- The ref is unique in each entity (the old index on ref only is replaced; on later activations both lines fail harmlessly)
+ALTER TABLE llx_dolifarm_farmdossier DROP INDEX uk_dolifarm_farmdossier_ref;
+ALTER TABLE llx_dolifarm_farmdossier ADD UNIQUE INDEX uk_dolifarm_farmdossier_ref_entity (ref, entity);
 ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_soc (fk_soc);
 ALTER TABLE llx_dolifarm_farmdossier ADD INDEX idx_dolifarm_farmdossier_validator (fk_user_validator);
     -- Vincoli

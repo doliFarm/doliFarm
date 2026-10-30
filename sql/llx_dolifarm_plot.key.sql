@@ -1,5 +1,7 @@
 -- Indices
-ALTER TABLE llx_dolifarm_plot ADD UNIQUE INDEX uk_dolifarm_plot_ref (ref);
+-- The ref is unique in each entity (the old index on ref only is replaced; on later activations both lines fail harmlessly)
+ALTER TABLE llx_dolifarm_plot DROP INDEX uk_dolifarm_plot_ref;
+ALTER TABLE llx_dolifarm_plot ADD UNIQUE INDEX uk_dolifarm_plot_ref_entity (ref, entity);
 ALTER TABLE llx_dolifarm_plot ADD INDEX idx_dolifarm_plot_dossier (fk_dossier);
 ALTER TABLE llx_dolifarm_plot ADD  UNIQUE INDEX uk_dolitrace_plot_uuid (uuid);
 -- Foreign Keys

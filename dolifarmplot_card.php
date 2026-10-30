@@ -135,20 +135,11 @@ if ($object->id > 0 && empty($shape_json_val)) {
 }
 
 // Permissions
-$enablepermissioncheck = getDolGlobalInt('MYMODULE_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-    $permissiontoread = $user->hasRight('dolifarm', 'dolifarmplot', 'read');
-    $permissiontoadd = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-    $permissiontodelete = $user->hasRight('dolifarm', 'dolifarmplot', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-    $permissionnote = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_setnotes.inc.php
-    $permissiondellink = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_dellink.inc.php
-} else {
-    $permissiontoread = 1;
-    $permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-    $permissiontodelete = 1;
-    $permissionnote = 1;
-    $permissiondellink = 1;
-}
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmplot', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmplot', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+$permissionnote = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_setnotes.inc.php
+$permissiondellink = $user->hasRight('dolifarm', 'dolifarmplot', 'write'); // Used by the include of actions_dellink.inc.php
 
 $upload_dir = $conf->dolifarm->multidir_output[isset($object->entity) ? $object->entity : 1].'/dolifarmplot';
 
@@ -208,8 +199,8 @@ if (empty($reshook)) {
     include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 
     // Actions to send emails
-    $triggersendname = 'MYMODULE_MYOBJECT_SENTBYMAIL';
-    $autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+    $triggersendname = $object->TRIGGER_PREFIX.'_SENTBYMAIL';
+    $autocopy = 'MAIN_MAIL_AUTOCOPY_'.strtoupper($object->element).'_TO';
     $trackid = 'dolifarmplot'.$object->id;
     include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
@@ -453,6 +444,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     $morehtmlref .= '</div>';
 
 
+    // Overdue and near expiry dates of the object
+    dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+    $morehtmlref .= dolifarmExpiryObjectWarnings($object);
     dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 

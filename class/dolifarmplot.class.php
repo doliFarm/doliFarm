@@ -740,7 +740,7 @@ class DoliFarmPlot extends CommonObject
 
             if (!$error && !$notrigger) {
                 // Call trigger
-                $result = $this->call_trigger('MYOBJECT_VALIDATE', $user);
+                $result = $this->call_trigger($this->TRIGGER_PREFIX.'_VALIDATE', $user);
                 if ($result < 0) {
                     $error++;
                 }
@@ -830,7 +830,7 @@ class DoliFarmPlot extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'DOLIFARM_MYOBJECT_UNVALIDATE');
+        return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, $this->TRIGGER_PREFIX.'_UNVALIDATE');
     }
 
     /**
@@ -854,7 +854,7 @@ class DoliFarmPlot extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, 'DOLIFARM_MYOBJECT_CANCEL');
+        return $this->setStatusCommon($user, self::STATUS_CANCELED, $notrigger, $this->TRIGGER_PREFIX.'_CANCEL');
     }
 
     /**
@@ -878,7 +878,7 @@ class DoliFarmPlot extends CommonObject
          return -1;
          }*/
 
-        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, 'DOLIFARM_MYOBJECT_REOPEN');
+        return $this->setStatusCommon($user, self::STATUS_VALIDATED, $notrigger, $this->TRIGGER_PREFIX.'_REOPEN');
     }
 
     /**

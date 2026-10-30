@@ -143,16 +143,9 @@ if ($id > 0 || !empty($ref)) {
 	$upload_dir = $conf->dolifarm->multidir_output[!empty($object->entity) ? $object->entity : $conf->entity]."/".$object->id;
 }
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmagrodrug', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmagrodrug', 'write');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmagrodrug', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmagrodrug', 'write');
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

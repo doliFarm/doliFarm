@@ -90,16 +90,9 @@ $extrafields->fetch_name_optionals_label($object->table_element);
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be 'include', not 'include_once'. Include fetch and fetch_thirdparty but not fetch_optionals
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmcrops', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmcrops', 'write');
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmcrops', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmcrops', 'write');
 
 // Security check (enable the most restrictive one)
 //if ($user->socid > 0) accessforbidden();

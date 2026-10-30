@@ -147,22 +147,12 @@ if (empty($action) && empty($id) && empty($ref)) {
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be 'include', not 'include_once'.
 
-// There is several ways to check permission.
-// Set $enablepermissioncheck to 1 to enable a minimum low level of checks
-$enablepermissioncheck = getDolGlobalInt('DOLIFARM_ENABLE_PERMISSION_CHECK');
-if ($enablepermissioncheck) {
-	$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
-	$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
-	$permissionnote = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_setnotes.inc.php
-	$permissiondellink = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_dellink.inc.php
-} else {
-	$permissiontoread = 1;
-	$permissiontoadd = 1; // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
-	$permissiontodelete = 1;
-	$permissionnote = 1;
-	$permissiondellink = 1;
-}
+// Permissions
+$permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
+$permissiontoadd = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_addupdatedelete.inc.php and actions_lineupdown.inc.php
+$permissiontodelete = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'delete') || ($permissiontoadd && isset($object->status) && $object->status == $object::STATUS_DRAFT);
+$permissionnote = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_setnotes.inc.php
+$permissiondellink = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write'); // Used by the include of actions_dellink.inc.php
 
 $upload_dir = $conf->dolifarm->multidir_output[isset($object->entity) ? $object->entity : 1].'/dolifarmfarmdossier';
 
@@ -238,8 +228,8 @@ if (empty($reshook)) {
 	*/
 
 	// Actions to send emails
-	$triggersendname = 'DOLIFARM_MYOBJECT_SENTBYMAIL';
-	$autocopy = 'MAIN_MAIL_AUTOCOPY_MYOBJECT_TO';
+	$triggersendname = $object->TRIGGER_PREFIX.'_SENTBYMAIL';
+	$autocopy = 'MAIN_MAIL_AUTOCOPY_'.strtoupper($object->element).'_TO';
 	$trackid = 'dolifarmfarmdossier'.$object->id;
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 }
@@ -495,6 +485,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	$morehtmlref .= '</div>';
 
 
+	// Overdue and near expiry dates of the object
+	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+	$morehtmlref .= dolifarmExpiryObjectWarnings($object);
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 

@@ -202,6 +202,10 @@ include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
 ));*/
 
 $object->fields = dol_sort_array($object->fields, 'position');
+
+// Expiry dates of the object: badge overdue / near in the list
+dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+$expiryfields = dolifarmExpiryFieldsOf($object->element);
 $arrayfields = dol_sort_array($arrayfields, 'position');
 
 // Permissions
@@ -864,6 +868,9 @@ while ($i < $imaxinloop) {
 						print '<div class="small lineheightsmall twolinesmax-normallineheight">';
 					}
 					print $object->showOutputField($val, $key, (string) $object->$key, '');
+					if (isset($expiryfields[$key]) && (int) $object->status != 9) {
+						print dolifarmExpiryBadge($object->$key, $expiryfields[$key]['milestone']);
+					}
 					if ($val['type'] == 'html') {
 						print '</div>';
 					}

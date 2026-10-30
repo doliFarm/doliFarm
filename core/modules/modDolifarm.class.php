@@ -93,7 +93,7 @@ class modDolifarm extends DolibarrModules
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -123,7 +123,6 @@ class modDolifarm extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'afterlogin',
-				       'hookcontext2',
 				   ),
 				   'entity' => '0',
 			),
@@ -184,7 +183,11 @@ class modDolifarm extends DolibarrModules
 		// Example: $this->const=array(1 => array('DOLIFARM_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
 		//                             2 => array('DOLIFARM_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
-		$this->const = array();
+		// Created only if missing, so the values set in the setup are kept
+		$this->const = array(
+			1 => array('DOLIFARM_EXPIRY_DAYS', 'chaine', '60', 'Days before an expiry date when it is shown as near', 0, 'current', 0),
+			2 => array('DOLIFARM_EXPIRY_AGENDA', 'chaine', '1', 'Agenda events for the expiry dates', 0, 'current', 0),
+		);
 
 		// Some keys to add into the overwriting translation tables
 		/*$this->overwrite_translation = array(
@@ -388,6 +391,11 @@ class modDolifarm extends DolibarrModules
 			 4 => array(
                 'file' => 'dolifarmwidgettopplannedproducts.php@dolifarm',
                 'note' => $langs->trans('BoxProductsPlanOverview'),
+                'enabledbydefaulton' => 'dolifarm',
+            ),
+            5 => array(
+                'file' => 'dolifarm_Expiry.php@dolifarm',
+                'note' => $langs->trans('BoxExpiryDescription'),
                 'enabledbydefaulton' => 'dolifarm',
             ),
         );
