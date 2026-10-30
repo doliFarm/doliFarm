@@ -279,3 +279,144 @@ function dolifarmPrintFieldsCss()
 .dolifarm-cols { display: flex; flex-wrap: wrap; justify-content: space-between; }
 </style>'."\n";
 }
+
+/**
+ * Print the script that keeps in a select of the form only the records of the selected third party (#fk_soc).
+ * Used for the dossier (and the plot) of the objects of the farm dossier; the class checks it again on save.
+ *
+ * @param	string	$selectid		Id of the select to filter (fk_dossier, fk_plot)
+ * @param	string	$table			Table of the records, without prefix, with columns rowid, fk_soc, entity
+ * @param	string	$element		Element of the records, for getEntity()
+ * @param	bool	$autoselect		Select the record when the third party has only one
+ * @return	void
+ */
+function dolifarmPrintThirdpartyFilter($selectid, $table, $element, $autoselect = true)
+{
+	global $db;
+
+	$recordsoc = array();
+	$sql = "SELECT rowid, fk_soc FROM ".$db->prefix().$db->sanitize($table);
+	$sql .= " WHERE entity IN (".getEntity($element).")";
+	$resql = $db->query($sql);
+	if ($resql) {
+		while ($obj = $db->fetch_object($resql)) {
+			$recordsoc[(int) $obj->rowid] = (int) $obj->fk_soc;
+		}
+	}
+
+	print '<script>
+	$(document).ready(function() {
+		var recordSoc = '.json_encode((object) $recordsoc).';
+		var $select = $('.json_encode('#'.$selectid).');
+		if (!$select.length) {
+			return;
+		}
+		var allOptions = $select.find("option").clone();
+		function filterRecords() {
+			var soc = parseInt($("#fk_soc").val(), 10) || 0;
+			var current = $select.val();
+			$select.empty();
+			allOptions.each(function() {
+				var id = parseInt(this.value, 10) || 0;
+				if (id <= 0 || soc <= 0 || recordSoc[id] === soc) {
+					$select.append($(this).clone());
+				}
+			});
+			if (parseInt(current, 10) > 0 && $select.find("option[value=\'" + current + "\']").length) {
+				$select.val(current);
+			} else {
+				var real = $select.find("option").filter(function() { return parseInt(this.value, 10) > 0; });
+				$select.val('.($autoselect ? 'real.length == 1 ? real.val() : "-1"' : '"-1"').');
+			}
+			$select.trigger("change");
+		}
+		$("#fk_soc").on("change", filterRecords);
+		filterRecords();
+	});
+	</script>'."\n";
+}
+
+/**
+ * Print the fields of a card in bands of two columns (same layout in create, edit and view), then the
+ * fields not placed in the layout and the extrafields.
+ *
+ * Layout: array of bands, each band is array('title' => lang key or '', 'picto' => picto of the title,
+ * 'left' => items, 'right' => items, 'lefttitle' => lang key, 'righttitle' => lang key).
+ * Items are those of dolifarmPrintFieldsTable(). The first band is under the banner.
+ *
+ * @param	CommonObject					$object		Object
+ * @param	array<int,array<string,mixed>>	$layout		Bands
+ * @param	string							$mode		'create', 'edit' or 'view'
+ * @return	void
+ */
+function dolifarmPrintCardLayout($object, $layout, $mode)
+{
+	global $langs, $conf, $db, $user, $form, $hookmanager, $extrafields, $action;
+
+	dolifarmPrintFieldsCss();
+
+	$all = array();
+	foreach ($layout as $i => $band) {
+		print '<div class="dolifarm-section">';
+		if (!empty($band['title'])) {
+			print load_fiche_titre($langs->trans($band['title']), '', empty($band['picto']) ? '' : $band['picto']);
+		}
+		print '<div class="fichecenter">';
+		foreach (array('left', 'right') as $side) {
+			print '<div class="fichehalf'.$side.'">';
+			if ($i == 0 && $mode == 'view') {
+				print '<div class="underbanner clearboth"></div>';
+			}
+			if (!empty($band[$side])) {
+				dolifarmPrintFieldsTable($object, $band[$side], $mode, empty($band[$side.'title']) ? '' : $band[$side.'title']);
+				$all = array_merge($all, $band[$side]);
+			}
+			print '</div>';
+		}
+		print '</div>';
+		print '<div class="clearboth"></div>';
+		print '</div>';
+	}
+
+	// Fields not placed in the layout, then extrafields
+	$tableclass = ($mode == 'view') ? 'tableforfield' : 'tableforfield'.$mode;
+	print '<table class="border centpercent '.$tableclass.' dolifarm-fields">'."\n";
+	foreach (dolifarmFieldsNotInLayout($object, $all, $mode) as $key) {
+		dolifarmPrintFieldRow($object, array($key), $mode);
+	}
+	if ($mode == 'create') {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+	} elseif ($mode == 'edit') {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_edit.tpl.php';
+	} else {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
+	}
+	print '</table>'."\n";
+}
+
+/**
+ * Html for the banner of an object of the farm dossier: its third party and its dossier
+ *
+ * @param	CommonObject	$object		Object with fk_soc and fk_dossier
+ * @return	string
+ */
+function dolifarmObjectBannerRef($object)
+{
+	global $db, $langs;
+
+	$out = '';
+	if (!empty($object->fk_soc) && $object->fk_soc > 0) {
+		$soc = new Societe($db);
+		if ($soc->fetch($object->fk_soc) > 0) {
+			$out .= $soc->getNomUrl(1, '');
+		}
+	}
+	if (!empty($object->fk_dossier) && $object->fk_dossier > 0) {
+		dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
+		$dossier = new DoliFarmFarmDossier($db);
+		if ($dossier->fetch($object->fk_dossier) > 0) {
+			$out .= ($out ? '<br>' : '').$langs->trans('FkDossier').': '.$dossier->getNomUrl(1);
+		}
+	}
+	return $out;
+}

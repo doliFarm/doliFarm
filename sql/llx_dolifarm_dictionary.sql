@@ -197,3 +197,28 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_c_cadastral_comune (
     active      TINYINT DEFAULT 1,
     UNIQUE INDEX uk_dolifarm_c_cadastral_comune_code (code)
 ) ENGINE=InnoDB;
+
+-- Livestock species (consistenza zootecnica)
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_livestock_species (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(32) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    active      TINYINT DEFAULT 1,
+    module      VARCHAR(32) DEFAULT NULL,
+    position    INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_livestock_species_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_livestock_species (code, label, active, position) VALUES
+('BOVINI', 'Bovini', 1, 10),
+('BUFALINI', 'Bufalini', 1, 20),
+('OVINI', 'Ovini', 1, 30),
+('CAPRINI', 'Caprini', 1, 40),
+('SUINI', 'Suini', 1, 50),
+('EQUINI', 'Equini', 1, 60),
+('ASININI', 'Asinini', 1, 70),
+('AVICOLI', 'Avicoli', 1, 80),
+('CUNICOLI', 'Cunicoli', 1, 90),
+('API', 'Api', 1, 100),
+('ACQUACOLTURA', 'Acquacoltura', 1, 110),
+('ALTRO', 'Altre specie', 1, 900);

@@ -236,56 +236,6 @@ $plotlayout = array(
 );
 
 /**
- * Print the script that keeps in the dossier list only the dossiers of the selected third party
- * (checked again on save by DoliFarmPlot::checkPlotData())
- *
- * @return	void
- */
-function dolifarm_plot_print_dossier_filter()
-{
-	global $db;
-
-	$dossiersoc = array();
-	$sql = "SELECT rowid, fk_soc FROM ".$db->prefix()."dolifarm_farmdossier";
-	$sql .= " WHERE entity IN (".getEntity('dolifarmfarmdossier').")";
-	$resql = $db->query($sql);
-	if ($resql) {
-		while ($obj = $db->fetch_object($resql)) {
-			$dossiersoc[(int) $obj->rowid] = (int) $obj->fk_soc;
-		}
-	}
-
-	print '<script>
-	$(document).ready(function() {
-		var dossierSoc = '.json_encode((object) $dossiersoc).';
-		var $dossier = $("#fk_dossier");
-		var allOptions = $dossier.find("option").clone();
-		function filterDossiers() {
-			var soc = parseInt($("#fk_soc").val(), 10) || 0;
-			var current = $dossier.val();
-			$dossier.empty();
-			allOptions.each(function() {
-				var id = parseInt(this.value, 10) || 0;
-				if (id <= 0 || soc <= 0 || dossierSoc[id] === soc) {
-					$dossier.append($(this).clone());
-				}
-			});
-			if (parseInt(current, 10) > 0 && $dossier.find("option[value=\'" + current + "\']").length) {
-				$dossier.val(current);
-			} else {
-				// Only one dossier for this third party: select it
-				var real = $dossier.find("option").filter(function() { return parseInt(this.value, 10) > 0; });
-				$dossier.val(real.length == 1 ? real.val() : "-1");
-			}
-			$dossier.trigger("change");
-		}
-		$("#fk_soc").on("change", filterDossiers);
-		filterDossiers();
-	});
-	</script>'."\n";
-}
-
-/**
  * Print the fields of the plot card in groups (same layout in create, edit and view)
  *
  * @param	DoliFarmPlot					$object		Plot
@@ -318,7 +268,7 @@ function dolifarm_plot_print_fields($object, $layout, $mode)
 	print '<div class="clearboth"></div>';
 
 	if ($mode != 'view') {
-		dolifarm_plot_print_dossier_filter();
+		dolifarmPrintThirdpartyFilter('fk_dossier', 'dolifarm_farmdossier', 'dolifarmfarmdossier');
 	}
 
 	// Cadastre and location next to the map (flex: the map column is as tall as the fields, so the map can stay in view)
