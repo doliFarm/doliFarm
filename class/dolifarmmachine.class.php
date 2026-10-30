@@ -1094,15 +1094,14 @@ class DoliFarmMachine extends CommonObject
         global $langs, $conf;
         $langs->load("dolifarm@dolifarm");
 
-        if (!getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
-            $conf->global->DOLIFARM_MYOBJECT_ADDON = 'mod_dolifarmmachine_standard';
-        }
+        // Own constant of the object (the ModuleBuilder one, DOLIFARM_MYOBJECT_ADDON, was shared by all objects)
+        $addon = getDolGlobalString('DOLIFARM_DOLIFARMMACHINE_ADDON', 'mod_dolifarmmachine_standard');
 
-        if (getDolGlobalString('DOLIFARM_MYOBJECT_ADDON')) {
+        if ($addon) {
             $mybool = false;
 
-            $file = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON').".php";
-            $classname = getDolGlobalString('DOLIFARM_MYOBJECT_ADDON');
+            $file = $addon.".php";
+            $classname = $addon;
 
             // Include file with class
             $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);

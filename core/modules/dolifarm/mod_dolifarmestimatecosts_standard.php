@@ -41,7 +41,7 @@ class mod_dolifarmestimatecosts_standard extends ModeleNumRefDoliFarmEstimateCos
 	/**
 	 * @var string
 	 */
-	public $prefix = 'MYOBJECT';
+	public $prefix = 'STIMA';
 
 	/**
 	 * @var string Error code (or message)
@@ -93,7 +93,7 @@ class mod_dolifarmestimatecosts_standard extends ModeleNumRefDoliFarmEstimateCos
 
 		$posindice = strlen($this->prefix) + 6;
 		$sql = "SELECT MAX(CAST(SUBSTRING(t.ref FROM ".$posindice.") AS SIGNED)) as max";
-		$sql .= " FROM ".$db->prefix()."dolifarm_estimatecosts as t";
+		$sql .= " FROM ".$db->prefix()."dolifarm_dolifarmestimatecosts as t";
 		$sql .= " WHERE t.ref LIKE '".$db->escape($this->prefix)."____-%'";
 		if ($object->ismultientitymanaged == 1) {
 			$sql .= " AND t.entity = ".((int) $conf->entity);
@@ -133,7 +133,7 @@ class mod_dolifarmestimatecosts_standard extends ModeleNumRefDoliFarmEstimateCos
 		// first we get the max value
 		$posindice = strlen($this->prefix) + 6;
 		$sql = "SELECT MAX(CAST(SUBSTRING(t.ref FROM ".$posindice.") AS SIGNED)) as max";
-		$sql .= " FROM ".$db->prefix()."dolifarm_estimatecosts as t";
+		$sql .= " FROM ".$db->prefix()."dolifarm_dolifarmestimatecosts as t";
 		$sql .= " WHERE t.ref LIKE '".$db->escape($this->prefix)."____-%'";
 		if ($object->ismultientitymanaged == 1) {
 			$sql .= " AND t.entity = ".((int) $conf->entity);
@@ -156,8 +156,8 @@ class mod_dolifarmestimatecosts_standard extends ModeleNumRefDoliFarmEstimateCos
 			return -1;
 		}
 
-		//$date=time();
-		$date = $object->date_creation;
+		// When the ref is given at creation, date_creation is not set yet
+		$date = empty($object->date_creation) ? dol_now() : $object->date_creation;
 		$yymm = dol_print_date($date, "%y%m");
 
 		if ($max >= (pow(10, 4) - 1)) {
