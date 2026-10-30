@@ -48,14 +48,14 @@ class modDolifarm extends DolibarrModules
 		$this->picto = dolifarm_get_fa_icon('dolifarm');
 		// Id for module (must be unique).
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
-		$this->numero = 500000; // TODO Go on page https://wiki.dolibarr.org/index.php/List_of_modules_id to reserve an id number for your module
+		$this->numero = 500001; // TODO Go on page https://wiki.dolibarr.org/index.php/List_of_modules_id to reserve an id number for your module
 
 		// Key text used to identify module (for permissions, menus, etc...)
 		$this->rights_class = 'dolifarm';
 
 		// Family can be 'base' (core modules),'crm','financial','hr','projects','products','ecm','technic' (transverse modules),'interface' (link with external tools),'other','...'
 		// It is used to group modules by family in module setup page
-		$this->family = "other";
+		$this->family = "doliFARM";
 
 		// Module position in the family on 2 digits ('01', '10', '20', ...)
 		$this->module_position = '90';
@@ -121,11 +121,11 @@ class modDolifarm extends DolibarrModules
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
 			'hooks' => array(
-				//   'data' => array(
-				//       'hookcontext1',
-				//       'hookcontext2',
-				//   ),
-				//   'entity' => '0',
+				   'data' => array(
+				       'afterlogin',
+				       'hookcontext2',
+				   ),
+				   'entity' => '0',
 			),
 			/* END MODULEBUILDER HOOKSCONTEXTS */
 			// Set this to 1 if features of module are opened to external users
@@ -135,7 +135,17 @@ class modDolifarm extends DolibarrModules
 			// Set this to 1 if the module provides a captcha driver
 			'captcha' => 0
 		);
-
+		$this->const = array(
+			1 => array(
+				'MAIN_MODULE_DOLIFARM_HOOKS',
+				'chaine',
+				'main:afterlogin:index:home:topmenu',
+				'Hooks for dolifarm module',
+				0,
+				'current',
+				0  // NON cancellare alla disattivazione
+			),
+		);
 		// Data directories to create when module is enabled.
 		// Example: this->dirs = array("/dolifarm/temp","/dolifarm/subdir");
 		$this->dirs = array("/dolifarm/temp");
@@ -397,6 +407,7 @@ class modDolifarm extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
+
 		$this->rights[$r][0] = $this->numero . sprintf('%02d', (0 * 10) + 0 + 1);
 		$this->rights[$r][1] = 'Read DoliFarmPlot object of Dolifarm';
 		$this->rights[$r][4] = 'dolifarmplot';

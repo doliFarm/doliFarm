@@ -7,7 +7,7 @@
 -- Eliminazione tabella se esiste per rigenerazione pulita
 DROP TABLE IF EXISTS llx_dolitrace_c_operation_type;
 
-CREATE TABLE llx_dolitrace_c_operation_type (
+CREATE TABLE IF NOT EXISTS llx_dolitrace_c_operation_type (
   rowid       integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
   code        varchar(32) NOT NULL,
   label       varchar(128) NOT NULL,

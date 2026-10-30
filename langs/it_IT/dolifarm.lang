@@ -47,6 +47,8 @@ Events = Eventi
 Documents = Documenti
 Notes = Note
 Contacts = Contatti
+CropPlans = Piani Produzione
+AddCropPlan = Aggiungi Piano
 
 # ==============================================================================
 # FASCICOLO AZIENDALE (FARM DOSSIER)
@@ -267,3 +269,12 @@ CROP_PISTACHIO = Pistacchio
 CROP_LAVENDER = Lavanda
 CROP_BASIL = Basilico
 CROP_SAFFRON = Zafferano
+
+
+
+###################################
+## STIME Costi
+###################################
+Fkoperationtype = Tipo Operazione
+Durationminha = Ore/Ettaro
+Coststdha = Costo/Ettaro

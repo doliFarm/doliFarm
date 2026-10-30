@@ -9,7 +9,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- Riferito da: llx_dolifarm_plot.fk_ownership
 -- ------------------------------------------------------------------------------
 DROP TABLE IF EXISTS llx_dolifarm_c_ownership;
-CREATE TABLE llx_dolifarm_c_ownership (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_ownership (
     rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(32) NOT NULL,
     label       VARCHAR(128) NOT NULL,

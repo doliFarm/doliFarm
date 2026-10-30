@@ -3,7 +3,7 @@
 -- Gestisce tempi e costi standard o specifici per azienda.
 -- ==============================================================================
 
-CREATE TABLE llx_dolifarm_estimate (
+CREATE TABLE IF NOT EXISTS llx_dolifarm_estimate (
     rowid               INTEGER AUTO_INCREMENT PRIMARY KEY,
     entity              INTEGER DEFAULT 1,
     

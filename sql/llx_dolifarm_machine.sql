@@ -14,7 +14,7 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 SET FOREIGN_KEY_CHECKS=0;
-CREATE TABLE llx_dolifarm_machine(
+CREATE TABLE IF NOT EXISTS llx_dolifarm_machine(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid int AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ref varchar(128), 

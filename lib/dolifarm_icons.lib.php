@@ -50,7 +50,10 @@ function dolifarm_get_fa_icon($element_type, $full_tag = false) {
         'indicator'             => 'fa-chart-line',         // Alias
 
         // --- DEFAULT ---
-        'default'               => 'fa-cube'                // Icona di fallback
+        'default'               => 'fa-clipboard-check' ,               // Icona di fallback
+
+        // -- DOLIFIELD --
+         'dolifield'             => 'fas fa-wrench',         // Alias
     );
 
     // Recupera l'icona o usa il default

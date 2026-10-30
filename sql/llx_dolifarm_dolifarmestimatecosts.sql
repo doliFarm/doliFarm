@@ -14,7 +14,7 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-CREATE TABLE llx_dolifarm_dolifarmestimatecosts(
+CREATE TABLE IF NOT EXISTS llx_dolifarm_dolifarmestimatecosts(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid int AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	fk_operation_type varchar(32) NOT NULL, 
