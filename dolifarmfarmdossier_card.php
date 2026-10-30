@@ -113,6 +113,11 @@ $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $
 $optioncss = GETPOST('optioncss', 'aZ'); // Option for the css output (always '' except when 'print')
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
 
+// Back from the "+" button on the third party field: the new id comes as fk_societe
+if ($action == 'create' && GETPOSTINT('fk_societe') > 0 && !GETPOSTISSET('fk_soc')) {
+	$_GET['fk_soc'] = GETPOSTINT('fk_societe');
+}
+
 // Initialize a technical objects
 $object = new DoliFarmFarmDossier($db);
 $extrafields = new ExtraFields($db);
@@ -200,6 +205,12 @@ if (empty($reshook)) {
 	}
 
 	$triggermodname = $object->TRIGGER_PREFIX.'_MODIFY'; // Name of trigger action code to execute when we modify record. Used in actions_addupdatedelete.inc.php
+
+	// Notes are not in the common fields of the creation form: read them here (as in core cards)
+	if ($action == 'add' && !$cancel) {
+		$object->note_public = GETPOST('note_public', 'restricthtml');
+		$object->note_private = GETPOST('note_private', 'restricthtml');
+	}
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
@@ -295,6 +306,25 @@ if ($action == 'create') {
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+
+	// Public note
+	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+	print '<tr class="field_note_public">';
+	print '<td class="titlefieldcreate tdtop">'.$langs->trans('NotePublic').'</td>';
+	print '<td class="valuefieldcreate">';
+	$doleditor = new DolEditor('note_public', GETPOST('note_public', 'restricthtml'), '', 80, 'dolibarr_notes', 'In', false, false, getDolGlobalString('FCKEDITOR_ENABLE_NOTE_PUBLIC') ? 1 : 0, ROWS_3, '90%');
+	print $doleditor->Create(1);
+	print '</td></tr>';
+
+	// Private note
+	if (empty($user->socid)) {
+		print '<tr class="field_note_private">';
+		print '<td class="titlefieldcreate tdtop">'.$langs->trans('NotePrivate').'</td>';
+		print '<td class="valuefieldcreate">';
+		$doleditor = new DolEditor('note_private', GETPOST('note_private', 'restricthtml'), '', 80, 'dolibarr_notes', 'In', false, false, getDolGlobalString('FCKEDITOR_ENABLE_NOTE_PRIVATE') ? 1 : 0, ROWS_3, '90%');
+		print $doleditor->Create(1);
+		print '</td></tr>';
+	}
 
 	// Other attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';

@@ -132,25 +132,25 @@ class DoliFarmFarmDossier extends CommonObject
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
         "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 1, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
-        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "fk_user_validator" => array("type" => "integer:User:user/class/user.class.php", "label" => "Fkuservalidator", "picto" => "user", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "year_validity" => array("type" => "int", "label" => "Yearvalidity", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1",),
-        "date_import" => array("type" => "datetime", "label" => "Dateimport", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
-        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
-        "source_file" => array("type" => "varchar(255)", "label" => "Sourcefile", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
-        "note" => array("type" => "text", "label" => "Note", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
-        "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
-        "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+        "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php:1", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_user_validator" => array("type" => "integer:User:user/class/user.class.php", "label" => "Validator", "picto" => "user", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "year_validity" => array("type" => "int", "label" => "YearValidity", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1",),
+        "date_import" => array("type" => "datetime", "label" => "DateImport", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-5",),
+        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "5", "arrayofkeyval" => array("0" => "Draft", "1" => "Enabled", "9" => "Disabled"),),
+        "source_file" => array("type" => "varchar(255)", "label" => "SourceFile", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-5",),
+        "note" => array("type" => "text", "label" => "Note", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "0",),
+        "note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+        "note_private" => array("type" => "html", "label" => "NotePrivate", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         
-        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1",),
+        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-2",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-2",),
         
-        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         "fk_user_modif" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserModif", "picto" => "user", "enabled" => "1", 'position' => 70, 'notnull' => -1, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         "import_key" => array("type" => "varchar(14)", "label" => "ImportId", "enabled" => "1", 'position' => 900, 'notnull' => 0, "visible" => "-2",),
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-1",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-1",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "0",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "0",),
     );
     public $rowid;
     public $ref;
@@ -271,6 +271,10 @@ class DoliFarmFarmDossier extends CommonObject
         if (! isset($this->entity)) {
             global $conf;
             $this->entity = $conf->entity;
+        }
+        // Status is not in the creation form: a new dossier starts as draft
+        if ($this->status === null || $this->status === '') {
+            $this->status = self::STATUS_DRAFT;
         }
 
         $result = $this->createCommon($user, $notrigger);
