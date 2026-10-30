@@ -8,6 +8,27 @@
  * - CRS: EPSG:3857 (Standard Google/Leaflet)
  */
 
+/**
+ * Print the map column of a plot card (right half of the page).
+ * The map stays visible while the fields on the left are scrolled.
+ *
+ * @param string $mode 'edit' (create and edit forms) or 'view'
+ * @return void
+ */
+function dolifarm_print_map_container($mode = 'edit')
+{
+    global $langs;
+
+    print '<div class="fichehalfright">';
+    print '<div style="position: sticky; top: 60px;">';
+    print '<div id="dolifarm_map_'.($mode == 'view' ? 'view' : 'edit').'" style="width: 100%; height: calc(100vh - 220px); min-height: 400px; max-height: 600px; border: 1px solid #bbb; border-radius: 4px; margin-bottom: 10px;"></div>';
+    if ($mode != 'view') {
+        print '<div class="opacitymedium"><span class="fa fa-info-circle"></span> '.$langs->trans("DrawPolygonToCalculateArea").'</div>';
+    }
+    print '</div>';
+    print '</div>';
+}
+
 function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $target_input_id = '') {
     
     $is_editable_js = ($mode == 'edit') ? 'true' : 'false';
@@ -17,6 +38,24 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
     // Puntiamo alla card stessa. Aggiungiamo un token fittizio per evitare cache
     $proxy_url = dol_buildpath('/dolifarm/dolifarmplot_card.php', 1) . '?action=wms_proxy';
     
+    // Lookup of the cadastral parcel at a point (public WMS of the Agenzia delle Entrate)
+    global $langs;
+    $langs->load('dolifarm@dolifarm');
+    $cadastral_url = dol_buildpath('/dolifarm/ajax/cadastralinfo.php', 1);
+    $js_trans = json_encode(array(
+        'title' => $langs->transnoentitiesnoconv('CadastralParcelFound'),
+        'searching' => $langs->transnoentitiesnoconv('CadastralSearching'),
+        'comune' => $langs->transnoentitiesnoconv('Cadastralcomune'),
+        'section' => $langs->transnoentitiesnoconv('CadastralSection'),
+        'sheet' => $langs->transnoentitiesnoconv('Cadastralsheet'),
+        'parcel' => $langs->transnoentitiesnoconv('Cadastralparcel'),
+        'fill' => $langs->transnoentitiesnoconv('CadastralFillFields'),
+        'CadastralParcelNotFound' => $langs->transnoentitiesnoconv('CadastralParcelNotFound'),
+        'CadastralPointOutsideItaly' => $langs->transnoentitiesnoconv('CadastralPointOutsideItaly'),
+        'CadastralServiceUnavailable' => $langs->transnoentitiesnoconv('CadastralServiceUnavailable'),
+        'NotEnoughPermissions' => $langs->transnoentitiesnoconv('NotEnoughPermissions'),
+    ));
+
     $lat_safe = dol_escape_js($lat);
     $lon_safe = dol_escape_js($lon);
     $geojson_safe = dol_escape_js($geojson_content);
@@ -39,6 +78,8 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
         $(document).ready(function() {
             try {
                 var isEditable = {$is_editable_js};
+                var cadastralUrl = "{$cadastral_url}";
+                var cadastralTrans = {$js_trans};
                 var mapId = "{$map_id}";
                 var mapContainer = document.getElementById(mapId);
                 
@@ -114,11 +155,66 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
 
                     map.on(L.Draw.Event.CREATED, function (e) {
                         drawnItems.clearLayers(); drawnItems.addLayer(e.layer); updateFormFromMap(e.layer);
+                        var c = (e.layer.getBounds) ? e.layer.getBounds().getCenter() : e.layer.getLatLng();
+                        lookupParcel(c);
                     });
                     map.on(L.Draw.Event.EDITED, function (e) {
                         e.layers.eachLayer(function (l) { updateFormFromMap(l); });
                     });
                     map.on(L.Draw.Event.DELETED, function(e) { $("#shape_json").val(""); });
+                }
+
+                var drawingActive = false;
+                map.on("draw:drawstart draw:editstart draw:deletestart", function() { drawingActive = true; });
+                map.on("draw:drawstop draw:editstop draw:deletestop", function() { setTimeout(function() { drawingActive = false; }, 300); });
+                map.on("click", function(e) {
+                    if (!drawingActive) lookupParcel(e.latlng);
+                });
+
+                // Button next to the cadastral fields: parcel at the centre of the drawn shape, else of the map
+                $(document).on("click", ".dolifarm-cadastral-lookup", function(ev) {
+                    ev.preventDefault();
+                    var c = map.getCenter();
+                    drawnItems.eachLayer(function(l) { c = (l.getBounds) ? l.getBounds().getCenter() : l.getLatLng(); });
+                    lookupParcel(c);
+                });
+
+                // Ask the cadastral parcel at a point and show it in a popup
+                function lookupParcel(latlng) {
+                    var popup = L.popup().setLatLng(latlng).setContent(cadastralTrans.searching).openOn(map);
+                    $.getJSON(cadastralUrl, { lat: latlng.lat.toFixed(7), lon: latlng.lng.toFixed(7) }, function(data) {
+                        if (!data || !data.success) {
+                            popup.setContent(cadastralTrans[(data && data.error) ? data.error : "CadastralServiceUnavailable"] || cadastralTrans.CadastralServiceUnavailable);
+                            return;
+                        }
+                        var html = "<b>" + cadastralTrans.title + "</b><br>" + $("<span>").text(data.reference).html();
+                        // Comune as in the AGEA dossier (name in capitals), the code when the name is not in the dictionary
+                        var comune = data.comune_name ? data.comune_name.toUpperCase() : data.comune_code;
+                        var comuneLabel = data.comune_name ? data.comune_name + (data.province ? " (" + data.province + ")" : "") + " - " + data.comune_code : data.comune_code;
+                        if (data.sheet) {
+                            html += "<br>" + cadastralTrans.comune + ": " + $("<span>").text(comuneLabel).html()
+                                + (data.section ? " - " + cadastralTrans.section + ": " + $("<span>").text(data.section).html() : "")
+                                + "<br>" + cadastralTrans.sheet + ": " + $("<span>").text(data.sheet).html()
+                                + " - " + cadastralTrans.parcel + ": " + $("<span>").text(data.parcel).html();
+                        }
+                        if (isEditable) {
+                            html += "<br><br><a href=\"#\" class=\"button small dolifarm-fill-cadastral\">" + cadastralTrans.fill + "</a>";
+                        }
+                        popup.setContent(html);
+                        $(".dolifarm-fill-cadastral").off("click").on("click", function(ev) {
+                            ev.preventDefault();
+                            $("input[name='cadastral_reference']").val(data.reference);
+                            if (data.sheet) {
+                                $("input[name='cadastral_comune']").val(comune);
+                                $("input[name='cadastral_section']").val(data.section);
+                                $("input[name='cadastral_sheet']").val(data.sheet);
+                                $("input[name='cadastral_parcel']").val(data.parcel);
+                            }
+                            map.closePopup();
+                        });
+                    }).fail(function() {
+                        popup.setContent(cadastralTrans.CadastralServiceUnavailable);
+                    });
                 }
 
                 function updateFormFromMap(layer) {
@@ -127,8 +223,8 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
 
                     var center = (layer.getBounds) ? layer.getBounds().getCenter() : layer.getLatLng();
                     if (center) {
-                        var latIn = $("input[name='geolat']").length ? $("input[name='geolat']") : $("input[name='options_geolat']");
-                        var lonIn = $("input[name='geolon']").length ? $("input[name='geolon']") : $("input[name='options_geolon']");
+                        var latIn = $("input[name='geo_lat']");
+                        var lonIn = $("input[name='geo_lon']");
                         if(latIn.length) latIn.val(center.lat.toFixed(6));
                         if(lonIn.length) lonIn.val(center.lng.toFixed(6));
                     }
@@ -139,7 +235,7 @@ function dolifarm_print_map_script($mode, $lat, $lon, $geojson_content = '', $ta
                         if(areaField.length === 0) areaField = $("input[name='surface']");
                         
                         if(areaField.length) {
-                            areaField.val(areaHectares);
+                            areaField.val(areaHa);
                             areaField.css("background-color", "#e8f5e9");
                         }
                     }

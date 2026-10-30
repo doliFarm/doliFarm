@@ -186,3 +186,14 @@ INSERT IGNORE INTO llx_dolifarm_c_paying_agency (code, label, active, position) 
 ('AVEPA', 'AVEPA - Veneto', 1, 80),
 ('OPLO', 'OPLO - Lombardia', 1, 90),
 ('OPPAB', 'OPPAB - Provincia autonoma di Bolzano', 1, 100);
+
+-- Comuni with their cadastral (Belfiore) code, data in data_dolifarm_cadastral_comune.sql (ISTAT, CC-BY 4.0)
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_cadastral_comune (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(4) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    province    VARCHAR(2) DEFAULT NULL,
+    istat_code  VARCHAR(6) DEFAULT NULL,
+    active      TINYINT DEFAULT 1,
+    UNIQUE INDEX uk_dolifarm_c_cadastral_comune_code (code)
+) ENGINE=InnoDB;

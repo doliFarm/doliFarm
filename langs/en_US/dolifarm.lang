@@ -65,3 +65,43 @@ DateBioMembership = Control body membership date
 ErrorValidUntilBeforeSignature = The end of validity cannot be before the validation date
 DictionaryPayingAgency = Paying agencies
 TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = CAA operator
+
+#
+# Plot
+#
+CadastralSection = Section
+ConductionProtocol = Conduction protocol
+ConductionProtocolHelp = Protocol number of the conduction title in the dossier (e.g. AGEA.CAA6090.2016.0006095)
+ConductionPartial = Partial conduction
+ConductionPartialHelp = The parcel is only partly conducted by the farm
+DateConductionStart = Conduction start
+DateConductionEnd = Conduction end
+DateConductionEndHelp = Expiry of the conduction title (e.g. lease contract). Empty if open-ended
+SizeCadastral = Cadastral area (ha)
+SizeGraphic = Graphic area (ha)
+SizeConducted = Conducted area (ha)
+ZoneZVN = Nitrate vulnerable zone (NVZ)
+ZoneZVNHelp = NVZ constraint shown in the dossier: limits nitrogen inputs
+ZoneNatura2000 = Natura 2000 site (SCI/SPA)
+ZoneNatura2000Help = Code of the SCI/SPA site shown in the dossier. Empty if the parcel is not in a site
+ErrorConductionEndBeforeStart = The end of conduction cannot be before its start
+CadastralReference = National cadastral reference
+CadastralReferenceHelp = Identifier of the parcel in the cadastral map of the Agenzia delle Entrate (e.g. F943_027100.47). Filled by clicking on the map
+CadastralParcelFound = Cadastral parcel
+CadastralSearching = Looking for the parcel...
+CadastralFillFields = Fill the cadastral data
+CadastralFillFromMap = Find the parcel on the map
+CadastreAndLocation = Cadastre and location
+Cadastre = Cadastre
+Surfaces = Surfaces
+Coordinates = Coordinates
+OrganicFarming = Organic farming
+EnvironmentalConstraints = Environmental constraints
+ConductionPeriod = Conduction period
+ConversionPeriod = Conversion period
+CadastralParcelNotFound = No cadastral parcel at this point
+CadastralPointOutsideItaly = The point is outside Italy: the cadastral map is not available
+CadastralServiceUnavailable = The map service of the Agenzia delle Entrate does not answer
+GeoLocation = Geolocation
+Localization = Location
+DrawPolygonToCalculateArea = Draw the boundary with the tools on the left of the map: the graphic area and the coordinates are filled automatically. Click on a point to read the cadastral parcel.

@@ -24,3 +24,43 @@ DateBioMembership = Date d'adhésion à l'organisme de contrôle
 ErrorValidUntilBeforeSignature = La date de fin de validité ne peut pas être antérieure à la date de validation
 DictionaryPayingAgency = Organismes payeurs
 TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = Opérateur CAA
+
+#
+# Plot
+#
+CadastralSection = Section
+ConductionProtocol = Protocole de conduite
+ConductionProtocolHelp = Numéro de protocole du titre de conduite dans le dossier (ex. AGEA.CAA6090.2016.0006095)
+ConductionPartial = Conduite partielle
+ConductionPartialHelp = La parcelle n'est conduite qu'en partie par l'exploitation
+DateConductionStart = Début de conduite
+DateConductionEnd = Fin de conduite
+DateConductionEndHelp = Échéance du titre de conduite (ex. bail). Vide si à durée indéterminée
+SizeCadastral = Surface cadastrale (ha)
+SizeGraphic = Surface graphique (ha)
+SizeConducted = Surface conduite (ha)
+ZoneZVN = Zone vulnérable aux nitrates (ZVN)
+ZoneZVNHelp = Contrainte ZVN indiquée dans le dossier : limite les apports d'azote
+ZoneNatura2000 = Site Natura 2000 (SIC/ZPS)
+ZoneNatura2000Help = Code du site SIC/ZPS indiqué dans le dossier. Vide si la parcelle n'est pas dans un site
+ErrorConductionEndBeforeStart = La date de fin de conduite ne peut pas être antérieure à la date de début
+CadastralReference = Référence cadastrale nationale
+CadastralReferenceHelp = Identifiant de la parcelle dans la carte cadastrale de l'Agenzia delle Entrate (ex. F943_027100.47). Rempli en cliquant sur la carte
+CadastralParcelFound = Parcelle cadastrale
+CadastralSearching = Recherche de la parcelle...
+CadastralFillFields = Remplir les données cadastrales
+CadastralFillFromMap = Chercher la parcelle sur la carte
+CadastreAndLocation = Cadastre et localisation
+Cadastre = Cadastre
+Surfaces = Surfaces
+Coordinates = Coordonnées
+OrganicFarming = Agriculture biologique
+EnvironmentalConstraints = Contraintes environnementales
+ConductionPeriod = Période de conduite
+ConversionPeriod = Période de conversion
+CadastralParcelNotFound = Aucune parcelle cadastrale à cet endroit
+CadastralPointOutsideItaly = Le point est hors d'Italie : la carte cadastrale n'est pas disponible
+CadastralServiceUnavailable = Le service cartographique de l'Agenzia delle Entrate ne répond pas
+GeoLocation = Géolocalisation
+Localization = Localisation
+DrawPolygonToCalculateArea = Dessinez le périmètre avec les outils à gauche de la carte : la surface graphique et les coordonnées sont remplies automatiquement. Cliquez sur un point pour lire la parcelle cadastrale.

@@ -140,23 +140,32 @@ class DoliFarmPlot extends CommonObject
         
         // Linked to Dictionary: llx_dolifarm_c_ownership
         // Syntax: sellist:TableName:LabelField:KeyField::Filter
-        "fk_ownership" => array("type" => "sellist:dolifarm_c_ownership:label:code::active=1", "label" => "Ownership", "enabled" => "1", 'position' => 26, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
-        "fk_owner" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "PlotOwner", "picto" => "company", "enabled" => "1", 'position' => 27, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_ownership" => array("type" => "sellist:dolifarm_c_ownership:label:code::active=1", "label" => "Ownershiptype", "enabled" => "1", 'position' => 26, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_owner" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "FkOwner", "picto" => "company", "enabled" => "1", 'position' => 27, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "conduction_protocol" => array("type" => "varchar(64)", "label" => "ConductionProtocol", "enabled" => "1", 'position' => 28, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth300", "help" => "ConductionProtocolHelp",),
+        "conduction_partial" => array("type" => "boolean", "label" => "ConductionPartial", "enabled" => "1", 'position' => 29, 'notnull' => 0, "visible" => "-1", "help" => "ConductionPartialHelp",),
+        "date_conduction_start" => array("type" => "date", "label" => "DateConductionStart", "enabled" => "1", 'position' => 31, 'notnull' => 0, "visible" => "-1",),
+        "date_conduction_end" => array("type" => "date", "label" => "DateConductionEnd", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "-1", "help" => "DateConductionEndHelp",),
         
-        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "Fkdossier", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "FkDossier", "enabled" => "1", 'position' => 22, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
         "cadastral_comune" => array("type" => "varchar(100)", "label" => "Cadastralcomune", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
+        "cadastral_section" => array("type" => "varchar(10)", "label" => "CadastralSection", "enabled" => "1", 'position' => 38, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth100",),
         "cadastral_sheet" => array("type" => "varchar(10)", "label" => "Cadastralsheet", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
         "cadastral_parcel" => array("type" => "varchar(10)", "label" => "Cadastralparcel", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
         "cadastral_sub" => array("type" => "varchar(10)", "label" => "Cadastralsub", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
+        "cadastral_reference" => array("type" => "varchar(32)", "label" => "CadastralReference", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth200", "help" => "CadastralReferenceHelp",),
         
-        "size_total" => array("type" => "double(24,8)", "label" => "Sizetotal", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1",),
+        "size_cadastral" => array("type" => "double(24,8)", "label" => "SizeCadastral", "enabled" => "1", 'position' => 58, 'notnull' => 0, "visible" => "-1",),
+        // Area of the polygon drawn on the map (filled by the map script)
+        "size_total" => array("type" => "double(24,8)", "label" => "SizeGraphic", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1",),
+        "size_conducted" => array("type" => "double(24,8)", "label" => "SizeConducted", "enabled" => "1", 'position' => 62, 'notnull' => 0, "visible" => "-1",),
         "size_sau" => array("type" => "double(24,8)", "label" => "Sizesau", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "-1",),
         
         // GIS Fields (Double for Maps compatibility)
         "geo_lat" => array("type" => "double(24,8)", "label" => "Geolat", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "-1",),
         "geo_lon" => array("type" => "double(24,8)", "label" => "Geolon", "enabled" => "1", 'position' => 75, 'notnull' => 0, "visible" => "-1",),
-        "shape_json" => array("type" => "text", "label" => "ShapeJson", "enabled" => "1", 'position' => 77, 'notnull' => 0, "visible" => "5", "cssview" => "wordbreak",),
+        "shape_json" => array("type" => "text", "label" => "ShapeJson", "enabled" => "1", 'position' => 77, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         "map_reference" => array("type" => "varchar(128)", "label" => "Mapreference", "enabled" => "1", 'position' => 78, 'notnull' => 0, "visible" => "-1",),
 
         // Linked to Dictionary: llx_dolifarm_c_biostatus
@@ -164,22 +173,26 @@ class DoliFarmPlot extends CommonObject
         
         "date_conversion_start" => array("type" => "date", "label" => "Dateconversionstart", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "-1",),
         "date_conversion_end" => array("type" => "date", "label" => "Dateconversionend", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "-1",),
+
+        // Administrative constraints on the land (from the dossier)
+        "zone_zvn" => array("type" => "boolean", "label" => "ZoneZVN", "enabled" => "1", 'position' => 92, 'notnull' => 0, "visible" => "-1", "help" => "ZoneZVNHelp",),
+        "zone_natura2000" => array("type" => "varchar(64)", "label" => "ZoneNatura2000", "enabled" => "1", 'position' => 93, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth200", "help" => "ZoneNatura2000Help",),
         
-        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
+        "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "5", "arrayofkeyval" => array("0" => "Draft", "1" => "Enabled", "9" => "Disabled"),),
         
         "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 105, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         
         // Standard Dolibarr Tracking fields
-        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 125, 'notnull' => 0, "visible" => "-1",),
-        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 126, 'notnull' => 0, "visible" => "-1",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 130, 'notnull' => 0, "visible" => "-1",),
+        "date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 125, 'notnull' => 0, "visible" => "-2",),
+        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 126, 'notnull' => 0, "visible" => "-2",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 130, 'notnull' => 0, "visible" => "-2",),
         "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 135, 'notnull' => 0, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         "fk_user_modif" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserModif", "picto" => "user", "enabled" => "1", 'position' => 140, 'notnull' => -1, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         "import_key" => array("type" => "varchar(14)", "label" => "ImportId", "enabled" => "1", 'position' => 900, 'notnull' => 0, "visible" => "-2",),
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-1",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-1",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "0",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "0",),
     );
 
     // Properties corresponding to fields
@@ -191,6 +204,16 @@ class DoliFarmPlot extends CommonObject
     public $fk_soc;
     public $fk_ownership;
     public $fk_owner;
+    public $conduction_protocol;
+    public $conduction_partial;
+    public $date_conduction_start;
+    public $date_conduction_end;
+    public $cadastral_section;
+    public $cadastral_reference;
+    public $size_cadastral;
+    public $size_conducted;
+    public $zone_zvn;
+    public $zone_natura2000;
     public $cadastral_comune;
     public $cadastral_sheet;
     public $cadastral_parcel;
@@ -344,6 +367,9 @@ class DoliFarmPlot extends CommonObject
             $this->status = self::STATUS_DRAFT;
         }
 
+        if ($this->checkConductionDates() < 0) {
+            return -1;
+        }
         $result = $this->createCommon($user, $notrigger);
 
         // uncomment lines below if you want to validate object after creation
@@ -579,7 +605,27 @@ class DoliFarmPlot extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        if ($this->checkConductionDates() < 0) {
+            return -1;
+        }
         return $this->updateCommon($user, $notrigger);
+    }
+
+    /**
+     * Check that the end of conduction is not before its start
+     *
+     * @return int     Return integer <0 if KO, >0 if OK
+     */
+    public function checkConductionDates()
+    {
+        global $langs;
+
+        if (!empty($this->date_conduction_start) && !empty($this->date_conduction_end) && $this->date_conduction_end < $this->date_conduction_start) {
+            $langs->load('dolifarm@dolifarm');
+            $this->error = $langs->trans('ErrorConductionEndBeforeStart');
+            return -1;
+        }
+        return 1;
     }
 
     /**

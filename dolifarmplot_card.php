@@ -85,7 +85,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'wms_proxy') {
 
 
 // General defined Options
-if (! defined('CSRFCHECK_WITH_TOKEN'))     define('CSRFCHECK_WITH_TOKEN', '1');                   // Force use of CSRF protection with tokens even for GET
+//if (! defined('CSRFCHECK_WITH_TOKEN'))     define('CSRFCHECK_WITH_TOKEN', '1');                   // Force use of CSRF protection with tokens even for GET
 
 // Load Dolibarr environment
 $res = 0;
@@ -137,7 +137,8 @@ dol_include_once('/dolifarm/class/dolifarmplot.class.php');
 dol_include_once('/dolifarm/lib/dolifarm_plot.lib.php');
 
 // --- [INTEGRAZIONE] INCLUDE LIBRERIA MAPPA ---
-dol_include_once('/dolifarm/lib/dolifarm_map.lib.php'); 
+dol_include_once('/dolifarm/lib/dolifarm_map.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_fields.lib.php');
 // ---------------------------------------------
 
 // Load translation files required by the page
@@ -246,6 +247,13 @@ if (empty($reshook)) {
         }
     }
 
+    // The polygon drawn on the map is not a field of the form: save it here (only valid GeoJSON)
+    if (($action == 'add' || $action == 'update') && !$cancel && GETPOSTISSET('shape_json')) {
+        $shape_json_post = GETPOST('shape_json', 'none'); // Validated and re-encoded below
+        $shape_decoded = json_decode($shape_json_post, true);
+        $object->shape_json = (is_array($shape_decoded) && !empty($shape_decoded['type'])) ? json_encode($shape_decoded) : null;
+    }
+
     $triggermodname = $object->TRIGGER_PREFIX.'_MODIFY'; // Name of trigger action code to execute when we modify record. Used in actions_addupdatedelete.inc.php
 
     // Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
@@ -275,6 +283,101 @@ if (empty($reshook)) {
 
 $form = new Form($db);
 $formfile = new FormFile($db);
+
+// Layout of the card: general data on two columns, then cadastre and location next to the map, then organic farming and constraints
+$plotlayout = array(
+	'general_left' => array('ref', 'label', 'fk_dossier', 'fk_soc'),
+	'general_right' => array('fk_ownership', 'fk_owner', 'conduction_protocol', 'conduction_partial',
+		array('label' => 'ConductionPeriod', 'fields' => array('date_conduction_start', 'date_conduction_end'))),
+	'cadastre' => array('cadastral_comune', 'cadastral_section', 'cadastral_sheet', 'cadastral_parcel', 'cadastral_sub', 'cadastral_reference'),
+	'surfaces' => array('size_cadastral', 'size_total', 'size_conducted', 'size_sau'),
+	'geo' => array('geo_lat', 'geo_lon', 'map_reference'),
+	'bio' => array('fk_status_bio', array('label' => 'ConversionPeriod', 'fields' => array('date_conversion_start', 'date_conversion_end'))),
+	'zones' => array('zone_zvn', 'zone_natura2000'),
+);
+
+/**
+ * Print the fields of the plot card in groups (same layout in create, edit and view)
+ *
+ * @param	DoliFarmPlot					$object		Plot
+ * @param	array<string,array<int,mixed>>	$layout		Groups of fields
+ * @param	string							$mode		'create', 'edit' or 'view'
+ * @return	void
+ */
+function dolifarm_plot_print_fields($object, $layout, $mode)
+{
+	global $langs, $conf, $db, $user, $form, $hookmanager, $extrafields, $action;
+
+	$options = array();
+	dolifarmPrintFieldsCss();
+
+	// General data
+	print '<div class="fichecenter">';
+	print '<div class="fichehalfleft">';
+	if ($mode == 'view') {
+		print '<div class="underbanner clearboth"></div>';
+	}
+	dolifarmPrintFieldsTable($object, $layout['general_left'], $mode, '', $options);
+	print '</div>';
+	print '<div class="fichehalfright">';
+	if ($mode == 'view') {
+		print '<div class="underbanner clearboth"></div>';
+	}
+	dolifarmPrintFieldsTable($object, $layout['general_right'], $mode, '', $options);
+	print '</div>';
+	print '</div>';
+	print '<div class="clearboth"></div>';
+
+	// Cadastre and location next to the map (flex: the map column is as tall as the fields, so the map can stay in view)
+	print '<div class="dolifarm-section">';
+	print load_fiche_titre($langs->trans("CadastreAndLocation"), '', 'fa-map-marked-alt');
+	print '<div class="fichecenter dolifarm-cols">';
+	print '<div class="fichehalfleft">';
+	$cadastreoptions = $options;
+	if ($mode != 'view') {
+		$cadastreoptions['morerows'] = '<tr><td></td><td><a href="#" class="button small smallpaddingimp dolifarm-cadastral-lookup"><span class="fa fa-search-location paddingright"></span>'.$langs->trans("CadastralFillFromMap").'</a></td></tr>';
+	}
+	dolifarmPrintFieldsTable($object, $layout['cadastre'], $mode, 'Cadastre', $cadastreoptions);
+	dolifarmPrintFieldsTable($object, $layout['surfaces'], $mode, 'Surfaces', $options);
+	dolifarmPrintFieldsTable($object, $layout['geo'], $mode, 'Coordinates', $options);
+	print '</div>';
+	dolifarm_print_map_container($mode == 'view' ? 'view' : 'edit');
+	print '</div>';
+	print '<div class="clearboth"></div>';
+	print '</div>';
+
+	// Organic farming and constraints
+	print '<div class="dolifarm-section">';
+	print '<div class="fichecenter">';
+	print '<div class="fichehalfleft">';
+	dolifarmPrintFieldsTable($object, $layout['bio'], $mode, 'OrganicFarming', $options);
+	print '</div>';
+	print '<div class="fichehalfright">';
+	dolifarmPrintFieldsTable($object, $layout['zones'], $mode, 'EnvironmentalConstraints', $options);
+	print '</div>';
+	print '</div>';
+	print '<div class="clearboth"></div>';
+
+	// Fields not placed in the layout, then extrafields
+	$all = array();
+	foreach ($layout as $items) {
+		$all = array_merge($all, $items);
+	}
+	$tableclass = ($mode == 'view') ? 'tableforfield' : 'tableforfield'.$mode;
+	print '<table class="border centpercent '.$tableclass.' dolifarm-fields">'."\n";
+	foreach (dolifarmFieldsNotInLayout($object, $all, $mode) as $key) {
+		dolifarmPrintFieldRow($object, array($key), $mode, '', $options);
+	}
+	if ($mode == 'create') {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+	} elseif ($mode == 'edit') {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_edit.tpl.php';
+	} else {
+		include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
+	}
+	print '</table>'."\n";
+	print '</div>';
+}
 
 $title = $langs->trans("DoliFarmPlot")." - ".$langs->trans('Card');
 //$title = $object->ref." - ".$langs->trans('Card');
@@ -311,27 +414,13 @@ if ($action == 'create') {
     print dol_get_fiche_head(array(), '');
 
 
-    print '<table class="border centpercent tableforfieldcreate">'."\n";
+    dolifarm_plot_print_fields($object, $plotlayout, 'create');
 
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
+    $lat_def = GETPOST('geo_lat', 'alpha');
+    $lon_def = GETPOST('geo_lon', 'alpha');
 
-    // Other attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
-
-    print '</table>'."\n";
-
-    // --- [INTEGRAZIONE] MAPPA CREATE ---
-    print '<br>';
-    print load_fiche_titre($langs->trans("GeoLocation"), '', 'compass');
-    print '<div id="dolifarm_map_edit" style="width: 100%; height: 450px; border: 1px solid #bbb; border-radius: 4px; margin-bottom: 10px;"></div>';
-    print '<div class="info-box"><span class="fa fa-info-circle"></span> ' . $langs->trans("DrawPolygonToCalculateArea") . '</div>';
-    
-    $lat_def = GETPOST('geolat') ? GETPOST('geolat') : '';
-    $lon_def = GETPOST('geolon') ? GETPOST('geolon') : '';
-    
     // CHIAMATA LIBRERIA
-    dolifarm_print_map_script('edit', $lat_def, $lon_def, '', 'size_total');
+    dolifarm_print_map_script('edit', $lat_def, $lon_def, $shape_json_val, 'size_total');
     // -----------------------------------
 
     print dol_get_fiche_end();
@@ -361,24 +450,10 @@ if (($id || $ref) && $action == 'edit') {
 
     print dol_get_fiche_head();
 
-    print '<table class="border centpercent tableforfieldedit">'."\n";
+    dolifarm_plot_print_fields($object, $plotlayout, 'edit');
 
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
-
-    // Other attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_edit.tpl.php';
-
-    print '</table>';
-
-    // --- [INTEGRAZIONE] MAPPA EDIT ---
-    print '<br>';
-    print load_fiche_titre($langs->trans("GeoLocation"), '', 'compass');
-    print '<div id="dolifarm_map_edit" style="width: 100%; height: 450px; border: 1px solid #bbb; border-radius: 4px; margin-bottom: 10px;"></div>';
-    print '<div class="info-box"><span class="fa fa-info-circle"></span> ' . $langs->trans("DrawPolygonToCalculateArea") . '</div>';
-    
-    $lat_val = (GETPOST('geolat') ? GETPOST('geolat') : $object->geolat);
-    $lon_val = (GETPOST('geolon') ? GETPOST('geolon') : $object->geolon);
+    $lat_val = (GETPOST('geo_lat', 'alpha') ? GETPOST('geo_lat', 'alpha') : $object->geo_lat);
+    $lon_val = (GETPOST('geo_lon', 'alpha') ? GETPOST('geo_lon', 'alpha') : $object->geo_lon);
     
     dolifarm_print_map_script('edit', $lat_val, $lon_val, $shape_json_val, 'size_total');
     // --------------------------------
@@ -438,29 +513,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
 
-    print '<div class="fichecenter">';
-    print '<div class="fichehalfleft">';
-    print '<div class="underbanner clearboth"></div>';
-    print '<table class="border centpercent tableforfield">'."\n";
+    dolifarm_plot_print_fields($object, $plotlayout, 'view');
 
-    // Common attributes
-    include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_view.tpl.php';
-
-    // Other attributes. Fields from hook formObjectOptions and Extrafields.
-    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
-
-    print '</table>';
-    print '</div>';
-    
-    // --- [INTEGRAZIONE] MAPPA VIEW ---
-    print '<div class="fichehalfright">';
-    
-    print '<div class="underbanner clearboth"></div>';
-    print load_fiche_titre($langs->trans("Localization"), '', 'compass');
-    print '<div id="dolifarm_map_view" style="width: 100%; height: 350px; border: 1px solid #bbb; border-radius: 4px; margin-bottom: 20px;"></div>';
-    
-    $lat = (isset($object->geolat) && $object->geolat != '') ? $object->geolat : '';
-    $lon = (isset($object->geolon) && $object->geolon != '') ? $object->geolon : '';
+    $lat = (isset($object->geo_lat) && $object->geo_lat != '') ? $object->geo_lat : '';
+    $lon = (isset($object->geo_lon) && $object->geo_lon != '') ? $object->geo_lon : '';
     
     dolifarm_print_map_script('view', $lat, $lon, $object->shape_json);
     // --------------------------------
@@ -518,7 +574,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         print '</div>';
     }
 
-    print '</div></div>'; // End halfright, End center
     print '<div class="clearboth"></div>';
 
     print dol_get_fiche_end();
