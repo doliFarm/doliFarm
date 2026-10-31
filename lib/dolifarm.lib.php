@@ -49,7 +49,9 @@ function dolifarmAdminPrepareHead()
 		'dolifarmlivestock' => array('DoliFarmLivestock', 'dolifarm_livestock'),
 		'dolifarmbuilding' => array('DoliFarmBuilding', 'dolifarm_building'),
 		'dolifarmmachine' => array('DoliFarmMachine', 'dolifarm_machine'),
+		'dolifarmoperator' => array('DoliFarmOperator', 'dolifarm_operator'),
 		'dolifarmagrodrug' => array('DoliFarmAgroDrug', 'dolifarm_agrodrug'),
+		'dolifarmfertilizer' => array('DoliFarmFertilizer', 'dolifarm_fertilizer'),
 		'dolifarmcrops' => array('DoliFarmCrops', 'dolifarm_crops'),
 		'dolifarmestimatecosts' => array('DoliFarmEstimateCosts', 'dolifarm_dolifarmestimatecosts'),
 	) as $element => $info) {
@@ -63,6 +65,11 @@ function dolifarmAdminPrepareHead()
 		$head[$h][2] = $element.'_extrafields';
 		$h++;
 	}
+
+	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/eppo.php", 1));
+	$head[$h][1] = $langs->trans("EppoCodes");
+	$head[$h][2] = 'eppo';
+	$h++;
 
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/about.php", 1));
 	$head[$h][1] = $langs->trans("About");

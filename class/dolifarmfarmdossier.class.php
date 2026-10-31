@@ -130,7 +130,7 @@ class DoliFarmFarmDossier extends CommonObject
      */
     public $fields = array(
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 1, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
         "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php:1", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         // Replaced by the CAA operator (contact of the dossier) and by date_signature/date_validity_end: kept in DB only
@@ -153,6 +153,9 @@ class DoliFarmFarmDossier extends CommonObject
         // Organic control body
         "fk_soc_bio_body" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "BioControlBody", "picto" => "company", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150",),
         "date_bio_membership" => array("type" => "date", "label" => "DateBioMembership", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-1",),
+        // Warehouses of the farm: technical inputs (agrodrugs, fertilizers) and harvested products
+        "fk_warehouse_inputs" => array("type" => "integer:Entrepot:product/stock/class/entrepot.class.php:0:((statut:>:0) AND (entity:IN:__SHARED_ENTITIES__))", "label" => "WarehouseInputs", "picto" => "stock", "enabled" => "isModEnabled('stock')", 'position' => 49, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150", "help" => "WarehouseInputsHelp",),
+        "fk_warehouse_products" => array("type" => "integer:Entrepot:product/stock/class/entrepot.class.php:0:((statut:>:0) AND (entity:IN:__SHARED_ENTITIES__))", "label" => "WarehouseProducts", "picto" => "stock", "enabled" => "isModEnabled('stock')", 'position' => 49.5, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150", "help" => "WarehouseProductsHelp",),
         "date_import" => array("type" => "datetime", "label" => "DateImport", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "-5",),
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "5", "arrayofkeyval" => array("0" => "Draft", "1" => "Enabled", "9" => "Disabled"),),
         "source_file" => array("type" => "varchar(255)", "label" => "SourceFile", "enabled" => "1", 'position' => 91, 'notnull' => 0, "visible" => "-5",),
@@ -189,6 +192,8 @@ class DoliFarmFarmDossier extends CommonObject
     public $economic_size;
     public $fk_soc_bio_body;
     public $date_bio_membership;
+    public $fk_warehouse_inputs;
+    public $fk_warehouse_products;
     public $date_import;
     public $status;
     public $source_file;
@@ -323,6 +328,10 @@ class DoliFarmFarmDossier extends CommonObject
             return -1;
         }
 
+        // The ref can be typed; when left empty it is given by the numbering module
+        if (empty($this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         $result = $this->createCommon($user, $notrigger);
 
         // uncomment lines below if you want to validate object after creation
@@ -558,6 +567,10 @@ class DoliFarmFarmDossier extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        // A ref cleared in the form is given again by the numbering module
+        if (empty($this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         if ($this->checkValidityDates() < 0) {
             return -1;
         }

@@ -39,7 +39,7 @@ class InterfaceDolifarmTriggers extends DolibarrTriggers
 
 		$this->name = preg_replace('/^Interface/i', '', get_class($this));
 		$this->family = "dolifarm";
-		$this->description = "doliFarm: agenda events of the expiry dates (dossier, conductions, authorisations, machines).";
+		$this->description = "doliFarm: agenda events of the expiry dates (dossier, conductions, authorisations, machines), dossier and warehouses of the affiliated farms.";
 		$this->version = self::VERSIONS['prod'];
 		$this->picto = 'fa-leaf';
 	}
@@ -56,6 +56,23 @@ class InterfaceDolifarmTriggers extends DolibarrTriggers
 	 */
 	public function runTrigger($action, $object, User $user, Translate $langs, Conf $conf)
 	{
+		// Affiliated farms (multi-farm mode): dossier and warehouses follow the flag of the third party
+		if (($action == 'COMPANY_CREATE' || $action == 'COMPANY_MODIFY') && isModEnabled('dolifarm') && getDolGlobalInt('DOLIFARM_MULTIFARM')) {
+			dol_include_once('/dolifarm/lib/dolifarm_affiliated.lib.php');
+			$messages = array();
+			$res = dolifarmSyncAffiliatedFarm($this->db, $object, $user, $messages);
+			if ($res < 0) {
+				// The third party is saved anyway: the user is warned and can save it again
+				dol_syslog("Trigger '".$this->name."': affiliated farm not updated for third party ".$object->id.": ".implode(' ', $messages), LOG_ERR);
+				setEventMessages($langs->trans('ErrorDolifarmAffiliatedSync'), $messages, 'warnings');
+				return 0;
+			}
+			if ($res > 0) {
+				setEventMessages(null, $messages, 'mesgs');
+			}
+			return $res > 0 ? 1 : 0;
+		}
+
 		// Codes of the common CRUD (DOLIFARMBUILDING_CREATE: class name) and of the status changes (DOLIFARM_BUILDING_CANCEL: TRIGGER_PREFIX)
 		if (!isModEnabled('dolifarm') || !preg_match('/^DOLIFARM_?[A-Z]+_(CREATE|MODIFY|DELETE|CANCEL|REOPEN|VALIDATE|UNVALIDATE)$/', $action, $reg)) {
 			return 0;

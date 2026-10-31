@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_crops(
 	fk_default_product INTEGER DEFAULT NULL,
 	entity INTEGER DEFAULT 1,
 	scientific_name varchar(255), 
+	eppo_code varchar(10), 
 	family varchar(128), 
 	variety varchar(128), 
 	crop_type varchar(32), 

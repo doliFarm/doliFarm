@@ -1,5 +1,28 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.2.0
+
+Anagrafiche per il registro dei trattamenti e delle fertilizzazioni (Reg. UE 2023/564) e codici EPPO. Dopo l'aggiornamento disattivare e riattivare il modulo per applicare tabelle, indici, dizionari e job pianificati.
+
+### Registro dei trattamenti
+- Nuovo oggetto Operatore (riferimento OPER): terzo o contatto o utente, codice fiscale, patentino con tipo, numero, ente, rilascio e scadenza; la scadenza del patentino entra nelle scadenze.
+- Nuovo oggetto Fertilizzante (riferimento FERT): prodotto, tipo (dizionario "Tipi di fertilizzante"), produttore, numero di registrazione, titolo di N, P2O5 e K2O, biologico.
+- Colture: codice EPPO. Appezzamenti: identificativo della parcella IACS e tipo di coltivazione.
+
+### Magazzini e aziende affiliate
+- Fascicolo: magazzino dei mezzi tecnici e magazzino dei prodotti (con il modulo Magazzini attivo); nel setup i magazzini predefiniti per la modalità azienda singola.
+- Modalità multi-azienda (setup): il campo "Azienda affiliata" del soggetto terzo crea il fascicolo in bozza e i magazzini AZ-<codice>, -IN e -PROD; togliendolo i magazzini vengono chiusi e il fascicolo disattivato, senza cancellare nulla.
+
+### Codici EPPO
+- Import del file "XML full" scaricato da data.eppo.int (anche compresso in gzip), dalla scheda "Codici EPPO" del setup o da riga di comando (scripts/eppo_import.php). Solo codici e nomi, secondo la EPPO Open Data Licence; attribuzione e data dei dati mostrate dove compaiono i codici.
+- Colture: ricerca del codice per nome o codice, controllo del tipo (piante) e compilazione dal nome scientifico; nella scheda "Codici EPPO" il completamento delle colture senza codice.
+- Aggiornamento dall'API EPPO dei codici creati o modificati (codici disattivati e codice sostitutivo): pulsante "Aggiorna ora" e job settimanale, disattivato per default. La chiave API si inserisce nelle impostazioni del modulo, viene verificata e salvata cifrata.
+- Dopo l'aggiornamento: importare il file EPPO, inserire la chiave e attivare il job "Aggiornamento codici EPPO" nei lavori pianificati.
+
+### Altro
+- Riferimento assegnato alla creazione per macchine (non modificabile, come gli appezzamenti); per agrofarmaci, colture e fascicolo è facoltativo e, se vuoto, viene generato (AGRO, COLT, FASC).
+- Schede Note e Documenti attive per tutti gli oggetti; rimossi i modelli di documento di esempio di ModuleBuilder.
+
 ## 1.1.1
 
 Correzioni emerse dall'aggiornamento di un'installazione esistente alla 1.1.0. Dopo l'aggiornamento disattivare e riattivare il modulo.

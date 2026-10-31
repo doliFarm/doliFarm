@@ -119,6 +119,61 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
 $item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
+// Multi-farm mode: the affiliated third parties get their dossier and warehouses
+$formSetup->newItem('FarmMode')->setAsTitle();
+$item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();
+$item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
+
+// Warehouses used when the farm dossier has none (single-farm mode)
+if (isModEnabled('stock')) {
+	dol_include_once('/dolifarm/lib/dolifarm_warehouse.lib.php');
+	$warehouses = array('' => '') + dolifarmWarehouseOptions($db);
+	$formSetup->newItem('FarmWarehouses')->setAsTitle();
+	$item = $formSetup->newItem('DOLIFARM_WAREHOUSE_INPUTS')->setAsSelect($warehouses);
+	$item->helpText = $langs->transnoentities('DOLIFARM_WAREHOUSE_INPUTSHelp');
+	$item = $formSetup->newItem('DOLIFARM_WAREHOUSE_PRODUCTS')->setAsSelect($warehouses);
+	$item->helpText = $langs->transnoentities('DOLIFARM_WAREHOUSE_PRODUCTSHelp');
+}
+
+// Key of the EPPO API: never printed in the page, checked with a call before it is saved (constant of entity 0,
+// stored encrypted by dolibarr_set_const). An empty field keeps the key, the checkbox removes it.
+$formSetup->newItem('EppoApi')->setAsTitle();
+$item = $formSetup->newItem('DOLIFARM_EPPO_API_KEY');
+$item->nameText = $langs->transnoentities('EppoApiKey');
+$item->helpText = $langs->transnoentities('EppoApiKeyHelp');
+$eppokeyset = (getDolGlobalString('DOLIFARM_EPPO_API_KEY') !== '');
+$item->fieldInputOverride = '<input type="password" class="flat minwidth300" name="DOLIFARM_EPPO_API_KEY" value="" autocomplete="new-password" placeholder="'.dol_escape_htmltag($eppokeyset ? $langs->transnoentities('EppoApiKeyIsSet') : '').'">';
+if ($eppokeyset) {
+	$item->fieldInputOverride .= ' <label><input type="checkbox" name="DOLIFARM_EPPO_API_KEY_remove" value="1"> '.$langs->trans('EppoApiKeyRemove').'</label>';
+}
+$item->fieldOutputOverride = ($eppokeyset ? img_picto('', 'tick', 'class="pictofixedwidth"').$langs->trans('EppoApiKeySet') : '<span class="opacitymedium">'.$langs->trans('EppoApiKeyNotSet').'</span>');
+$item->setValueFromPostCallBack(function () use ($db, $langs, $conf) {
+	if (GETPOST('DOLIFARM_EPPO_API_KEY_remove', 'int')) {
+		dolibarr_del_const($db, 'DOLIFARM_EPPO_API_KEY', 0);
+		setEventMessages($langs->trans('EppoApiKeyRemoved'), null, 'mesgs');
+		return 0;
+	}
+	$apikey = trim(GETPOST('DOLIFARM_EPPO_API_KEY', 'password'));
+	// The header copies the posted values in the link of the print view: the key must not be there
+	unset($_POST['DOLIFARM_EPPO_API_KEY'], $_GET['DOLIFARM_EPPO_API_KEY']);
+	if ($apikey === '') {
+		return 0;
+	}
+	dol_include_once('/dolifarm/class/dolifarmepposync.class.php');
+	$previous = getDolGlobalString('DOLIFARM_EPPO_API_KEY');
+	$conf->global->DOLIFARM_EPPO_API_KEY = $apikey;
+	$sync = new DoliFarmEppoSync($db);
+	if ($sync->checkKey() > 0) {
+		dolibarr_set_const($db, 'DOLIFARM_EPPO_API_KEY', $apikey, 'chaine', 0, 'Key of the EPPO API', 0);
+		setEventMessages($langs->trans('EppoApiKeySaved'), null, 'mesgs');
+	} else {
+		$conf->global->DOLIFARM_EPPO_API_KEY = $previous;
+		setEventMessages($sync->error, null, 'errors');
+	}
+	// The constant is written here (entity 0), not by the form
+	return 0;
+});
+
 // End of definition of parameters
 
 
@@ -136,7 +191,9 @@ foreach (array(
 	'dolifarmlivestock' => 'DoliFarmLivestock',
 	'dolifarmbuilding' => 'DoliFarmBuilding',
 	'dolifarmmachine' => 'DoliFarmMachine',
+	'dolifarmoperator' => 'DoliFarmOperator',
 	'dolifarmagrodrug' => 'DoliFarmAgroDrug',
+	'dolifarmfertilizer' => 'DoliFarmFertilizer',
 	'dolifarmcrops' => 'DoliFarmCrops',
 ) as $tmpkey => $tmpclass) {
 	dol_include_once('/dolifarm/class/'.$tmpkey.'.class.php');
