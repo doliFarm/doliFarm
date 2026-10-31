@@ -111,6 +111,17 @@ if ($action == 'import') {
 		setEventMessages($langs->trans('ErrorEppoNoFile'), null, 'errors');
 	}
 }
+if ($action == 'fillcrops') {
+	dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+	$result = dolifarmEppoFillCrops($db);
+	if ($result < 0) {
+		setEventMessages($db->lasterror(), null, 'errors');
+	} else {
+		setEventMessages($langs->trans('EppoCropsFilled', $result), null, 'mesgs');
+	}
+	header("Location: ".$_SERVER["PHP_SELF"]);
+	exit;
+}
 if (($action == 'upload' || $action == 'import') && $file) {
 	@set_time_limit(0);
 	$importer = new DoliFarmEppoImporter($db);
@@ -180,6 +191,26 @@ if ($counts) {
 	}
 	print '</table>';
 	print '</div>';
+}
+
+// Crops without EPPO code: filled from the scientific name
+if ($total > 0) {
+	$nbcrops = 0;
+	$sql = "SELECT COUNT(*) as nb FROM ".$db->prefix()."dolifarm_crops WHERE (eppo_code IS NULL OR eppo_code = '') AND entity IN (".getEntity('dolifarmcrops').")";
+	$resql = $db->query($sql);
+	if ($resql && ($obj = $db->fetch_object($resql))) {
+		$nbcrops = (int) $obj->nb;
+	}
+	print '<br>';
+	print load_fiche_titre($langs->trans('EppoCropsTitle'), '', '');
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="fillcrops">';
+	print $langs->trans('EppoCropsWithoutCode', $nbcrops).' ';
+	if ($nbcrops > 0) {
+		print '<input type="submit" class="button small reposition" value="'.$langs->trans('EppoCropsFill').'">';
+	}
+	print '</form>';
 }
 
 // Import

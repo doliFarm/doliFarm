@@ -266,6 +266,9 @@ class DoliFarmCrops extends CommonObject
 		if (empty($this->ref)) {
 			$this->ref = $this->getNextNumRef();
 		}
+		if ($this->checkEppoCode() < 0) {
+			return -1;
+		}
 		$result = $this->createCommon($user, $notrigger);
 
 		// uncomment lines below if you want to validate object after creation
@@ -504,7 +507,76 @@ class DoliFarmCrops extends CommonObject
 		if (empty($this->ref)) {
 			$this->ref = $this->getNextNumRef();
 		}
+		if ($this->checkEppoCode() < 0) {
+			return -1;
+		}
 		return $this->updateCommon($user, $notrigger);
+	}
+
+	/**
+	 * Check the EPPO code of the crop against the imported EPPO Codes (plants)
+	 *
+	 * @return	int		Return integer <0 if KO, >0 if OK
+	 */
+	public function checkEppoCode()
+	{
+		dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+
+		$this->eppo_code = strtoupper(trim((string) $this->eppo_code));
+		// Empty code: the one of the scientific name, when there is only one
+		if ($this->eppo_code === '' && !empty($this->scientific_name)) {
+			$this->eppo_code = dolifarmEppoFindByLatinName($this->db, $this->scientific_name, 'crop');
+		}
+		$error = dolifarmEppoCheckCode($this->db, $this->eppo_code, 'crop');
+		if ($error !== '') {
+			$this->error = $error;
+			$this->errors[] = $error;
+			return -1;
+		}
+		return 1;
+	}
+
+	/**
+	 * Return HTML string to put an input field into a page: the EPPO code is chosen with a search on the EPPO Codes
+	 *
+	 * @param	array<string,mixed>	$val			Array of properties for field to show
+	 * @param	string				$key			Key of attribute
+	 * @param	mixed				$value			Preselected value to show (for date type it must be in timestamp format, for amount or price it must be a php numeric value)
+	 * @param	string				$moreparam		To add more parameters on html input tag
+	 * @param	string				$keysuffix		Prefix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string				$keyprefix		Suffix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string|int			$morecss		Value for css to define style/length of field. May also be a numeric.
+	 * @param	int<0,1>			$nonewbutton	Force to not show the new button on field that are links to object
+	 * @return	string
+	 */
+	public function showInputField($val, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = 0, $nonewbutton = 0)
+	{
+		if ($key == 'eppo_code' && $keyprefix === '' && $keysuffix === '') {
+			dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+			return dolifarmEppoSelect($this->db, $key, (string) $value, 'crop');
+		}
+		return parent::showInputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss, $nonewbutton);
+	}
+
+	/**
+	 * Return HTML string to show a field into a page: the EPPO code is shown with its names
+	 *
+	 * @param	array<string,mixed>	$val			Array of properties of field to show
+	 * @param	string				$key			Key of attribute
+	 * @param	string				$value			Preselected value to show (for date type it must be in timestamp format, for amount or price it must be a php numeric value)
+	 * @param	string				$moreparam		To add more parameters on html tag
+	 * @param	string				$keysuffix		Prefix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string				$keyprefix		Suffix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	mixed				$morecss		Value for CSS to use (Old usage: May also be a numeric to define a size).
+	 * @return	string
+	 */
+	public function showOutputField($val, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = '')
+	{
+		if ($key == 'eppo_code') {
+			dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+			return dolifarmEppoShow($this->db, (string) $value);
+		}
+		return parent::showOutputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss);
 	}
 
 	/**
