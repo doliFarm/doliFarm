@@ -162,6 +162,12 @@ if (!isModEnabled($object->module)) {
 if (!$permissiontoread) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
+// Single-farm mode: the farm of the setup and its current dossier in the creation form
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+dolifarmPrefillFarm($db, $object, $action);
 
 $error = 0;
 

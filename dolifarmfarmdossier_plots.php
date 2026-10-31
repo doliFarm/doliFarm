@@ -58,6 +58,9 @@ if ($id > 0) {
 if (!isModEnabled('dolifarm')) accessforbidden('Module not enabled');
 $permissiontoread = $user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read');
 if (!$permissiontoread) accessforbidden();
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
 
 
 /*

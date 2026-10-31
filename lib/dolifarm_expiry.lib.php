@@ -27,6 +27,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
 
 /**
  * Definitions of the expiry dates
@@ -175,6 +176,10 @@ function dolifarmExpiryList($db, $user, $limit = 0, $filters = array())
 		$sql .= " AND t.".$def['field']." <= '".$db->idate($limitdate)."'";
 		if ($def['milestone']) {
 			$sql .= " AND t.".$def['field']." >= '".$db->idate($today)."'";
+		}
+		if ($def['socfield']) {
+			// Users restricted to their third parties (sales representatives)
+			$sql .= dolifarmSqlSocFilter($user, 't.'.$def['socfield']);
 		}
 		if (!empty($filters['fk_soc'])) {
 			$sql .= " AND t.".$def['socfield']." = ".((int) $filters['fk_soc']);

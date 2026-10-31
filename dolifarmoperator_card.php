@@ -101,10 +101,16 @@ $upload_dir = $conf->dolifarm->multidir_output[isset($object->entity) ? $object-
 if (!isModEnabled('dolifarm')) {
 	accessforbidden('Module dolifarm not enabled');
 }
-restrictedArea($user, $object->module, $object->id, $object->table_element, $object->element, 'fk_soc', 'rowid');
+restrictedArea($user, $object->module, 0, $object->table_element, $object->element, 'fk_soc', 'rowid');
 if (!$permissiontoread) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
+// Single-farm mode: the farm of the setup and its current dossier in the creation form
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+dolifarmPrefillFarm($db, $object, $action);
 
 $error = 0;
 

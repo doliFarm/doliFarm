@@ -379,25 +379,9 @@ foreach ($search as $key => $val) {
 if ($search_all) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
 }
-/*
-// If the internal user must only see his customers, force searching by him
-$search_sale = 0;
-if (!$user->hasRight('societe', 'client', 'voir')) {
-	$search_sale = $user->id;
-}
-// Search on sale representative
-if ($search_sale && $search_sale != '-1') {
-	if ($search_sale == -2) {
-		$sql .= " AND NOT EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = t.fk_soc)";
-	} elseif ($search_sale > 0) {
-		$sql .= " AND EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = t.fk_soc AND sc.fk_user = ".((int) $search_sale).")";
-	}
-}
-// Search on socid
-if ($socid) {
-	$sql .= " AND t.fk_soc = ".((int) $socid);
-}
-*/
+// Users restricted to their third parties (sales representatives): only the objects of these third parties
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+$sql .= dolifarmSqlSocFilter($user, 't.fk_soc');
 //$sql.= dolSqlDateFilter("t.field", $search_xxxday, $search_xxxmonth, $search_xxxyear);
 // Add where from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
