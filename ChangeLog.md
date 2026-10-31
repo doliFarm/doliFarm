@@ -1,5 +1,22 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.3.0
+
+Visibilità delle aziende per commerciale e modalità azienda unica. È la versione richiesta da doliTrace 1.1.0 (registro dei trattamenti): aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo.
+
+### Visibilità per commerciale
+- Stessa regola di Dolibarr: l'utente interno senza il permesso "vedere tutti i terzi" vede solo i terzi che segue (anche quelli dei subordinati con MAIN_SEE_SUBORDINATES), l'utente esterno solo il proprio; gli oggetti senza terzo restano visibili.
+- Filtrate le liste di fascicoli, appezzamenti, macchine, fabbricati, allevamenti, operatori e stime dei costi, i widget e l'elenco delle scadenze.
+- Schede e relative linguette controllano il terzo e l'entità dell'oggetto.
+- Funzioni comuni in lib/dolifarm_access.lib.php, usate anche da doliTrace.
+- Rimossi gli endpoint ajax inutilizzati generati da ModuleBuilder, che permettevano a un utente con permesso di scrittura di modificare qualsiasi campo di qualsiasi oggetto.
+
+### Azienda unica
+- Nuova impostazione "Azienda (modalità azienda singola)" (DOLIFARM_FARM_SOCID), disponibile quando la modalità multi-azienda è spenta.
+- I moduli di creazione di fascicoli, appezzamenti, macchine, fabbricati, allevamenti, operatori e stime dei costi propongono l'azienda e il suo fascicolo in corso.
+- Senza azienda indicata, il magazzino dell'azienda è quello dell'azienda unica, prima dei magazzini predefiniti del setup.
+- Funzioni comuni in lib/dolifarm_farm.lib.php, usate anche da doliTrace.
+
 ## 1.2.0
 
 Anagrafiche per il registro dei trattamenti e delle fertilizzazioni (Reg. UE 2023/564) e codici EPPO. Dopo l'aggiornamento disattivare e riattivare il modulo per applicare tabelle, indici, dizionari e job pianificati.
