@@ -49,7 +49,9 @@ function dolifarmAdminPrepareHead()
 		'dolifarmlivestock' => array('DoliFarmLivestock', 'dolifarm_livestock'),
 		'dolifarmbuilding' => array('DoliFarmBuilding', 'dolifarm_building'),
 		'dolifarmmachine' => array('DoliFarmMachine', 'dolifarm_machine'),
+		'dolifarmoperator' => array('DoliFarmOperator', 'dolifarm_operator'),
 		'dolifarmagrodrug' => array('DoliFarmAgroDrug', 'dolifarm_agrodrug'),
+		'dolifarmfertilizer' => array('DoliFarmFertilizer', 'dolifarm_fertilizer'),
 		'dolifarmcrops' => array('DoliFarmCrops', 'dolifarm_crops'),
 		'dolifarmestimatecosts' => array('DoliFarmEstimateCosts', 'dolifarm_dolifarmestimatecosts'),
 	) as $element => $info) {

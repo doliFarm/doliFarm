@@ -132,6 +132,7 @@ class DoliFarmCrops extends CommonObject
 		"rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
 		"ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
 		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
+		"eppo_code" => array("type" => "varchar(10)", "label" => "EppoCode", "enabled" => "1", 'position' => 28, 'notnull' => 0, "visible" => "1", "searchall" => "1", "css" => "maxwidth100", "help" => "EppoCodeCropHelp", "copytoclipboard" => "1",),
 		"scientific_name" => array("type" => "varchar(255)", "label" => "Scientificname", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1",),
 		"family" => array("type" => "varchar(128)", "label" => "Family", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
 		"variety" => array("type" => "varchar(128)", "label" => "Variety", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
@@ -150,6 +151,7 @@ class DoliFarmCrops extends CommonObject
 	public $rowid;
 	public $ref;
 	public $label;
+	public $eppo_code;
 	public $scientific_name;
 	public $family;
 	public $variety;

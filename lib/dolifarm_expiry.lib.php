@@ -44,6 +44,7 @@ function dolifarmExpiryDefinitions()
 		'agrodrug_authorization' => array('element' => 'dolifarmagrodrug', 'class' => 'DoliFarmAgroDrug', 'table' => 'dolifarm_agrodrug', 'field' => 'auth_expiration_date', 'label' => 'ExpiryAgrodrugAuthorization', 'labelfield' => 'label', 'socfield' => '', 'milestone' => 0),
 		'machine_revision' => array('element' => 'dolifarmmachine', 'class' => 'DoliFarmMachine', 'table' => 'dolifarm_machine', 'field' => 'date_revision_next', 'label' => 'ExpiryMachineRevision', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
 		'machine_insurance' => array('element' => 'dolifarmmachine', 'class' => 'DoliFarmMachine', 'table' => 'dolifarm_machine', 'field' => 'date_insurance_end', 'label' => 'ExpiryMachineInsurance', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
+		'operator_license' => array('element' => 'dolifarmoperator', 'class' => 'DoliFarmOperator', 'table' => 'dolifarm_operator', 'field' => 'license_end', 'label' => 'ExpiryOperatorLicense', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
 		'machine_sprayer' => array('element' => 'dolifarmmachine', 'class' => 'DoliFarmMachine', 'table' => 'dolifarm_machine', 'field' => 'date_sprayer_check_end', 'label' => 'ExpiryMachineSprayerCheck', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
 	);
 }

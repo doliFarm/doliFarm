@@ -36,6 +36,10 @@ function dolifarm_get_fa_icon($element_type, $full_tag = false) {
         'livestock'             => 'fa-paw',                // Alias
         'dolifarmbuilding'      => 'fa-warehouse',          // Fabbricati
         'building'              => 'fa-warehouse',          // Alias
+        'dolifarmoperator'      => 'fa-user-shield',        // Operatori
+        'operator'              => 'fa-user-shield',        // Alias
+        'dolifarmfertilizer'    => 'fa-tint',               // Fertilizzanti
+        'fertilizer'            => 'fa-tint',               // Alias
 
         // --- DOLITRACE ---
         'dolitrace'             => 'fa-route',              // Modulo DoliTrace

@@ -136,7 +136,9 @@ foreach (array(
 	'dolifarmlivestock' => 'DoliFarmLivestock',
 	'dolifarmbuilding' => 'DoliFarmBuilding',
 	'dolifarmmachine' => 'DoliFarmMachine',
+	'dolifarmoperator' => 'DoliFarmOperator',
 	'dolifarmagrodrug' => 'DoliFarmAgroDrug',
+	'dolifarmfertilizer' => 'DoliFarmFertilizer',
 	'dolifarmcrops' => 'DoliFarmCrops',
 ) as $tmpkey => $tmpclass) {
 	dol_include_once('/dolifarm/class/'.$tmpkey.'.class.php');

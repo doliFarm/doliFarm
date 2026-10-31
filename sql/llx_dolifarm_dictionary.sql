@@ -222,3 +222,31 @@ INSERT IGNORE INTO llx_dolifarm_c_livestock_species (code, label, active, positi
 ('API', 'Api', 1, 100),
 ('ACQUACOLTURA', 'Acquacoltura', 1, 110),
 ('ALTRO', 'Altre specie', 1, 900);
+
+-- Fertilizer types (registro delle fertilizzazioni)
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_fert_type (
+    rowid       INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code        VARCHAR(32) NOT NULL,
+    label       VARCHAR(128) NOT NULL,
+    active      TINYINT DEFAULT 1,
+    module      VARCHAR(32) DEFAULT NULL,
+    position    INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_fert_type_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_fert_type (code, label, active, position) VALUES
+('MIN_N', 'Concime minerale azotato', 1, 10),
+('MIN_P', 'Concime minerale fosfatico', 1, 20),
+('MIN_K', 'Concime minerale potassico', 1, 30),
+('MIN_NPK', 'Concime minerale composto', 1, 40),
+('MESO_MICRO', 'Concime a base di meso o microelementi', 1, 50),
+('ORGMIN', 'Concime organo-minerale', 1, 60),
+('ORG', 'Concime organico', 1, 70),
+('AMMEND', 'Ammendante', 1, 80),
+('CORRECT', 'Correttivo', 1, 90),
+('BIOSTIM', 'Biostimolante', 1, 100),
+('MANURE', 'Effluente zootecnico palabile (letame)', 1, 110),
+('SLURRY', 'Effluente zootecnico non palabile (liquame)', 1, 120),
+('DIGEST', 'Digestato', 1, 130),
+('SLUDGE', 'Fanghi di depurazione', 1, 140),
+('OTHER', 'Altro', 1, 900);

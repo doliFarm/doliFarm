@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_plot(
 	cadastral_parcel varchar(10), 
 	cadastral_sub varchar(10), 
 	cadastral_reference varchar(32), 
+	iacs_parcel varchar(64), 
+	cultivation_type smallint DEFAULT 1, 
 	map_reference varchar(128), 
 	size_total double(24,8), 
 	size_cadastral double(24,8), 
