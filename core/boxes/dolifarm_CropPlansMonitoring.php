@@ -90,12 +90,13 @@ class dolifarm_CropPlansMonitoring extends ModeleBoxes
         
         // Definisce la tabella
         $table_name = MAIN_DB_PREFIX . "dolitrace_cropplan"; 
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
         
         $this->info_box_contents = array();
 
         // 1. OTTENERE IL NUMERO TOTALE DI PIANI ATTIVI
         // Filtra per entity e status = 1 (Attivo)
-        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1";
+        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1" . dolifarmSqlSocFilter($user, 'fk_soc');
         
         $total_active = 0;
         $res_count = $this->db->query($sql_count);
@@ -125,7 +126,7 @@ class dolifarm_CropPlansMonitoring extends ModeleBoxes
         // 2. OTTENERE LA LISTA DEGLI ULTIMI 5 PIANI
         $sql = "SELECT rowid, ref, label, datec, status";
         $sql .= " FROM " . $table_name;
-        $sql .= " WHERE entity = " . $conf->entity . " AND status = 1";
+        $sql .= " WHERE entity = " . $conf->entity . " AND status = 1" . dolifarmSqlSocFilter($user, 'fk_soc');
         $sql .= " ORDER BY datec DESC";
         $sql .= " LIMIT " . $max;
 

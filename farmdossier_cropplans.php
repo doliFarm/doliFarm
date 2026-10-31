@@ -33,6 +33,9 @@ if ($object->id <= 0) {
 if (!empty($object->entity) && !in_array((int) $object->entity, explode(',', getEntity('dolifarmfarmdossier')))) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
 
 /* View */
 $title = $object->ref . " - " . $langs->trans("CropPlans");

@@ -57,11 +57,12 @@ class dolifarm_TotPlots extends ModeleBoxes
         $societestatic = new Societe($this->db);
         
         $table_name = MAIN_DB_PREFIX . "dolifarm_plot"; 
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
         
         $this->info_box_contents = array();
 
         // 1. CONTEGGIO TOTALE
-        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1";
+        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1" . dolifarmSqlSocFilter($user, 'fk_soc');
         
         $total_active = 0;
         $res_count = $this->db->query($sql_count);
@@ -88,6 +89,7 @@ class dolifarm_TotPlots extends ModeleBoxes
         $sql .= " FROM " . $table_name . " as t";
         $sql .= " WHERE t.entity = " . $conf->entity;
         $sql .= " AND t.status = 1"; 
+        $sql .= dolifarmSqlSocFilter($user, 't.fk_soc');
         $sql .= " ORDER BY t.date_creation DESC";
         $sql .= " LIMIT " . $max;
 

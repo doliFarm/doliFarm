@@ -89,6 +89,7 @@ class dolifarm_TotDossiers extends ModeleBoxes
         
         // Tabella dei fascicoli
         $table_name = MAIN_DB_PREFIX . "dolifarm_farmdossier"; 
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
         
         $this->info_box_contents = array();
 
@@ -96,7 +97,7 @@ class dolifarm_TotDossiers extends ModeleBoxes
         // 1. CONTEGGIO TOTALE FASCICOLI ATTIVI
         // Assumiamo status = 1 per "Attivo"
         // ---------------------------------------------------------
-        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1";
+        $sql_count = "SELECT count(*) as nb FROM " . $table_name . " WHERE entity = " . $conf->entity . " AND status = 1" . dolifarmSqlSocFilter($user, 'fk_soc');
         
         $total_active = 0;
         $res_count = $this->db->query($sql_count);
@@ -133,6 +134,7 @@ class dolifarm_TotDossiers extends ModeleBoxes
         $sql .= " FROM " . $table_name;
         $sql .= " WHERE entity = " . $conf->entity;
         $sql .= " AND status = 1"; // Solo attivi
+        $sql .= dolifarmSqlSocFilter($user, 'fk_soc');
         $sql .= " ORDER BY date_creation DESC";
         $sql .= " LIMIT " . $max;
 

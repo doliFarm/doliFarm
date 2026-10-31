@@ -63,13 +63,16 @@ if ($id > 0 || $ref) {
 if (!isModEnabled('dolifarm')) {
 	accessforbidden('Module not enabled');
 }
-restrictedArea($user, 'dolifarm', $object->id, $object->table_element, $object->element, 'fk_soc', 'rowid');
+restrictedArea($user, 'dolifarm', 0, $object->table_element, $object->element, 'fk_soc', 'rowid');
 if (!$user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read') || !$user->hasRight('dolifarm', 'dolifarmlivestock', 'read')) {
 	accessforbidden();
 }
 if (empty($object->id)) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
 
 
 /*

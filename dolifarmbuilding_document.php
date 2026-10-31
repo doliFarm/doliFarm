@@ -145,13 +145,16 @@ $permissiontoadd  = $user->hasRight('dolifarm', 'dolifarmbuilding', 'write'); //
 //if ($user->socid > 0) accessforbidden();
 //if ($user->socid > 0) $socid = $user->socid;
 //$isdraft = (($object->status == $object::STATUS_DRAFT) ? 1 : 0);
-restrictedArea($user, $object->module, $object->id, $object->table_element, $object->element, 'fk_soc', 'rowid');
+restrictedArea($user, $object->module, 0, $object->table_element, $object->element, 'fk_soc', 'rowid');
 if (!isModEnabled("dolifarm")) {
 	accessforbidden();
 }
 if (!$permissiontoread) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
 if (empty($object->id) || $upload_dir === null) {
 	accessforbidden();
 }

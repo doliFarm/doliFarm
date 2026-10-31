@@ -162,6 +162,9 @@ if (!isModEnabled($object->module)) {
 if (!$permissiontoread) {
 	accessforbidden();
 }
+// Farm of the object: users restricted to their third parties (sales representatives)
+dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+dolifarmCheckSocAccess($user, $object);
 
 $error = 0;
 
