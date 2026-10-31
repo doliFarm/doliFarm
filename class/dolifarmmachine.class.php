@@ -152,19 +152,19 @@ class DoliFarmMachine extends CommonObject
         
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1",),
         
-        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
-        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-1",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-1",),
+        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-5",),
+        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-5",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-5",),
         
         // Standard Dolibarr tracking
-        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-5", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         "fk_user_modif" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserModif", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => -1, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 71, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-1",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-1",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-5",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-5",),
     );
     public $rowid;
     public $ref;
@@ -294,6 +294,10 @@ class DoliFarmMachine extends CommonObject
         // Machines have no validation step: the final ref is given at creation
         if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
             $this->ref = $this->getNextNumRef();
+        }
+        // The table uses datec, which createCommon() does not fill
+        if (empty($this->datec)) {
+            $this->datec = dol_now();
         }
         $result = $this->createCommon($user, $notrigger);
 
