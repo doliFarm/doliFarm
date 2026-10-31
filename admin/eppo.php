@@ -60,6 +60,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 dol_include_once('/dolifarm/lib/dolifarm.lib.php');
 dol_include_once('/dolifarm/class/dolifarmeppoimporter.class.php');
+dol_include_once('/dolifarm/class/dolifarmepposync.class.php');
 
 $langs->loadLangs(array("errors", "admin", "dolifarm@dolifarm"));
 
@@ -110,6 +111,18 @@ if ($action == 'import') {
 	if (empty($file)) {
 		setEventMessages($langs->trans('ErrorEppoNoFile'), null, 'errors');
 	}
+}
+// Update from the EPPO API (the key is set in the setup page of the module)
+if ($action == 'sync') {
+	@set_time_limit(0);
+	$sync = new DoliFarmEppoSync($db);
+	if ($sync->sync() < 0) {
+		setEventMessages($sync->error, null, 'errors');
+	} else {
+		setEventMessages($sync->output, null, 'mesgs');
+	}
+	header("Location: ".$_SERVER["PHP_SELF"]);
+	exit;
 }
 if ($action == 'fillcrops') {
 	dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
@@ -191,6 +204,31 @@ if ($counts) {
 	}
 	print '</table>';
 	print '</div>';
+}
+
+// Update from the EPPO API
+print '<br>';
+print load_fiche_titre($langs->trans('EppoApi'), '', '');
+print '<span class="opacitymedium">'.$langs->trans('EppoApiHelp').'</span><br><br>';
+$eppokeyset = (getDolGlobalString('DOLIFARM_EPPO_API_KEY') !== '');
+print '<div class="div-table-responsive-no-min">';
+print '<table class="noborder centpercent">';
+print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('Parameters').'</td></tr>';
+print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('EppoApiKey').'</td><td>';
+print ($eppokeyset ? img_picto('', 'tick', 'class="pictofixedwidth"').$langs->trans('EppoApiKeySet') : '<span class="opacitymedium">'.$langs->trans('EppoApiKeyNotSet').'</span>');
+print ' - <a href="'.dol_buildpath('/dolifarm/admin/setup.php', 1).'">'.$langs->trans('EppoApiKeyInSetup').'</a>';
+print '</td></tr>';
+$syncdate = getDolGlobalString('DOLIFARM_EPPO_SYNC_DATE');
+print '<tr class="oddeven"><td>'.$langs->trans('EppoSyncDate').'</td><td>'.($syncdate ? dol_print_date($db->jdate($syncdate), 'day') : '<span class="opacitymedium">'.$langs->trans('EppoNeverSynced').'</span>').'</td></tr>';
+print '</table>';
+print '</div>';
+if ($eppokeyset && $total > 0) {
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="sync">';
+	print '<input type="submit" class="button small reposition" value="'.$langs->trans('EppoSyncNow').'">';
+	print ' <span class="opacitymedium">'.$langs->trans('EppoSyncCron').'</span>';
+	print '</form>';
 }
 
 // Crops without EPPO code: filled from the scientific name

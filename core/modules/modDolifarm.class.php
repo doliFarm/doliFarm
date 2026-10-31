@@ -402,6 +402,21 @@ class modDolifarm extends DolibarrModules
 		// unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
 		/* BEGIN MODULEBUILDER CRON */
 		$this->cronjobs = array(
+			// Weekly update of the EPPO Codes from the EPPO API (needs the key, set in the EPPO tab of the setup)
+			0 => array(
+				'label' => 'DolifarmEppoSyncJob',
+				'jobtype' => 'method',
+				'class' => '/dolifarm/class/dolifarmepposync.class.php',
+				'objectname' => 'DoliFarmEppoSync',
+				'method' => 'cronSync',
+				'parameters' => '',
+				'comment' => 'Update of the EPPO Codes created or changed since the last update',
+				'frequency' => 1,
+				'unitfrequency' => 604800,
+				'status' => 0,
+				'test' => 'isModEnabled("dolifarm")',
+				'priority' => 50,
+			),
 			//  0 => array(
 			//      'label' => 'MyJob label',
 			//      'jobtype' => 'method',
