@@ -119,6 +119,11 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
 $item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
+// Multi-farm mode: the affiliated third parties get their dossier and warehouses
+$formSetup->newItem('FarmMode')->setAsTitle();
+$item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();
+$item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
+
 // Warehouses used when the farm dossier has none (single-farm mode)
 if (isModEnabled('stock')) {
 	dol_include_once('/dolifarm/lib/dolifarm_warehouse.lib.php');

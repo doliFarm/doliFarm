@@ -1112,8 +1112,14 @@ class modDolifarm extends DolibarrModules
 		}
 
 		// Create extrafields during init
-		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-		//$extrafields = new ExtraFields($this->db);
+		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		// Affiliated farm (multi-farm mode): the flag creates the dossier and the warehouses of the farm
+		$result = $extrafields->addExtraField('dolifarm_affiliated', "DolifarmAffiliated", 'boolean', 1000, '', 'thirdparty', 0, 0, '', '', 1, '', '1', 'DolifarmAffiliatedHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && getDolGlobalInt("DOLIFARM_MULTIFARM")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
 		//$result0=$extrafields->addExtraField('dolifarm_separator1', "Separator 1", 'separator', 1,  0, 'thirdparty',   0, 0, '', array('options'=>array(1=>1)), 1, '', 1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result1=$extrafields->addExtraField('dolifarm_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result2=$extrafields->addExtraField('dolifarm_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
