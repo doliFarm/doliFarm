@@ -27,7 +27,7 @@
  * the latest draft.
  *
  * @param	DoliDB	$db			Database handler
- * @param	int		$socid		Id of the third party of the farm (0 = only the module setup)
+ * @param	int		$socid		Id of the third party of the farm (0 = farm of the single-farm mode, then the module setup)
  * @param	string	$kind		'inputs' (agrodrugs, fertilizers) or 'products' (harvested products)
  * @return	int					Id of the warehouse, 0 if none
  */
@@ -37,6 +37,10 @@ function dolifarmGetFarmWarehouse($db, $socid, $kind)
 		return 0;
 	}
 	$field = 'fk_warehouse_'.$kind;
+	if ($socid <= 0) {
+		dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+		$socid = dolifarmSingleFarmSocid();
+	}
 
 	if ($socid > 0) {
 		$sql = "SELECT d.".$field." as fk_warehouse";

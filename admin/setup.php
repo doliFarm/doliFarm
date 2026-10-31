@@ -123,6 +123,24 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 $formSetup->newItem('FarmMode')->setAsTitle();
 $item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
+// Single-farm mode: the farm of the installation, proposed in the new objects
+if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
+	$item = $formSetup->newItem('DOLIFARM_FARM_SOCID');
+	$item->helpText = $langs->transnoentities('DOLIFARM_FARM_SOCIDHelp');
+	$item->fieldInputOverride = img_picto('', 'company', 'class="pictofixedwidth"').$formSetup->form->select_company(getDolGlobalInt('DOLIFARM_FARM_SOCID'), 'DOLIFARM_FARM_SOCID', '', 1, 0, 0, array(), 0, 'minwidth300');
+	$item->fieldOutputOverride = '';
+	if (getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0) {
+		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+		$farmsoc = new Societe($db);
+		if ($farmsoc->fetch(getDolGlobalInt('DOLIFARM_FARM_SOCID')) > 0) {
+			$item->fieldOutputOverride = $farmsoc->getNomUrl(1);
+		}
+	}
+	$item->setValueFromPostCallBack(function () use ($item) {
+		$item->fieldValue = (string) max(0, GETPOSTINT('DOLIFARM_FARM_SOCID'));
+		return 1;
+	});
+}
 
 // Warehouses used when the farm dossier has none (single-farm mode)
 if (isModEnabled('stock')) {
