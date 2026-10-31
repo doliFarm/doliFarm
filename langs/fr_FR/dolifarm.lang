@@ -231,3 +231,36 @@ DolifarmAffiliatedClosed = Exploitation plus affiliée : entrepôts fermés et d
 ErrorDolifarmAffiliatedDossier = Impossible de créer le dossier de l'exploitation %s
 ErrorDolifarmAffiliatedWarehouse = Impossible de créer l'entrepôt %s
 ErrorDolifarmAffiliatedSync = Tiers enregistré, mais le dossier et les entrepôts de l'exploitation affiliée n'ont pas été mis à jour
+
+#
+# EPPO Codes
+#
+EppoCodes = Codes OEPP
+EppoAttribution = Contains EPPO Codes (www.eppo.int)
+EppoPageHelp = Les codes OEPP identifient cultures et ravageurs dans le registre des traitements (Règl. (UE) 2023/564). Importez le fichier "XML full" téléchargé depuis votre compte sur data.eppo.int : codes et noms seulement, aucune autre donnée de la Global Database. Les données appartiennent à l'OEPP et sont utilisées selon l'EPPO Open Data Licence.
+EppoData = Données OEPP
+EppoSource = Source
+EppoDataDate = Date des données (export OEPP)
+EppoImportDate = Dernier import
+EppoNotImported = Codes pas encore importés
+EppoNbCodes = Codes
+EppoNbActive = Actifs
+EppoDatatype = Type OEPP
+EppoDatatypePFL = Plantes
+EppoDatatypeGAI = Animaux (insectes, acariens, nématodes...)
+EppoDatatypeGAF = Micro-organismes (champignons, bactéries, virus...)
+EppoDatatypeNTX = Entrées non taxonomiques
+EppoDatatypeSPT = Groupes taxonomiques (familles, genres...)
+EppoDatatypeSFT = Groupes taxonomiques (familles, genres...)
+EppoDatatypeSIT = Groupes taxonomiques (familles, genres...)
+EppoImport = Import du fichier OEPP
+EppoImportHelp = Fichier fullcodes.xml (environ 130 Mo) ou compressé gzip, fullcodes.xml.gz (environ 13 Mo). Limites du serveur : %s par fichier, %s par requête. L'import peut être relancé : il met à jour les codes existants.
+EppoUploadAndImport = Envoyer et importer
+EppoFilePresent = Fichier déjà envoyé : %s du %s
+EppoImportAgain = Importer de nouveau
+EppoImportCli = En ligne de commande, par exemple dans le conteneur du serveur :
+EppoImportDone = Codes OEPP importés : %s codes, %s noms, données du %s
+ErrorEppoNoXmlReader = L'extension PHP XMLReader n'est pas disponible
+ErrorEppoBadFile = Le fichier n'est pas un fichier OEPP "XML full" (fullcodes.xml ou fullcodes.xml.gz)
+ErrorEppoNoFile = Aucun fichier OEPP à importer
+ErrorEppoFileTooLarge = Le fichier dépasse la limite d'envoi du serveur : utilisez le fichier compressé .gz ou le script en ligne de commande

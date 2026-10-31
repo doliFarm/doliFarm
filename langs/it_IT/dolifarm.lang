@@ -504,3 +504,36 @@ DolifarmAffiliatedClosed = Azienda non più affiliata: magazzini chiusi e fascic
 ErrorDolifarmAffiliatedDossier = Impossibile creare il fascicolo aziendale di %s
 ErrorDolifarmAffiliatedWarehouse = Impossibile creare il magazzino %s
 ErrorDolifarmAffiliatedSync = Soggetto terzo salvato, ma fascicolo e magazzini dell'azienda affiliata non sono stati aggiornati
+
+#
+# EPPO Codes
+#
+EppoCodes = Codici EPPO
+EppoAttribution = Contains EPPO Codes (www.eppo.int)
+EppoPageHelp = I codici EPPO identificano colture e avversità nel registro dei trattamenti (Reg. UE 2023/564). Si importa il file "XML full" scaricato dal proprio account su data.eppo.int: solo codici e nomi, nessun altro dato della Global Database. I dati restano di EPPO e sono usati secondo la EPPO Open Data Licence.
+EppoData = Dati EPPO
+EppoSource = Fonte
+EppoDataDate = Data dei dati (esportazione EPPO)
+EppoImportDate = Ultimo import
+EppoNotImported = Codici non ancora importati
+EppoNbCodes = Codici
+EppoNbActive = Attivi
+EppoDatatype = Tipo EPPO
+EppoDatatypePFL = Piante
+EppoDatatypeGAI = Animali (insetti, acari, nematodi...)
+EppoDatatypeGAF = Microrganismi (funghi, batteri, virus...)
+EppoDatatypeNTX = Voci non tassonomiche
+EppoDatatypeSPT = Gruppi tassonomici (famiglie, generi...)
+EppoDatatypeSFT = Gruppi tassonomici (famiglie, generi...)
+EppoDatatypeSIT = Gruppi tassonomici (famiglie, generi...)
+EppoImport = Import del file EPPO
+EppoImportHelp = File fullcodes.xml (circa 130 MB) o compresso in gzip, fullcodes.xml.gz (circa 13 MB). Limiti del server per il caricamento: %s per file, %s per richiesta. L'import si può ripetere: aggiorna i codici esistenti.
+EppoUploadAndImport = Carica e importa
+EppoFilePresent = File già caricato: %s del %s
+EppoImportAgain = Importa di nuovo
+EppoImportCli = Da riga di comando, per esempio nel container della VPS:
+EppoImportDone = Codici EPPO importati: %s codici, %s nomi, dati del %s
+ErrorEppoNoXmlReader = L'estensione PHP XMLReader non è disponibile
+ErrorEppoBadFile = Il file non è un file EPPO "XML full" (fullcodes.xml o fullcodes.xml.gz)
+ErrorEppoNoFile = Nessun file EPPO da importare
+ErrorEppoFileTooLarge = Il file supera il limite di caricamento del server: usare la versione compressa .gz o lo script da riga di comando

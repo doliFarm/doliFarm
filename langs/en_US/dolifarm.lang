@@ -272,3 +272,36 @@ DolifarmAffiliatedClosed = Farm no longer affiliated: warehouses closed and doss
 ErrorDolifarmAffiliatedDossier = Cannot create the farm dossier of %s
 ErrorDolifarmAffiliatedWarehouse = Cannot create the warehouse %s
 ErrorDolifarmAffiliatedSync = Third party saved, but the dossier and warehouses of the affiliated farm were not updated
+
+#
+# EPPO Codes
+#
+EppoCodes = EPPO Codes
+EppoAttribution = Contains EPPO Codes (www.eppo.int)
+EppoPageHelp = EPPO Codes identify crops and pests in the treatment register (Reg. (EU) 2023/564). Import the "XML full" file downloaded from your account on data.eppo.int: codes and names only, no other data of the Global Database. The data belong to EPPO and are used under the EPPO Open Data Licence.
+EppoData = EPPO data
+EppoSource = Source
+EppoDataDate = Data date (EPPO export)
+EppoImportDate = Last import
+EppoNotImported = Codes not imported yet
+EppoNbCodes = Codes
+EppoNbActive = Active
+EppoDatatype = EPPO type
+EppoDatatypePFL = Plants
+EppoDatatypeGAI = Animals (insects, mites, nematodes...)
+EppoDatatypeGAF = Microorganisms (fungi, bacteria, viruses...)
+EppoDatatypeNTX = Non-taxonomic entries
+EppoDatatypeSPT = Taxonomic groups (families, genera...)
+EppoDatatypeSFT = Taxonomic groups (families, genera...)
+EppoDatatypeSIT = Taxonomic groups (families, genera...)
+EppoImport = Import of the EPPO file
+EppoImportHelp = File fullcodes.xml (about 130 MB) or gzip compressed, fullcodes.xml.gz (about 13 MB). Upload limits of the server: %s per file, %s per request. The import can run again: it updates the existing codes.
+EppoUploadAndImport = Upload and import
+EppoFilePresent = File already uploaded: %s of %s
+EppoImportAgain = Import again
+EppoImportCli = From the command line, for example in the container of the server:
+EppoImportDone = EPPO Codes imported: %s codes, %s names, data of %s
+ErrorEppoNoXmlReader = The PHP extension XMLReader is not available
+ErrorEppoBadFile = The file is not an EPPO "XML full" file (fullcodes.xml or fullcodes.xml.gz)
+ErrorEppoNoFile = No EPPO file to import
+ErrorEppoFileTooLarge = The file exceeds the upload limit of the server: use the compressed .gz file or the command line script

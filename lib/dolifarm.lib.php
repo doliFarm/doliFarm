@@ -66,6 +66,11 @@ function dolifarmAdminPrepareHead()
 		$h++;
 	}
 
+	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/eppo.php", 1));
+	$head[$h][1] = $langs->trans("EppoCodes");
+	$head[$h][2] = 'eppo';
+	$h++;
+
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/about.php", 1));
 	$head[$h][1] = $langs->trans("About");
 	$head[$h][2] = 'about';
