@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_farmdossier(
 	economic_size double(24,8), 
 	fk_soc_bio_body integer, 
 	date_bio_membership date, 
+	fk_warehouse_inputs integer, 
+	fk_warehouse_products integer, 
 	date_import datetime, 
 	status int, 
 	source_file varchar(255), 

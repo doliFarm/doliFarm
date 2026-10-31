@@ -153,6 +153,9 @@ class DoliFarmFarmDossier extends CommonObject
         // Organic control body
         "fk_soc_bio_body" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "BioControlBody", "picto" => "company", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150",),
         "date_bio_membership" => array("type" => "date", "label" => "DateBioMembership", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-1",),
+        // Warehouses of the farm: technical inputs (agrodrugs, fertilizers) and harvested products
+        "fk_warehouse_inputs" => array("type" => "integer:Entrepot:product/stock/class/entrepot.class.php:0:((statut:>:0) AND (entity:IN:__SHARED_ENTITIES__))", "label" => "WarehouseInputs", "picto" => "stock", "enabled" => "isModEnabled('stock')", 'position' => 49, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150", "help" => "WarehouseInputsHelp",),
+        "fk_warehouse_products" => array("type" => "integer:Entrepot:product/stock/class/entrepot.class.php:0:((statut:>:0) AND (entity:IN:__SHARED_ENTITIES__))", "label" => "WarehouseProducts", "picto" => "stock", "enabled" => "isModEnabled('stock')", 'position' => 49.5, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150", "help" => "WarehouseProductsHelp",),
         "date_import" => array("type" => "datetime", "label" => "DateImport", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "-5",),
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "5", "arrayofkeyval" => array("0" => "Draft", "1" => "Enabled", "9" => "Disabled"),),
         "source_file" => array("type" => "varchar(255)", "label" => "SourceFile", "enabled" => "1", 'position' => 91, 'notnull' => 0, "visible" => "-5",),
@@ -189,6 +192,8 @@ class DoliFarmFarmDossier extends CommonObject
     public $economic_size;
     public $fk_soc_bio_body;
     public $date_bio_membership;
+    public $fk_warehouse_inputs;
+    public $fk_warehouse_products;
     public $date_import;
     public $status;
     public $source_file;

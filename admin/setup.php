@@ -119,6 +119,17 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
 $item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
+// Warehouses used when the farm dossier has none (single-farm mode)
+if (isModEnabled('stock')) {
+	dol_include_once('/dolifarm/lib/dolifarm_warehouse.lib.php');
+	$warehouses = array('' => '') + dolifarmWarehouseOptions($db);
+	$formSetup->newItem('FarmWarehouses')->setAsTitle();
+	$item = $formSetup->newItem('DOLIFARM_WAREHOUSE_INPUTS')->setAsSelect($warehouses);
+	$item->helpText = $langs->transnoentities('DOLIFARM_WAREHOUSE_INPUTSHelp');
+	$item = $formSetup->newItem('DOLIFARM_WAREHOUSE_PRODUCTS')->setAsSelect($warehouses);
+	$item->helpText = $langs->transnoentities('DOLIFARM_WAREHOUSE_PRODUCTSHelp');
+}
+
 // End of definition of parameters
 
 
