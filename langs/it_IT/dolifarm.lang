@@ -153,6 +153,7 @@ MachineInsuranceEnd = Scadenza assicurazione
 MachineInsuranceEndHelp = Data di scadenza della polizza di responsabilità civile
 MachineSprayerCheckEnd = Scadenza controllo irroratrice
 MachineSprayerCheckEndHelp = Scadenza del controllo funzionale delle macchine irroratrici (PAN)
+RefAutoHelp = Lasciare vuoto per assegnare il riferimento automaticamente secondo la numerazione impostata nel setup del modulo
 DossierValidUntilHelp = Se vuoto, viene impostato a un anno dalla data di validazione
 DateReferenceConsistency = Consistenza aggiornata al
 CAA = CAA

@@ -129,6 +129,7 @@ MachineInsuranceEnd = Insurance expiry
 MachineInsuranceEndHelp = Expiry date of the liability insurance policy
 MachineSprayerCheckEnd = Sprayer check expiry
 MachineSprayerCheckEndHelp = Expiry of the functional check of the sprayers (national action plan)
+RefAutoHelp = Leave empty to get the ref from the numbering set in the setup of the module
 DossierValidUntilHelp = If empty, it is set to one year after the validation date
 DateReferenceConsistency = Holdings updated at
 CAA = CAA

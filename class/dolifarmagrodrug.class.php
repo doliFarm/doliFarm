@@ -131,7 +131,7 @@ class DoliFarmAgroDrug extends CommonObject
 	 */
 	public $fields = array(
 		"rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-		"ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 1, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+		"ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
 		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
 		"fk_product" => array("type" => "integer:Product:product/class/product.class.php:1", "label" => "Fkproduct", "picto" => "product", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
 		"reg_number" => array("type" => "varchar(64)", "label" => "Regnumber", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
@@ -270,6 +270,10 @@ class DoliFarmAgroDrug extends CommonObject
 	 */
 	public function create(User $user, $notrigger = 0)
 	{
+		// The ref can be typed; when left empty it is given by the numbering module
+		if (empty($this->ref)) {
+			$this->ref = $this->getNextNumRef();
+		}
 		$result = $this->createCommon($user, $notrigger);
 
 		// uncomment lines below if you want to validate object after creation
@@ -504,6 +508,10 @@ class DoliFarmAgroDrug extends CommonObject
 	 */
 	public function update(User $user, $notrigger = 0)
 	{
+		// A ref cleared in the form is given again by the numbering module
+		if (empty($this->ref)) {
+			$this->ref = $this->getNextNumRef();
+		}
 		return $this->updateCommon($user, $notrigger);
 	}
 

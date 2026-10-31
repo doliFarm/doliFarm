@@ -130,7 +130,7 @@ class DoliFarmFarmDossier extends CommonObject
      */
     public $fields = array(
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 1, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
         "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php:1", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         // Replaced by the CAA operator (contact of the dossier) and by date_signature/date_validity_end: kept in DB only
@@ -323,6 +323,10 @@ class DoliFarmFarmDossier extends CommonObject
             return -1;
         }
 
+        // The ref can be typed; when left empty it is given by the numbering module
+        if (empty($this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         $result = $this->createCommon($user, $notrigger);
 
         // uncomment lines below if you want to validate object after creation
@@ -558,6 +562,10 @@ class DoliFarmFarmDossier extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        // A ref cleared in the form is given again by the numbering module
+        if (empty($this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         if ($this->checkValidityDates() < 0) {
             return -1;
         }

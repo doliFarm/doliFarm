@@ -130,7 +130,7 @@ class DoliFarmMachine extends CommonObject
      */
     public $fields = array(
         "rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+        "ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "4", "noteditable" => "1", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
         "entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 16, 'notnull' => 1, "visible" => 0, 'default' => 1),
         "label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
         
@@ -291,6 +291,10 @@ class DoliFarmMachine extends CommonObject
             $this->entity = $conf->entity;
         }
 
+        // Machines have no validation step: the final ref is given at creation
+        if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         $result = $this->createCommon($user, $notrigger);
 
         // uncomment lines below if you want to validate object after creation
@@ -526,6 +530,10 @@ class DoliFarmMachine extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        // Machines created before the ref was given at creation
+        if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
+            $this->ref = $this->getNextNumRef();
+        }
         return $this->updateCommon($user, $notrigger);
     }
 

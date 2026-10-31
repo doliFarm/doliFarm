@@ -88,6 +88,7 @@ MachineInsuranceEnd = Échéance de l'assurance
 MachineInsuranceEndHelp = Date d'échéance de la police responsabilité civile
 MachineSprayerCheckEnd = Échéance du contrôle du pulvérisateur
 MachineSprayerCheckEndHelp = Échéance du contrôle fonctionnel des pulvérisateurs (plan national)
+RefAutoHelp = Laisser vide pour obtenir la référence selon la numérotation définie dans la configuration du module
 DossierValidUntilHelp = Si vide, elle est fixée à un an après la date de validation
 DateReferenceConsistency = Consistance mise à jour au
 CAA = CAA
