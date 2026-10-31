@@ -35,8 +35,8 @@ function dolifarmestimatecostsPrepareHead($object)
 	$langs->load("dolifarm@dolifarm");
 
 	$showtabofpagecontact = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_CONTACT');
-	$showtabofpagenote = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_NOTE');
-	$showtabofpagedocument = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_DOCUMENT');
+	$showtabofpagenote = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_NOTE', 1);
+	$showtabofpagedocument = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_DOCUMENT', 1);
 	$showtabofpageagenda = getDolGlobalInt('MAIN_DOLIFARM_SHOW_PAGE_OF_AGENDA');
 
 	$h = 0;

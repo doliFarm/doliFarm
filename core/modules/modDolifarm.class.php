@@ -134,17 +134,6 @@ class modDolifarm extends DolibarrModules
 			// Set this to 1 if the module provides a captcha driver
 			'captcha' => 0
 		);
-		$this->const = array(
-			1 => array(
-				'MAIN_MODULE_DOLIFARM_HOOKS',
-				'chaine',
-				'main:afterlogin:index:home:topmenu',
-				'Hooks for dolifarm module',
-				0,
-				'current',
-				0  // NON cancellare alla disattivazione
-			),
-		);
 		// Data directories to create when module is enabled.
 		// Example: this->dirs = array("/dolifarm/temp","/dolifarm/subdir");
 		$this->dirs = array("/dolifarm/temp");
@@ -1063,36 +1052,10 @@ class modDolifarm extends DolibarrModules
 
 		$sql = array();
 
-		// Document templates
-		$moduledir = dol_sanitizeFileName('dolifarm');
-		$myTmpObjects = array();
-		$myTmpObjects['DoliFarmPlot'] = array('includerefgeneration' => 0, 'includedocgeneration' => 0);
-
-		foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
-			if ($myTmpObjectArray['includerefgeneration']) {
-				$src = DOL_DOCUMENT_ROOT.'/install/doctemplates/'.$moduledir.'/template_dolifarmplots.odt';
-				$dirodt = DOL_DATA_ROOT.($conf->entity > 1 ? '/'.$conf->entity : '').'/doctemplates/'.$moduledir;
-				$dest = $dirodt.'/template_dolifarmplots.odt';
-
-				if (file_exists($src) && !file_exists($dest)) {
-					require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-					dol_mkdir($dirodt);
-					$result = dol_copy($src, $dest, '0', 0);
-					if ($result < 0) {
-						$langs->load("errors");
-						$this->error = $langs->trans('ErrorFailToCopyFile', $src, $dest);
-						return 0;
-					}
-				}
-
-				$sql = array_merge($sql, array(
-					"DELETE FROM ".$this->db->prefix()."document_model WHERE nom = 'standard_".strtolower($myTmpObjectKey)."' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity) VALUES('standard_".strtolower($myTmpObjectKey)."', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")",
-					"DELETE FROM ".$this->db->prefix()."document_model WHERE nom = 'generic_".strtolower($myTmpObjectKey)."_odt' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity) VALUES('generic_".strtolower($myTmpObjectKey)."_odt', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")"
-				));
-			}
-		}
+		// Document templates: the ModuleBuilder examples (standard_*, generic_*_odt) were removed, their activations too
+		$sql = array_merge($sql, array(
+			"DELETE FROM ".$this->db->prefix()."document_model WHERE type LIKE 'dolifarm%' AND (nom LIKE 'standard\\_%' OR nom LIKE 'generic\\_%') AND entity = ".((int) $conf->entity),
+		));
 
 		// Sheet of a plot (essential data and QR code to the card)
 		$sql = array_merge($sql, array(

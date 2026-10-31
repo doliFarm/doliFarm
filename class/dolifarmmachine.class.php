@@ -1177,7 +1177,7 @@ class DoliFarmMachine extends CommonObject
             if (!empty($this->model_pdf)) {
                 $modele = $this->model_pdf;
             } else {
-                $modele = getDolGlobalString('DOLIFARM_DOLIFARMMACHINE_ADDON_PDF', 'standard_dolifarmmachine');
+                $modele = getDolGlobalString('DOLIFARM_DOLIFARMMACHINE_ADDON_PDF');
             }
         }
 

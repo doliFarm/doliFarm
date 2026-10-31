@@ -1180,7 +1180,7 @@ class DoliFarmCrops extends CommonObject
 			if (!empty($this->model_pdf)) {
 				$modele = $this->model_pdf;
 			} else {
-				$modele = getDolGlobalString('DOLIFARM_DOLIFARMCROPS_ADDON_PDF', 'standard_dolifarmcrops');
+				$modele = getDolGlobalString('DOLIFARM_DOLIFARMCROPS_ADDON_PDF');
 			}
 		}
 
