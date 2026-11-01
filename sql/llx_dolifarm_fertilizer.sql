@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_fertilizer(
 	cu_content double(8,2),
 	efficiency double(8,2),
 	dry_matter double(8,2),
+	density double(8,3),
 	organic smallint,
 	note_public text,
 	note_private text,

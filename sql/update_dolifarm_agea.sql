@@ -97,3 +97,6 @@ ALTER TABLE llx_dolifarm_building ADD INDEX idx_dolifarm_building_fk_warehouse (
 
 -- Buildings: address of the storage sites and of the treated products (sheets 4, 5 and 9)
 ALTER TABLE llx_dolifarm_building ADD COLUMN address varchar(255);
+
+-- Fertilizers: density of the liquids, for the nitrogen applied with quantities in l or m3
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN density double(8,3);

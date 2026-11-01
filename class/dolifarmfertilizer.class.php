@@ -91,6 +91,7 @@ class DoliFarmFertilizer extends CommonObject
 		"k2o_content" => array("type" => "double(8,2)", "label" => "PotassiumContent", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"cu_content" => array("type" => "double(8,2)", "label" => "CopperContent", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"efficiency" => array("type" => "double(8,2)", "label" => "FertilizerEfficiency", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerEfficiencyHelp"),
+		"density" => array("type" => "double(8,3)", "label" => "FertilizerDensity", "enabled" => "1", 'position' => 36, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDensityHelp"),
 		"dry_matter" => array("type" => "double(8,2)", "label" => "FertilizerDryMatter", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDryMatterHelp"),
 		"organic" => array("type" => "boolean", "label" => "AllowedInOrganic", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "help" => "AllowedInOrganicHelp"),
 		"note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
@@ -130,6 +131,11 @@ class DoliFarmFertilizer extends CommonObject
 	 * @var float|string|null	Dry matter (%), AGEA field notebook sheet 6
 	 */
 	public $dry_matter;
+
+	/**
+	 * @var float|string|null	Density in kg/l of a liquid fertilizer, for the nitrogen applied
+	 */
+	public $density;
 	public $p2o5_content;
 	public $k2o_content;
 	public $organic;
@@ -176,6 +182,10 @@ class DoliFarmFertilizer extends CommonObject
 		}
 		if ($this->efficiency !== null && $this->efficiency !== '' && ((float) $this->efficiency < 0 || (float) $this->efficiency > 1)) {
 			$this->error = $langs->trans('ErrorFertilizerEfficiency');
+			return -1;
+		}
+		if ($this->density !== null && $this->density !== '' && ((float) $this->density <= 0 || (float) $this->density > 3)) {
+			$this->error = $langs->trans('ErrorFertilizerDensity');
 			return -1;
 		}
 		return 1;

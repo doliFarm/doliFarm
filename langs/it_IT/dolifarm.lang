@@ -505,6 +505,9 @@ FertilizerEfficiencyHelp = Coefficiente da 0 a 1 della tabella nazionale per il 
 FertilizerDryMatter = Sostanza secca (%)
 FertilizerDryMatterHelp = Percentuale di sostanza secca dell'effluente o del digestato (quaderno di campagna AGEA, fertilizzazione organica)
 ErrorFertilizerEfficiency = L'efficienza deve essere compresa tra 0 e 1
+FertilizerDensity = Densità (kg/l)
+FertilizerDensityHelp = Densità del fertilizzante liquido: serve a calcolare l'azoto distribuito quando la quantità è in litri o m³. Vuota per gli effluenti zootecnici = 1 kg/l
+ErrorFertilizerDensity = La densità deve essere maggiore di 0 e al massimo 3 kg/l
 DictionaryFertilizerType = Tipi di fertilizzante
 WarehouseInputs = Magazzino forniture
 WarehouseInputsHelp = Magazzino da cui i trattamenti e le fertilizzazioni scaricano agrofarmaci e fertilizzanti dell'azienda

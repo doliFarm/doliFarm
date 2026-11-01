@@ -274,6 +274,9 @@ FertilizerEfficiencyHelp = Coefficient from 0 to 1 of the national table for the
 FertilizerDryMatter = Dry matter (%)
 FertilizerDryMatterHelp = Percentage of dry matter of the effluent or digestate (AGEA field notebook, organic fertilization)
 ErrorFertilizerEfficiency = The efficiency must be between 0 and 1
+FertilizerDensity = Density (kg/l)
+FertilizerDensityHelp = Density of the liquid fertilizer: used to compute the nitrogen applied when the quantity is in litres or m³. Empty for livestock effluents = 1 kg/l
+ErrorFertilizerDensity = The density must be greater than 0 and at most 3 kg/l
 DictionaryFertilizerType = Fertilizer types
 WarehouseInputs = Inputs warehouse
 WarehouseInputsHelp = Warehouse from which the treatments and fertilizations of the farm take the agrodrugs and fertilizers
