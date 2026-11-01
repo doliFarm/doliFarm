@@ -37,7 +37,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-001', p.label, p.rowid, 
-    '12928', '2005-10-04', 'MANICA SPA', 
+    '016457', '2005-10-04', 'MANICA SPA', 
     'Rame Metallo (da Poltiglia Bordolese)', '20%', 'WG', 'H410', 20, 4.0, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-001';
 
@@ -47,7 +47,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-002', p.label, p.rowid, 
-    '9482', '1998-01-20', 'SYNGENTA ITALIA', 
+    '002923', '1998-01-20', 'SYNGENTA ITALIA', 
     'Zolfo', '80%', 'WG', 'H315', 5, 8.0, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-002';
 
@@ -57,7 +57,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-003', p.label, p.rowid, 
-    '16447', '2016-02-15', 'BAYER CROPSCIENCE', 
+    '016780', '2016-02-15', 'BAYER CROPSCIENCE', 
     'Bacillus subtilis (ceppo QST 713)', '1.34%', 'SC', 'NC', 0, 8.0, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-003';
 
@@ -67,7 +67,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-004', p.label, p.rowid, 
-    '13364', '2009-02-10', 'ISAGRO SPA', 
+    '012737', '2009-02-10', 'ISAGRO SPA', 
     'Rame (Ossicloruro + Idrossido)', '28%', 'WG', 'H302', 20, 3.5, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-004';
 
@@ -77,7 +77,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-005', p.label, p.rowid, 
-    '12266', '2004-11-29', 'CORTEVA AGRISCIENCE', 
+    '012768', '2004-11-29', 'CORTEVA AGRISCIENCE', 
     'Spinosad', '0.024%', 'CB', 'NC', 7, 1.2, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-005';
 
@@ -87,7 +87,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-006', p.label, p.rowid, 
-    '10398', '2000-03-01', 'CORTEVA AGRISCIENCE', 
+    '011693', '2000-03-01', 'CORTEVA AGRISCIENCE', 
     'Spinosad', '44.2%', 'SC', 'H410', 15, 0.25, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-006';
 
@@ -97,7 +97,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-007', p.label, p.rowid, 
-    '15911', '2014-01-20', 'GOWAN ITALIA', 
+    '012566', '2014-01-20', 'GOWAN ITALIA', 
     'Piretrine naturali', '1.4%', 'EC', 'H410', 2, 2.5, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-007';
 
@@ -107,7 +107,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-008', p.label, p.rowid, 
-    '14002', '2008-01-10', 'SUMITOMO CHEMICAL', 
+    '013062', '2008-01-10', 'SUMITOMO CHEMICAL', 
     'Bacillus Thuringiensis (Kurstaki)', '54%', 'WG', 'NC', 0, 1.0, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-008';
 
@@ -117,7 +117,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-009', p.label, p.rowid, 
-    '16301', '2016-04-01', 'BAYER', 
+    '014737', '2016-04-01', 'BAYER', 
     'Glifosate (sale potassico)', '48%', 'SL', 'H411', 0, 3.0, 1, NOW(), 'MARKET_IT_26', 'NON AMMESSO IN BIO'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-009';
 
@@ -127,7 +127,7 @@ INSERT IGNORE INTO llx_dolifarm_agrodrug (
 )
 SELECT 
     'AGRO-IT-010', p.label, p.rowid, 
-    '11561', '2003-01-20', 'ADAMA ITALIA', 
+    '011561', '2003-01-20', 'ADAMA ITALIA', 
     'Azadiractina A (da olio di Neem)', '1%', 'EC', 'H411', 3, 3.0, 1, NOW(), 'MARKET_IT_26'
 FROM llx_product p WHERE p.ref = 'AGRO-IT-010';
 

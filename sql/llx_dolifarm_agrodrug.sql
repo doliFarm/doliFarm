@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_agrodrug(
 	admin_status varchar(128),
 	date_revocation date,
 	date_catalog_sync datetime,
+	organic_confirm_user integer,
+	organic_confirm_date datetime,
 	note_public text, 
 	note_private text, 
 	status int, 

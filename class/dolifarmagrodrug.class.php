@@ -150,6 +150,8 @@ class DoliFarmAgroDrug extends CommonObject
 		"cu_content" => array("type" => "double(24,8)", "label" => "AgroDrugCuContent", "enabled" => "1", 'position' => 84, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugCuContentHelp"),
 		"admin_status" => array("type" => "varchar(128)", "label" => "AgroDrugAdminStatus", "enabled" => "1", 'position' => 46, 'notnull' => 0, "visible" => "5", "help" => "AgroDrugAdminStatusHelp",),
 		"date_revocation" => array("type" => "date", "label" => "AgroDrugDateRevocation", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-5",),
+		"organic_confirm_user" => array("type" => "integer:User:user/class/user.class.php", "label" => "AgroDrugOrganicConfirmUser", "picto" => "user", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "-5",),
+		"organic_confirm_date" => array("type" => "datetime", "label" => "AgroDrugOrganicConfirmDate", "enabled" => "1", 'position' => 86, 'notnull' => 0, "visible" => "-5",),
 		"date_catalog_sync" => array("type" => "datetime", "label" => "AgroDrugDateCatalogSync", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-5",),
 		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
@@ -209,6 +211,16 @@ class DoliFarmAgroDrug extends CommonObject
 	 * @var int|string|null	Date of the last copy from the catalogue
 	 */
 	public $date_catalog_sync;
+
+	/**
+	 * @var int|null	User that confirmed by hand the use in organic production
+	 */
+	public $organic_confirm_user;
+
+	/**
+	 * @var int|string|null	Date of the confirmation by hand
+	 */
+	public $organic_confirm_date;
 	public $note_public;
 	public $note_private;
 	public $status;
@@ -322,6 +334,7 @@ class DoliFarmAgroDrug extends CommonObject
 		$result = $this->createCommon($user, $notrigger);
 		if ($result > 0) {
 			$this->copyFromCatalog();
+			$this->stampOrganicConfirmation($user);
 		}
 
 		// uncomment lines below if you want to validate object after creation
@@ -566,8 +579,24 @@ class DoliFarmAgroDrug extends CommonObject
 		$result = $this->updateCommon($user, $notrigger);
 		if ($result > 0) {
 			$this->copyFromCatalog();
+			$this->stampOrganicConfirmation($user);
 		}
 		return $result;
+	}
+
+	/**
+	 * Keep who confirmed by hand the use in organic production and when (cleared when the confirmation is removed)
+	 *
+	 * @param	User	$user	User that saves
+	 * @return	int				1 if OK, -1 if KO
+	 */
+	public function stampOrganicConfirmation(User $user)
+	{
+		$sql = "UPDATE ".$this->db->prefix()."dolifarm_agrodrug SET";
+		$sql .= " organic_confirm_user = (CASE WHEN organic_allowed = 1 THEN COALESCE(organic_confirm_user, ".((int) $user->id).") ELSE NULL END),";
+		$sql .= " organic_confirm_date = (CASE WHEN organic_allowed = 1 THEN COALESCE(organic_confirm_date, '".$this->db->idate(dol_now())."') ELSE NULL END)";
+		$sql .= " WHERE rowid = ".((int) $this->id);
+		return ($this->db->query($sql) ? 1 : -1);
 	}
 
 	/**

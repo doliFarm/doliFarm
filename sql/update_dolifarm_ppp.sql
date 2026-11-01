@@ -19,3 +19,6 @@
 ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN admin_status varchar(128);
 ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN date_revocation date;
 ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN date_catalog_sync datetime;
+-- Check for organic production (annex I): confirmation by hand of the use, with user and date
+ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN organic_confirm_user integer;
+ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN organic_confirm_date datetime;
