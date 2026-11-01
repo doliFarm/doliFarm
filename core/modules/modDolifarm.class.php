@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2018	Laurent Destailleur			<eldy@users.sourceforge.net>
  * Copyright (C) 2018-2019	Nicolas ZABOURI				<info@inovea-conseil.com>
  * Copyright (C) 2019-2024	Frédéric France				<frederic.france@free.fr>
- * Copyright (C) 2026		SuperAdmin
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ class modDolifarm extends DolibarrModules
 		$this->editor_squarred_logo = '';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@dolifarm'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.3.0';
+		$this->version = '1.4.0';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -112,7 +112,7 @@ class modDolifarm extends DolibarrModules
 			'theme' => 0,
 			// Set this to relative path of css file if module has its own css file
 			'css' => array(
-				//    '/dolifarm/css/dolifarm.css.php',
+				'/dolifarm/css/dolifarm.css',	// Icons of the farm groups in the dashboard of the home page
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
@@ -123,6 +123,7 @@ class modDolifarm extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'afterlogin',
+				       'index',	// Home page: farm group of the dashboard of open elements
 				   ),
 				   'entity' => '0',
 			),
@@ -155,7 +156,7 @@ class modDolifarm extends DolibarrModules
 		$this->langfiles = array("dolifarm@dolifarm");
 
 		// Prerequisites
-		$this->phpmin = array(7, 2); // Minimum version of PHP required by module
+		$this->phpmin = array(8, 2); // Minimum version of PHP required by module
 		// $this->phpmax = array(8, 0); // Maximum version of PHP required by module
 		$this->need_dolibarr_version = array(23, 0); // Minimum version of Dolibarr required by module (dolBuildUrl() from v23)
 		// $this->max_dolibarr_version = array(19, -3); // Maximum version of Dolibarr required by module
@@ -286,10 +287,10 @@ class modDolifarm extends DolibarrModules
                 'SELECT rowid, code, label, description, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_biostatus',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_machinetype',
                 'SELECT rowid, code, label, active FROM '.MAIN_DB_PREFIX.'dolifarm_c_fueltype',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type', // [NUOVO]
+                'SELECT rowid, code, label, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_paying_agency',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_livestock_species',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type'
+                'SELECT rowid, code, label, fert_group, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type'
             ),
             
             // Sort order
@@ -310,10 +311,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // List of fields (list of fields to edit a record)
@@ -322,10 +323,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // List of fields (list of fields for insert)
@@ -334,10 +335,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // Name of columns with primary key (try to always name it 'rowid')
@@ -352,28 +353,30 @@ class modDolifarm extends DolibarrModules
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'description' => $langs->trans('Description')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')), // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'agea_value' => $langs->trans('AgeaValueHelp')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'))
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'fert_group' => $langs->trans('FertGroupHelp'), 'agea_value' => $langs->trans('AgeaValueHelp'))
             )
         );
 
         /* END MODULEBUILDER DICTIONARIES */
 
 		// Boxes/Widgets
+		// 'Home': added to the home page of Dolibarr when the module is enabled (users can remove or move them).
+		// 'dolifarm' is not a page code: those widgets are only on the Area Gestione Agricola and in the list of widgets.
 		// Add here list of php file(s) stored in dolifarm/core/boxes that contains a class to show a widget.
 /* BEGIN MODULEBUILDER WIDGETS */
         $this->boxes = array(
             0 => array(
                 'file' => 'dolifarm_TotDossiers.php@dolifarm',
                 'note' => $langs->trans('BoxTotDossiersDescription'), 
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
             1 => array(
                 'file' => 'dolifarm_TotPlots.php@dolifarm',
                 'note' => $langs->trans('BoxTotPlotsDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
             2 => array(
                 'file' => 'dolifarm_TotMachines.php@dolifarm',
@@ -383,7 +386,7 @@ class modDolifarm extends DolibarrModules
             3 => array(
                 'file' => 'dolifarm_CropPlansMonitoring.php@dolifarm',
                 'note' => $langs->trans('BoxCropPlansMonitoringDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
 			 4 => array(
                 'file' => 'dolifarmwidgettopplannedproducts.php@dolifarm',
@@ -393,7 +396,7 @@ class modDolifarm extends DolibarrModules
             5 => array(
                 'file' => 'dolifarm_Expiry.php@dolifarm',
                 'note' => $langs->trans('BoxExpiryDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
         );
         /* END MODULEBUILDER WIDGETS */
@@ -411,6 +414,21 @@ class modDolifarm extends DolibarrModules
 				'method' => 'cronSync',
 				'parameters' => '',
 				'comment' => 'Update of the EPPO Codes created or changed since the last update',
+				'frequency' => 1,
+				'unitfrequency' => 604800,
+				'status' => 0,
+				'test' => 'isModEnabled("dolifarm")',
+				'priority' => 50,
+			),
+			// Weekly update of the catalogue of plant protection products (open data of the Ministry of Health)
+			1 => array(
+				'label' => 'DolifarmPppSyncJob',
+				'jobtype' => 'method',
+				'class' => '/dolifarm/class/dolifarmpppsync.class.php',
+				'objectname' => 'DoliFarmPppSync',
+				'method' => 'cronSync',
+				'parameters' => '',
+				'comment' => 'Download of the latest file of the dataset "fitosanitari" and update of the agrodrugs',
 				'frequency' => 1,
 				'unitfrequency' => 604800,
 				'status' => 0,
@@ -889,6 +907,22 @@ class modDolifarm extends DolibarrModules
 			'object' => 'DoliFarmFertilizer'
 		);
 		/* END MODULEBUILDER LEFTMENU DOLIFARMFERTILIZER */
+		// Register of the technical inputs: plant protection products, fertilisers and corroborants for organic production
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'type' => 'left',
+			'titre' => 'InputsRegister',
+			'prefix' => img_picto('', 'fa-leaf', 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarminputs',
+			'url' => '/dolifarm/dolifarm_inputs.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
+			'target' => '',
+			'user' => 2,
+		);
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMCROPS */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',
@@ -1131,6 +1165,33 @@ class modDolifarm extends DolibarrModules
 		$extrafields = new ExtraFields($this->db);
 		// Affiliated farm (multi-farm mode): the flag creates the dossier and the warehouses of the farm
 		$result = $extrafields->addExtraField('dolifarm_affiliated', "DolifarmAffiliated", 'boolean', 1000, '', 'thirdparty', 0, 0, '', '', 1, '', '1', 'DolifarmAffiliatedHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && getDolGlobalInt("DOLIFARM_MULTIFARM")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
+		// Organic production: status of the reproductive material (seeds, seedlings) of the products, copied on the sowing
+		// in doliTrace (Reg. EU 2018/848, annex II part I point 1.8)
+		$result = $extrafields->addExtraField('dolifarm_seed_status', "DolifarmSeedStatus", 'select', 1000, '', 'product', 0, 0, '', array('options' => array('BIO' => 'SeedStatusBio', 'INCONV' => 'SeedStatusInConversion', 'NONBIO' => 'SeedStatusNonBio')), 1, '', '1', 'DolifarmSeedStatusHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
+		// Organic production: certificate of the third parties (suppliers of inputs, buyers), Reg. EU 2021/771 art. 1
+		// (traceability: supplier, its certificate); the end of validity is in the widget of the expiries
+		$bioextrafields = array(
+			array('dolifarm_bio_cert', 'DolifarmBioCert', 'varchar', 1001, '64', 'DolifarmBioCertHelp'),
+			array('dolifarm_bio_body', 'DolifarmBioBody', 'varchar', 1002, '128', 'DolifarmBioBodyHelp'),
+			array('dolifarm_bio_cert_end', 'DolifarmBioCertEnd', 'date', 1003, '', 'DolifarmBioCertEndHelp'),
+		);
+		foreach ($bioextrafields as $def) {
+			$result = $extrafields->addExtraField($def[0], $def[1], $def[2], $def[3], $def[4], 'thirdparty', 0, 0, '', '', 1, '', '1', $def[5], '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+			if ($result < 0) {
+				$this->error = $extrafields->error;
+				return -1;
+			}
+		}
+		// Organic production: warehouse dedicated to one organic status (separation, Reg. EU 2018/848 art. 9.10)
+		$result = $extrafields->addExtraField('dolifarm_bio_dedicated', "DolifarmBioDedicated", 'select', 1000, '', 'entrepot', 0, 0, '', array('options' => array('BIO' => 'SeedStatusBio', 'INCONV' => 'SeedStatusInConversion', 'NONBIO' => 'SeedStatusNonBio')), 1, '', '1', 'DolifarmBioDedicatedHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && isModEnabled("stock")');
 		if ($result < 0) {
 			$this->error = $extrafields->error;
 			return -1;

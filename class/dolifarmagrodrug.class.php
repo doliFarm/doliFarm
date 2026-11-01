@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017       Laurent Destailleur      <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2025  Frédéric France          <frederic.france@free.fr>
- * Copyright (C) 2026		SuperAdmin
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,8 +144,17 @@ class DoliFarmAgroDrug extends CommonObject
 		"hazard_classification" => array("type" => "varchar(128)", "label" => "Hazardclassification", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "-1",),
 		"safety_days_default" => array("type" => "int", "label" => "Safetydaysdefault", "enabled" => "1", 'position' => 75, 'notnull' => 0, "visible" => "-1",),
 		"max_dose_ha" => array("type" => "double(24,8)", "label" => "Maxdoseha", "enabled" => "1", 'position' => 80, 'notnull' => 0, "visible" => "-1",),
-		"note_public" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
-		"note_private" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+		"max_applications" => array("type" => "int", "label" => "AgroDrugMaxApplications", "enabled" => "1", 'position' => 81, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugMaxApplicationsHelp"),
+		"moa_codes" => array("type" => "varchar(128)", "label" => "AgroDrugMoaCodes", "enabled" => "1", 'position' => 82, 'notnull' => 0, "visible" => "-1", "css" => "minwidth200", "help" => "AgroDrugMoaCodesHelp"),
+		"organic_allowed" => array("type" => "boolean", "label" => "AgroDrugOrganicAllowed", "enabled" => "1", 'position' => 83, 'notnull' => 0, "visible" => "1", "default" => "0", "help" => "AgroDrugOrganicAllowedHelp"),
+		"cu_content" => array("type" => "double(24,8)", "label" => "AgroDrugCuContent", "enabled" => "1", 'position' => 84, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugCuContentHelp"),
+		"admin_status" => array("type" => "varchar(128)", "label" => "AgroDrugAdminStatus", "enabled" => "1", 'position' => 46, 'notnull' => 0, "visible" => "5", "help" => "AgroDrugAdminStatusHelp",),
+		"date_revocation" => array("type" => "date", "label" => "AgroDrugDateRevocation", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-5",),
+		"organic_confirm_user" => array("type" => "integer:User:user/class/user.class.php", "label" => "AgroDrugOrganicConfirmUser", "picto" => "user", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "-5",),
+		"organic_confirm_date" => array("type" => "datetime", "label" => "AgroDrugOrganicConfirmDate", "enabled" => "1", 'position' => 86, 'notnull' => 0, "visible" => "-5",),
+		"date_catalog_sync" => array("type" => "datetime", "label" => "AgroDrugDateCatalogSync", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-5",),
+		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "-1",),
 		"tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 105, 'notnull' => 0, "visible" => "-1",),
@@ -167,6 +176,51 @@ class DoliFarmAgroDrug extends CommonObject
 	public $hazard_classification;
 	public $safety_days_default;
 	public $max_dose_ha;
+
+	/**
+	 * @var int|string|null	Maximum number of applications for each crop cycle, from the label
+	 */
+	public $max_applications;
+
+	/**
+	 * @var string|null	Groups of the mode of action (FRAC, IRAC, HRAC), for example "FRAC 3; FRAC M01"
+	 */
+	public $moa_codes;
+
+	/**
+	 * @var int|string|null	1 when the product is allowed in organic farming (Reg. EU 2021/1165, annex I)
+	 */
+	public $organic_allowed;
+
+	/**
+	 * @var float|string|null	Copper metal in g for kg or l of product, as written on the label
+	 */
+	public $cu_content;
+
+	/**
+	 * @var string|null	Administrative status written by the Ministry of Health (catalogue, read only)
+	 */
+	public $admin_status;
+
+	/**
+	 * @var int|string|null	Date from which the revocation applies (catalogue, read only)
+	 */
+	public $date_revocation;
+
+	/**
+	 * @var int|string|null	Date of the last copy from the catalogue
+	 */
+	public $date_catalog_sync;
+
+	/**
+	 * @var int|null	User that confirmed by hand the use in organic production
+	 */
+	public $organic_confirm_user;
+
+	/**
+	 * @var int|string|null	Date of the confirmation by hand
+	 */
+	public $organic_confirm_date;
 	public $note_public;
 	public $note_private;
 	public $status;
@@ -274,7 +328,14 @@ class DoliFarmAgroDrug extends CommonObject
 		if (empty($this->ref)) {
 			$this->ref = $this->getNextNumRef();
 		}
+		if ($this->checkData() < 0) {
+			return -1;
+		}
 		$result = $this->createCommon($user, $notrigger);
+		if ($result > 0) {
+			$this->copyFromCatalog();
+			$this->stampOrganicConfirmation($user);
+		}
 
 		// uncomment lines below if you want to validate object after creation
 		// if ($result > 0) {
@@ -512,7 +573,117 @@ class DoliFarmAgroDrug extends CommonObject
 		if (empty($this->ref)) {
 			$this->ref = $this->getNextNumRef();
 		}
-		return $this->updateCommon($user, $notrigger);
+		if ($this->checkData() < 0) {
+			return -1;
+		}
+		$result = $this->updateCommon($user, $notrigger);
+		if ($result > 0) {
+			$this->copyFromCatalog();
+			$this->stampOrganicConfirmation($user);
+		}
+		return $result;
+	}
+
+	/**
+	 * Keep who confirmed by hand the use in organic production and when (cleared when the confirmation is removed)
+	 *
+	 * @param	User	$user	User that saves
+	 * @return	int				1 if OK, -1 if KO
+	 */
+	public function stampOrganicConfirmation(User $user)
+	{
+		$sql = "UPDATE ".$this->db->prefix()."dolifarm_agrodrug SET";
+		$sql .= " organic_confirm_user = (CASE WHEN organic_allowed = 1 THEN COALESCE(organic_confirm_user, ".((int) $user->id).") ELSE NULL END),";
+		$sql .= " organic_confirm_date = (CASE WHEN organic_allowed = 1 THEN COALESCE(organic_confirm_date, '".$this->db->idate(dol_now())."') ELSE NULL END)";
+		$sql .= " WHERE rowid = ".((int) $this->id);
+		return ($this->db->query($sql) ? 1 : -1);
+	}
+
+	/**
+	 * Copy status, dates and the empty fields from the catalogue of the Ministry of Health (same registration number)
+	 *
+	 * @return	int		1 if copied, 0 if the product is not in the catalogue
+	 */
+	public function copyFromCatalog()
+	{
+		dol_include_once('/dolifarm/class/dolifarmpppsync.class.php');
+		$sql = DoliFarmPppSync::agroDrugUpdateSql($this->db, (int) $this->id, DoliFarmPppSync::regKey($this->reg_number));
+		if ($sql === '' || !$this->db->query($sql)) {
+			return 0;
+		}
+		return 1;
+	}
+
+	/**
+	 * Check the data before saving: groups of the mode of action written as FRAC, IRAC or HRAC and a code
+	 *
+	 * @return	int		Return integer <0 if KO, >0 if OK
+	 */
+	public function checkData()
+	{
+		global $langs;
+
+		$langs->load('dolifarm@dolifarm');
+		if ($this->max_applications !== null && $this->max_applications !== '' && (int) $this->max_applications < 0) {
+			$this->error = $langs->trans('ErrorAgroDrugMaxApplications');
+			return -1;
+		}
+		$groups = self::moaGroups($this->moa_codes, $invalid);
+		if ($invalid !== '') {
+			$this->error = $langs->trans('ErrorAgroDrugMoaCodes', $invalid);
+			return -1;
+		}
+		$this->moa_codes = (count($groups) ? implode('; ', $groups) : null);
+		if ($this->cu_content !== null && $this->cu_content !== '' && ((float) $this->cu_content < 0 || (float) $this->cu_content > 1000)) {
+			$this->error = $langs->trans('ErrorAgroDrugCuContent');
+			return -1;
+		}
+		return 1;
+	}
+
+	/**
+	 * Groups of the mode of action of a text such as "FRAC 3, frac m 01; IRAC 4A"
+	 *
+	 * Each group is written again as committee and code without spaces ("FRAC M01"). The keys of the array let compare
+	 * the groups without the leading zeros ("FRAC M1"), as the labels write them in both ways.
+	 *
+	 * @param	string|null	$text		Groups separated by comma, semicolon or slash
+	 * @param	string		$invalid	First part that is not a group, '' if all are valid
+	 * @return	array<string,string>	Groups by key of comparison
+	 */
+	public static function moaGroups($text, &$invalid = '')
+	{
+		$invalid = '';
+		$groups = array();
+		foreach (preg_split('/[,;\/]+/', (string) $text) as $part) {
+			$part = trim($part);
+			if ($part === '') {
+				continue;
+			}
+			if (!preg_match('/^(FRAC|IRAC|HRAC)\s*([A-Z0-9 .]{1,12})$/i', $part, $reg)) {
+				if ($invalid === '') {
+					$invalid = $part;
+				}
+				continue;
+			}
+			$code = strtoupper(str_replace(' ', '', $reg[2]));
+			$group = strtoupper($reg[1]).' '.$code;
+			$key = strtoupper($reg[1]).' '.preg_replace('/(?<![0-9])0+(?=[0-9])/', '', $code);
+			$groups[$key] = $group;
+		}
+		return $groups;
+	}
+
+	/**
+	 * Groups with a low risk of resistance, left out of the check of the applications in a row: multi-site fungicides
+	 * (FRAC M) and groups not classified or with unknown mode of action
+	 *
+	 * @param	string	$key	Key of comparison of the group (see moaGroups())
+	 * @return	bool
+	 */
+	public static function moaLowRisk($key)
+	{
+		return (bool) preg_match('/^(FRAC M[0-9]+|FRAC NC|FRAC U[0-9]*|IRAC UN[A-Z]*|HRAC (Z|0))$/', $key);
 	}
 
 	/**

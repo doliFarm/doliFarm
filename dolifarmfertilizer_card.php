@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017       Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2024-2025  Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026       SuperAdmin
+ * Copyright (C) 2026       Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -151,8 +151,8 @@ $form = new Form($db);
 // Layout of the card: identification, then nutrient content
 $cardlayout = array(
 	array(
-		'left' => array('ref', 'label', 'fk_fert_type', 'fk_product'),
-		'right' => array('manufacturer', 'registration_number', 'organic'),
+		'left' => array('ref', 'label', 'product_kind', 'fk_fert_type', 'fk_product'),
+		'right' => array('manufacturer', 'registration_number', 'organic', 'annex2_code', 'organic_check_date'),
 	),
 	array(
 		'title' => 'FertilizerNutrients',

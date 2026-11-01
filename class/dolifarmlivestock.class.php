@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017      Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2025 Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026      SuperAdmin
+ * Copyright (C) 2026      Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,6 +154,9 @@ class DoliFarmLivestock extends CommonObject
 		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('livestock');
 		$this->initFieldsDefinition();
+		// Drop-down lists only with the farms the user can see
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array('fk_dossier'));
 	}
 
 	/**

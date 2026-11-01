@@ -1,17 +1,17 @@
 <?php
-/* Copyright (C) 2026		SuperAdmin
+/* Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -71,6 +71,19 @@ class InterfaceDolifarmTriggers extends DolibarrTriggers
 				setEventMessages(null, $messages, 'mesgs');
 			}
 			return $res > 0 ? 1 : 0;
+		}
+
+		// Objects of doliFarm and doliTrace: the user must see the farm of the object and of the objects it links to
+		// (the drop-down lists only show them, this refuses a value sent by hand). An error cancels the save.
+		if (isModEnabled('dolifarm') && preg_match('/^DOLI(FARM|TRACE)[A-Z]+_(CREATE|MODIFY)$/', $action)) {
+			dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+			$error = dolifarmCheckObjectAccess($object, $user);
+			if ($error !== '') {
+				dol_syslog("Trigger '".$this->name."': ".$action." refused for user ".$user->id.": ".$error, LOG_WARNING);
+				$this->error = $error;
+				$this->errors[] = $error;
+				return -1;
+			}
 		}
 
 		// Codes of the common CRUD (DOLIFARMBUILDING_CREATE: class name) and of the status changes (DOLIFARM_BUILDING_CANCEL: TRIGGER_PREFIX)

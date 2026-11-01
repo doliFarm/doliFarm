@@ -1,17 +1,17 @@
 <?php
-/* Copyright (C) 2026      SuperAdmin
+/* Copyright (C) 2026      Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -220,7 +220,14 @@ function dolifarmAffiliatedWarehouse($db, $ref, $parentid, $soc, $labelkey, $use
 
 	$warehouse = new Entrepot($db);
 	if ($warehouse->fetch(0, $ref) > 0) {
-		return (dolifarmAffiliatedOpenWarehouse($db, $warehouse, $user) < 0) ? -1 : $warehouse->id;
+		$wasclosed = ($warehouse->statut == Entrepot::STATUS_CLOSED);
+		if (dolifarmAffiliatedOpenWarehouse($db, $warehouse, $user) < 0) {
+			return -1;
+		}
+		if ($wasclosed) {
+			$messages[] = $langs->trans('DolifarmAffiliatedWarehouseReopened', $ref);
+		}
+		return $warehouse->id;
 	}
 
 	$warehouse->label = $ref;

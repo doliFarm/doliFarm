@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017       Laurent Destailleur      <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2025  Frédéric France          <frederic.france@free.fr>
- * Copyright (C) 2026		SuperAdmin
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,8 +140,8 @@ class DoliFarmCrops extends CommonObject
 		"planting_unit" => array("type" => "varchar(32)", "label" => "Plantingunit", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
 		"estimated_yield_std" => array("type" => "double(24,8)", "label" => "Estimatedyieldstd", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
 		"status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
-		"note_private" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
-		"note_public" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 75, 'notnull' => 0, "visible" => "-1",),
 		"tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 80, 'notnull' => 0, "visible" => "-1",),
 		"fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),

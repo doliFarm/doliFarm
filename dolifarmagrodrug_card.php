@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017       Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2024-2025  Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026		SuperAdmin
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -458,6 +458,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	print '</div>';
 
 	print '<div class="clearboth"></div>';
+
+	// Check for organic production: substances of annex I, authorisation, uses of the label
+	dol_include_once('/dolifarm/lib/dolifarm_organic.lib.php');
+	$organic = dolifarmOrganicAgroDrugCheck($db, (int) $object->id);
+	print '<br><div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('OrganicCheck').' '.$form->textwithpicto('', $langs->trans('OrganicCheckHelp')).'</td></tr>';
+	print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('OrganicResult').'</td><td>'.dolifarmOrganicBadge($organic['result']);
+	foreach ($organic['reasons'] as $reason) {
+		print '<br><span class="opacitymedium">'.dol_escape_htmltag($reason).'</span>';
+	}
+	print '</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans('OrganicSubstances').'</td><td>';
+	foreach ($organic['substances'] as $substance) {
+		print dol_escape_htmltag($substance['name']).' &rarr; '.($substance['code'] !== '' ? dol_escape_htmltag($substance['label']) : '<span class="error">'.$langs->trans('OrganicNotInAnnex').'</span>').'<br>';
+	}
+	print '<span class="opacitymedium">'.$langs->trans($organic['source'] == 'catalog' ? 'OrganicSourceCatalog' : 'OrganicSourceCard').'</span></td></tr>';
+	if (count($organic['conditions'])) {
+		print '<tr class="oddeven"><td>'.$langs->trans('OrganicConditions').'</td><td>'.dol_escape_htmltag(implode("
+", $organic['conditions']), 1, 1).'</td></tr>';
+	}
+	print '</table></div>';
 
 	print dol_get_fiche_end();
 

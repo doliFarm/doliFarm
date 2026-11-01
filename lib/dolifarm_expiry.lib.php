@@ -1,17 +1,17 @@
 <?php
-/* Copyright (C) 2026		SuperAdmin
+/* Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -198,6 +198,32 @@ function dolifarmExpiryList($db, $user, $limit = 0, $filters = array())
 				'fk_soc' => (int) $obj->fk_soc, 'date' => $date, 'state' => dolifarmExpiryState($date, $def['milestone']));
 		}
 		$db->free($resql);
+	}
+
+	// Organic certificates of the third parties (extrafields of doliFarm), not with a filter on a dossier
+	if ($user->hasRight('societe', 'lire') && empty($filters['fk_dossier'])) {
+		$def = array('element' => 'societe', 'class' => 'Societe', 'label' => 'ExpiryBioCertificate', 'milestone' => 0);
+		$sql = "SELECT s.rowid, s.nom as ref, x.dolifarm_bio_cert as label, x.dolifarm_bio_cert_end as dateexp";
+		$sql .= " FROM ".$db->prefix()."societe as s";
+		$sql .= " INNER JOIN ".$db->prefix()."societe_extrafields as x ON x.fk_object = s.rowid";
+		$sql .= " WHERE s.entity IN (".getEntity('societe').") AND s.status = 1";
+		$sql .= " AND x.dolifarm_bio_cert_end IS NOT NULL AND x.dolifarm_bio_cert_end <= '".$db->idate($limitdate)."'";
+		$sql .= dolifarmSqlSocFilter($user, 's.rowid');
+		if (!empty($filters['fk_soc'])) {
+			$sql .= " AND s.rowid = ".((int) $filters['fk_soc']);
+		}
+		$resql = $db->query($sql);
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				$date = $db->jdate($obj->dateexp);
+				$rows[] = array('key' => 'thirdparty_biocert', 'def' => $def, 'id' => (int) $obj->rowid, 'ref' => $obj->ref, 'label' => (string) $obj->label,
+					'fk_soc' => 0, 'date' => $date, 'state' => dolifarmExpiryState($date, 0));
+			}
+			$db->free($resql);
+		} else {
+			// Extrafields not created yet (module not reactivated)
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_DEBUG);
+		}
 	}
 
 	usort($rows, function ($a, $b) {

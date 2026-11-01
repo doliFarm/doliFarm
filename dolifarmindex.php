@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 SuperAdmin */
+/* Copyright (C) 2026 Luigi Grillo - doliFarm.com	<info@dolifarm.com> */
 
 // 1. CARICAMENTO AMBIENTE
 $res = 0;
@@ -37,6 +37,7 @@ print load_fiche_titre($title, '', dolifarm_get_fa_icon('dolifarm'));
 // ============================================================================
 
 $widgets_to_load = array(
+    array('file' => 'dolifarm_Expiry.php'),
     array('file' => 'dolifarm_TotDossiers.php'),
     array('file' => 'dolifarm_TotPlots.php'),
     array('file' => 'dolifarm_TotMachines.php'),

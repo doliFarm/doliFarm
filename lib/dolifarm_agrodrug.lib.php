@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026		SuperAdmin
+/* Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  * Copyright (C) 2025       Frédéric France         <frederic.france@free.fr>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -45,6 +45,22 @@ function dolifarmagrodrugPrepareHead($object)
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmagrodrug_card.php", 1), ['id' => $object->id]);
 	$head[$h][1] = $langs->trans("DoliFarmAgroDrug");
 	$head[$h][2] = 'card';
+	$h++;
+
+	// Authorised uses (impieghi autorizzati) written on the label
+	$nbUses = 0;
+	$resql = $db->query("SELECT COUNT(rowid) as nb FROM ".$db->prefix()."dolifarm_agrodrug_use WHERE fk_agrodrug = ".((int) $object->id));
+	if ($resql) {
+		$obj = $db->fetch_object($resql);
+		$nbUses = ($obj ? (int) $obj->nb : 0);
+		$db->free($resql);
+	}
+	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmagrodrug_uses.php", 1), ['id' => $object->id]);
+	$head[$h][1] = $langs->trans("AgroDrugUses");
+	if ($nbUses > 0) {
+		$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbUses.'</span>';
+	}
+	$head[$h][2] = 'uses';
 	$h++;
 
 	if ($showtabofpagecontact) {

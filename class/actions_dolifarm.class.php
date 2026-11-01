@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2023		Laurent Destailleur			<eldy@users.sourceforge.net>
- * Copyright (C) ---Replace with your own copyright and developer email---
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,9 @@
  */
 
 /**
- * \file    htdocs/modulebuilder/template/class/actions_dolifarm.class.php
+ * \file    class/actions_dolifarm.class.php
  * \ingroup dolifarm
- * \brief   Example hook overload.
- *
- * TODO: Write detailed description here.
+ * \brief   Hooks of doliFarm (home page of Dolibarr: farm group of the dashboard of open elements)
  */
 
 
@@ -73,8 +71,6 @@ class ActionsDolifarm extends CommonHookActions
 	public function __construct($db)
 	{
 		$this->db = $db;
-		    dol_syslog("ActionsDolifarm CLASS LOADED", LOG_WARNING); // WARNING è più facile da trovare nei log
-
 	}
 
 
@@ -356,5 +352,66 @@ class ActionsDolifarm extends CommonHookActions
 	}
 
 
-	/* Add other hook methods here... */
+	/**
+	 * Home page of Dolibarr: line of the expiries (licences, checks of the sprayers, authorisations...) in the dashboard
+	 *
+	 * @param	array<string,mixed>	$parameters	Parameters
+	 * @param	object				$object		Not used
+	 * @param	string				$action		Not used
+	 * @param	HookManager			$hookmanager	Hook manager
+	 * @return	int									0
+	 */
+	public function addOpenElementsDashboardLine($parameters, &$object, &$action, $hookmanager)
+	{
+		global $user, $langs;
+
+		$this->results = array();
+		if (!isModEnabled('dolifarm') || !in_array('index', explode(':', $parameters['context']))) {
+			return 0;
+		}
+		dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+		require_once DOL_DOCUMENT_ROOT.'/core/class/workboardresponse.class.php';
+		$langs->load('dolifarm@dolifarm');
+
+		$all = dolifarmExpiryList($this->db, $user);
+		$board = new WorkboardResponse();
+		$board->img = img_picto('', 'fa-calendar-times');
+		$board->label = $langs->trans('DashboardExpiries', dolifarmExpiryDays());
+		$board->labelShort = $langs->trans('DashboardExpiriesShort');
+		$board->url = dol_buildpath('/dolifarm/dolifarmindex.php', 1).'?mainmenu=dolifarm';
+		$board->warning_delay = 0;
+		$board->nbtodo = count($all);
+		foreach ($all as $row) {
+			if ($row['state'] == 'overdue') {
+				$board->nbtodolate++;
+			}
+		}
+		$this->results = array('dolifarm_expiry' => $board);
+		return 0;
+	}
+
+	/**
+	 * Home page of Dolibarr: group "Farm" of the dashboard of open elements
+	 *
+	 * @param	array<string,mixed>	$parameters	Parameters
+	 * @param	object				$object		Not used
+	 * @param	string				$action		Not used
+	 * @param	HookManager			$hookmanager	Hook manager
+	 * @return	int									0
+	 */
+	public function addOpenElementsDashboardGroup($parameters, &$object, &$action, $hookmanager)
+	{
+		$this->results = array();
+		if (!isModEnabled('dolifarm') || !in_array('index', explode(':', $parameters['context']))) {
+			return 0;
+		}
+		$this->results = array(
+			'dolifarm' => array(
+				'lang' => 'dolifarm@dolifarm',
+				'groupName' => 'DashboardFarm',
+				'stats' => array('dolifarm_expiry'),
+			),
+		);
+		return 0;
+	}
 }

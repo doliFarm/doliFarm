@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017      Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2025 Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026      SuperAdmin
+ * Copyright (C) 2026      Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,36 +135,38 @@ class DoliFarmMachine extends CommonObject
         "label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
         
         "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 25, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "Fkdossier", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "FkDossier", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
         // Linked to Dictionary: llx_dolifarm_c_machinetype. Storing CODE.
-        "fk_type" => array("type" => "sellist:dolifarm_c_machinetype:label:code::active=1", "label" => "MachineType", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_type" => array("type" => "sellist:dolifarm_c_machinetype:label:code::active=1", "label" => "MachineTypeLabel", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
-        "power_kw" => array("type" => "double(10,2)", "label" => "Powerkw", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
+        "power_kw" => array("type" => "double(10,2)", "label" => "MachinePowerKw", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
         
         // Linked to Dictionary: llx_dolifarm_c_fueltype. Storing CODE.
         "fuel_type" => array("type" => "sellist:dolifarm_c_fueltype:label:code::active=1", "label" => "FuelType", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
         
-        "year_registration" => array("type" => "int", "label" => "Yearregistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
+        "year_registration" => array("type" => "int", "label" => "MachineYearRegistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
         "date_revision_next" => array("type" => "date", "label" => "MachineRevisionNext", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "-1", "help" => "MachineRevisionNextHelp",),
         "date_insurance_end" => array("type" => "date", "label" => "MachineInsuranceEnd", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1", "help" => "MachineInsuranceEndHelp",),
-        "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
+        "sprayer_cert_ref" => array("type" => "varchar(64)", "label" => "MachineSprayerCertRef", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCertRefHelp",),
+        "date_sprayer_check" => array("type" => "date", "label" => "MachineSprayerCheckDate", "enabled" => "1", 'position' => 54, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckDateHelp",),
+        "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
         
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1",),
         
-        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
-        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-1",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-1",),
+        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-5",),
+        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-5",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 58, 'notnull' => 0, "visible" => "-5",),
         
         // Standard Dolibarr tracking
-        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
+        "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-5", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         "fk_user_modif" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserModif", "picto" => "user", "enabled" => "1", 'position' => 65, 'notnull' => -1, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
         
         "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 71, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-1",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-1",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "Model", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-5",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "MachineLastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-5",),
     );
     public $rowid;
     public $ref;
@@ -178,6 +180,8 @@ class DoliFarmMachine extends CommonObject
     public $year_registration;
     public $date_revision_next;
     public $date_insurance_end;
+    public $sprayer_cert_ref;
+    public $date_sprayer_check;
     public $date_sprayer_check_end;
     public $status;
     public $datec;
@@ -243,6 +247,9 @@ class DoliFarmMachine extends CommonObject
 
         		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('machine');
+		// Drop-down lists only with the farms the user can see
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array('fk_dossier'));
 
         if (!getDolGlobalInt('MAIN_SHOW_TECHNICAL_ID') && isset($this->fields['rowid']) && !empty($this->fields['ref'])) {
             $this->fields['rowid']['visible'] = 0;
@@ -291,9 +298,17 @@ class DoliFarmMachine extends CommonObject
             $this->entity = $conf->entity;
         }
 
+        if ($this->checkSprayerDates() < 0) {
+            return -1;
+        }
+
         // Machines have no validation step: the final ref is given at creation
         if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
             $this->ref = $this->getNextNumRef();
+        }
+        // The table uses datec, which createCommon() does not fill
+        if (empty($this->datec)) {
+            $this->datec = dol_now();
         }
         $result = $this->createCommon($user, $notrigger);
 
@@ -522,6 +537,37 @@ class DoliFarmMachine extends CommonObject
     }
 
     /**
+     * Check the dates of the functional check of the sprayer: the last check is not in the future and not after its expiry
+     *
+     * @return int<-1,1>  1 if OK, -1 if KO
+     */
+    public function checkSprayerDates()
+    {
+        global $langs;
+
+        $langs->load('dolifarm@dolifarm');
+        $check = $this->date_sprayer_check;
+        $end = $this->date_sprayer_check_end;
+        if ($check !== null && $check !== '' && !is_numeric($check)) {
+            $check = dol_stringtotime($check);
+        }
+        if ($end !== null && $end !== '' && !is_numeric($end)) {
+            $end = dol_stringtotime($end);
+        }
+        if (!empty($check) && $check > dol_now()) {
+            $this->error = $langs->trans('ErrorMachineSprayerCheckFuture');
+            $this->errors[] = $this->error;
+            return -1;
+        }
+        if (!empty($check) && !empty($end) && $check > $end) {
+            $this->error = $langs->trans('ErrorMachineSprayerCheckAfterEnd');
+            $this->errors[] = $this->error;
+            return -1;
+        }
+        return 1;
+    }
+
+    /**
      * Update object into database
      *
      * @param   User        $user       User that modifies
@@ -530,6 +576,9 @@ class DoliFarmMachine extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        if ($this->checkSprayerDates() < 0) {
+            return -1;
+        }
         // Machines created before the ref was given at creation
         if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
             $this->ref = $this->getNextNumRef();

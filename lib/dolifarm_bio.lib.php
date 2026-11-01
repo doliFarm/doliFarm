@@ -1,0 +1,505 @@
+<?php
+/* Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * \file    lib/dolifarm_bio.lib.php
+ * \ingroup dolifarm
+ * \brief   Organic status of the plots: history of the periods and status at a date
+ *
+ * The history (table dolifarm_plot_biostatus) has periods CONV, CONVERSION, BIO and BIODYNAMIC (organic and biodynamic) (Reg. EU 2018/848, annex II
+ * part I point 1.7; DM 229771/2022 art. 3: the conversion starts at the date of the notification). A period without
+ * end date is still open; adding a period closes the open one on the day before.
+ * The status at a date is a code of the dictionary dolifarm_c_biostatus (CONV, BIO_CONV_1..3, BIO_FULL, BIODYNAMIC),
+ * the one the register (doliTrace) copies on the areas of the records. The fields fk_status_bio, date_conversion_start
+ * and date_conversion_end of the plot are derived from the history when there is one.
+ */
+
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+
+/**
+ * Statuses of the periods of the history: code => key of translation
+ *
+ * @return	array<string,string>
+ */
+function dolifarmBioPeriodStatuses()
+{
+	return array('CONV' => 'BioPeriodConv', 'CONVERSION' => 'BioPeriodConversion', 'BIO' => 'BioPeriodBio', 'BIODYNAMIC' => 'BioPeriodBiodynamic');
+}
+
+/**
+ * Reasons of a period: code => key of translation
+ *
+ * @return	array<string,string>
+ */
+function dolifarmBioPeriodReasons()
+{
+	return array(
+		'NOTIFICATION' => 'BioReasonNotification',		// notification of organic activity
+		'RETROACTIVE' => 'BioReasonRetroactive',		// retroactive recognition (Reg. EU 2018/848 art. 10.3)
+		'RESTART' => 'BioReasonRestart',				// new conversion after a product not allowed (annex II 1.7.6)
+		'END_CONVERSION' => 'BioReasonEndConversion',	// end of the conversion period
+		'WITHDRAWAL' => 'BioReasonWithdrawal',			// exit from the organic control system
+		'OTHER' => 'BioReasonOther',
+	);
+}
+
+/**
+ * Years of conversion proposed for a plot (Reg. EU 2018/848, annex II part I point 1.7.1)
+ *
+ * 3 years for perennial crops other than forage (orchards, vineyards, olive groves, nuts: crop types CAT_FRUIT
+ * and CAT_NUT), 2 years for annual crops, grassland and perennial forage. The crop is the one of the last crop plan
+ * of the plot in doliTrace; without doliTrace or crop plan, 2 years. The user can change the value.
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	int		$plotid		Plot
+ * @return	int					2 or 3
+ */
+function dolifarmBioDefaultConversionYears($db, $plotid)
+{
+	if (!isModEnabled('dolitrace')) {
+		return 2;
+	}
+	$sql = "SELECT c.crop_type FROM ".$db->prefix()."dolitrace_cropplan as cp";
+	$sql .= " INNER JOIN ".$db->prefix()."dolifarm_crops as c ON c.rowid = cp.fk_crop";
+	$sql .= " WHERE cp.fk_plot = ".((int) $plotid)." AND cp.status IN (1, 2)";
+	$sql .= " ORDER BY cp.date_start DESC, cp.rowid DESC";
+	$resql = $db->query($sql.$db->plimit(1, 0));
+	if (!$resql) {
+		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		return 2;
+	}
+	$obj = $db->fetch_object($resql);
+	$db->free($resql);
+	return ($obj && in_array((string) $obj->crop_type, array('CAT_FRUIT', 'CAT_NUT')) ? 3 : 2);
+}
+
+/**
+ * Periods of the history of a plot, oldest first
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	int		$plotid		Plot
+ * @return	array<int,stdClass>	Rows with dates as timestamps (date_start, date_end)
+ */
+function dolifarmBioHistory($db, $plotid)
+{
+	$rows = array();
+	$sql = "SELECT rowid, fk_plot, status, date_start, date_end, conversion_years, reason, reference, note";
+	$sql .= " FROM ".$db->prefix()."dolifarm_plot_biostatus";
+	$sql .= " WHERE fk_plot = ".((int) $plotid);
+	$sql .= " ORDER BY date_start ASC, rowid ASC";
+	$resql = $db->query($sql);
+	if (!$resql) {
+		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		return $rows;
+	}
+	while ($obj = $db->fetch_object($resql)) {
+		$obj->date_start = $db->jdate($obj->date_start);
+		$obj->date_end = ($obj->date_end === null ? null : $db->jdate($obj->date_end));
+		$rows[] = $obj;
+	}
+	$db->free($resql);
+	return $rows;
+}
+
+/**
+ * Planned end of a conversion period: start + years, minus one day
+ *
+ * @param	stdClass	$period		Period CONVERSION
+ * @return	int						Timestamp
+ */
+function dolifarmBioConversionEnd($period)
+{
+	$years = ((int) $period->conversion_years > 0 ? (int) $period->conversion_years : 2);
+	return dol_time_plus_duree(dol_time_plus_duree((int) $period->date_start, $years, 'y'), -1, 'd');
+}
+
+/**
+ * Code of the dictionary for a period at a date
+ *
+ * @param	stdClass	$period		Period
+ * @param	int			$date		Date (timestamp)
+ * @return	string
+ */
+function dolifarmBioPeriodCode($period, $date)
+{
+	if ($period->status == 'BIODYNAMIC') {
+		return 'BIODYNAMIC';
+	}
+	if ($period->status == 'BIO') {
+		return 'BIO_FULL';
+	}
+	if ($period->status == 'CONVERSION') {
+		$years = ((int) $period->conversion_years > 0 ? (int) $period->conversion_years : 2);
+		// Year of conversion: 1 in the first twelve months, then 2, then 3 (no more than the planned years)
+		$n = 1;
+		while ($n < $years && $n < 3 && dol_time_plus_duree((int) $period->date_start, $n, 'y') <= $date) {
+			$n++;
+		}
+		return 'BIO_CONV_'.$n;
+	}
+	return 'CONV';
+}
+
+/**
+ * Period of the history covering a date
+ *
+ * @param	array<int,stdClass>	$history	History (dolifarmBioHistory)
+ * @param	int					$date		Date (timestamp)
+ * @return	stdClass|null
+ */
+function dolifarmBioPeriodAt($history, $date)
+{
+	// Dates of the history are days in the timezone of the server (jdate)
+	$day = dol_print_date($date, '%Y-%m-%d', 'tzserver');
+	$found = null;
+	foreach ($history as $period) {
+		if (dol_print_date($period->date_start, '%Y-%m-%d', 'tzserver') <= $day && ($period->date_end === null || dol_print_date($period->date_end, '%Y-%m-%d', 'tzserver') >= $day)) {
+			$found = $period;
+		}
+	}
+	return $found;
+}
+
+/**
+ * Organic status of a plot at a date (code of the dictionary dolifarm_c_biostatus)
+ *
+ * Without history the status of the plot (fk_status_bio) is used; with a history, a date outside the periods is CONV.
+ *
+ * @param	DoliDB		$db			Database handler
+ * @param	int			$plotid		Plot
+ * @param	int			$date		Date (timestamp)
+ * @param	?string		$current	Status of the plot (fk_status_bio), read from the database when null
+ * @return	string					Code, '' when unknown
+ */
+function dolifarmBioStatusAt($db, $plotid, $date, $current = null)
+{
+	if ($current === null) {
+		$current = '';
+		$resql = $db->query("SELECT fk_status_bio FROM ".$db->prefix()."dolifarm_plot WHERE rowid = ".((int) $plotid));
+		if ($resql) {
+			$obj = $db->fetch_object($resql);
+			if ($obj && $obj->fk_status_bio !== null) {
+				$current = (string) $obj->fk_status_bio;
+			}
+			$db->free($resql);
+		}
+	}
+	$history = dolifarmBioHistory($db, $plotid);
+	if (empty($history)) {
+		return (string) $current;
+	}
+	$period = dolifarmBioPeriodAt($history, $date);
+	return ($period ? dolifarmBioPeriodCode($period, $date) : 'CONV');
+}
+
+/**
+ * True when a code of the dictionary is organic or in conversion
+ *
+ * @param	string	$code	Code
+ * @return	bool
+ */
+function dolifarmBioIsOrganic($code)
+{
+	return in_array((string) $code, array('BIO_CONV_1', 'BIO_CONV_2', 'BIO_CONV_3', 'BIO_FULL', 'BIODYNAMIC'));
+}
+
+/**
+ * Copy the history on the derived fields of the plot: status today and dates of the last conversion
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	int		$plotid		Plot
+ * @return	int					>0 if OK, <0 if KO
+ */
+function dolifarmBioSync($db, $plotid)
+{
+	$history = dolifarmBioHistory($db, $plotid);
+	if (empty($history)) {
+		return 1;
+	}
+	$now = dol_now();
+	$period = dolifarmBioPeriodAt($history, $now);
+	$status = ($period ? dolifarmBioPeriodCode($period, $now) : 'CONV');
+
+	$convstart = null;
+	$convend = null;
+	foreach ($history as $p) {
+		if ($p->status == 'CONVERSION') {
+			$convstart = (int) $p->date_start;
+			$convend = ($p->date_end !== null ? (int) $p->date_end : dolifarmBioConversionEnd($p));
+		}
+	}
+
+	$sql = "UPDATE ".$db->prefix()."dolifarm_plot SET";
+	$sql .= " fk_status_bio = '".$db->escape($status)."'";
+	$sql .= ", date_conversion_start = ".($convstart ? "'".$db->idate($convstart)."'" : "NULL");
+	$sql .= ", date_conversion_end = ".($convend ? "'".$db->idate($convend)."'" : "NULL");
+	$sql .= " WHERE rowid = ".((int) $plotid);
+	if (!$db->query($sql)) {
+		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		return -1;
+	}
+	return 1;
+}
+
+/**
+ * Add a period to the history of a plot. The open period before it is closed on the day before.
+ *
+ * @param	DoliDB		$db			Database handler
+ * @param	User		$user		User
+ * @param	int			$plotid		Plot
+ * @param	string		$status		CONV, CONVERSION, BIO or BIODYNAMIC
+ * @param	int			$datestart	Start (timestamp of the day)
+ * @param	?int		$years		Years of conversion (CONVERSION only: 2, or 3 for perennial crops)
+ * @param	string		$reason		Reason (dolifarmBioPeriodReasons)
+ * @param	string		$reference	Reference of the notification or of the document of the control body
+ * @param	string		$note		Note
+ * @param	string		$error		Error message (translated)
+ * @return	int						Id of the period, <0 if KO
+ */
+function dolifarmBioAddPeriod($db, $user, $plotid, $status, $datestart, $years, $reason, $reference, $note, &$error)
+{
+	global $langs;
+
+	$langs->load('dolifarm@dolifarm');
+	$error = '';
+	if (!array_key_exists($status, dolifarmBioPeriodStatuses())) {
+		$error = $langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('BioPeriodStatus'));
+		return -1;
+	}
+	if (empty($datestart)) {
+		$error = $langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('DateStart'));
+		return -1;
+	}
+	if ($reason !== '' && !array_key_exists($reason, dolifarmBioPeriodReasons())) {
+		$reason = 'OTHER';
+	}
+	if ($status == 'CONVERSION') {
+		$years = ((int) $years >= 1 && (int) $years <= 3 ? (int) $years : 2);
+	} else {
+		$years = null;
+	}
+
+	$history = dolifarmBioHistory($db, $plotid);
+	$last = (count($history) ? $history[count($history) - 1] : null);
+	if ($last && (int) $datestart <= (int) $last->date_start) {
+		$error = $langs->trans('ErrorBioPeriodBeforeLast', dol_print_date($last->date_start, 'day'));
+		return -1;
+	}
+	if ($last && $last->date_end !== null && (int) $datestart <= (int) $last->date_end) {
+		$error = $langs->trans('ErrorBioPeriodOverlap', dol_print_date($last->date_end, 'day'));
+		return -1;
+	}
+
+	$db->begin();
+	if ($last && $last->date_end === null) {
+		$sql = "UPDATE ".$db->prefix()."dolifarm_plot_biostatus SET date_end = '".$db->idate(dol_time_plus_duree((int) $datestart, -1, 'd'))."'";
+		$sql .= ", fk_user_modif = ".((int) $user->id);
+		$sql .= " WHERE rowid = ".((int) $last->rowid);
+		if (!$db->query($sql)) {
+			$error = $db->lasterror();
+			$db->rollback();
+			return -1;
+		}
+	}
+	$sql = "INSERT INTO ".$db->prefix()."dolifarm_plot_biostatus (fk_plot, status, date_start, date_end, conversion_years, reason, reference, note, date_creation, fk_user_creat)";
+	$sql .= " VALUES (".((int) $plotid).", '".$db->escape($status)."', '".$db->idate($datestart)."', NULL";
+	$sql .= ", ".($years === null ? "NULL" : ((int) $years));
+	$sql .= ", ".($reason !== '' ? "'".$db->escape($reason)."'" : "NULL");
+	$sql .= ", ".($reference !== '' ? "'".$db->escape(dol_trunc($reference, 128, 'right', 'UTF-8', 1))."'" : "NULL");
+	$sql .= ", ".($note !== '' ? "'".$db->escape(dol_trunc($note, 255, 'right', 'UTF-8', 1))."'" : "NULL");
+	$sql .= ", '".$db->idate(dol_now())."', ".((int) $user->id).")";
+	if (!$db->query($sql)) {
+		$error = $db->lasterror();
+		$db->rollback();
+		return -1;
+	}
+	$id = (int) $db->last_insert_id($db->prefix()."dolifarm_plot_biostatus");
+	if (dolifarmBioSync($db, $plotid) < 0) {
+		$error = $db->lasterror();
+		$db->rollback();
+		return -1;
+	}
+	$db->commit();
+	return $id;
+}
+
+/**
+ * Delete the last period of the history of a plot, and open again the one before it
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	User	$user		User
+ * @param	int		$plotid		Plot
+ * @param	int		$periodid	Period (must be the last one)
+ * @param	string	$error		Error message (translated)
+ * @return	int					>0 if OK, <0 if KO
+ */
+function dolifarmBioDeleteLastPeriod($db, $user, $plotid, $periodid, &$error)
+{
+	global $langs;
+
+	$error = '';
+	$history = dolifarmBioHistory($db, $plotid);
+	$n = count($history);
+	if (!$n || (int) $history[$n - 1]->rowid != (int) $periodid) {
+		$error = $langs->trans('ErrorBioPeriodNotLast');
+		return -1;
+	}
+	$db->begin();
+	if (!$db->query("DELETE FROM ".$db->prefix()."dolifarm_plot_biostatus WHERE rowid = ".((int) $periodid)." AND fk_plot = ".((int) $plotid))) {
+		$error = $db->lasterror();
+		$db->rollback();
+		return -1;
+	}
+	// The period before was closed by the deleted one: open it again
+	if ($n > 1) {
+		$prev = $history[$n - 2];
+		if ($prev->date_end !== null && (int) $prev->date_end == (int) dol_time_plus_duree((int) $history[$n - 1]->date_start, -1, 'd')) {
+			$sql = "UPDATE ".$db->prefix()."dolifarm_plot_biostatus SET date_end = NULL, fk_user_modif = ".((int) $user->id)." WHERE rowid = ".((int) $prev->rowid);
+			if (!$db->query($sql)) {
+				$error = $db->lasterror();
+				$db->rollback();
+				return -1;
+			}
+		}
+		if (dolifarmBioSync($db, $plotid) < 0) {
+			$error = $db->lasterror();
+			$db->rollback();
+			return -1;
+		}
+	}
+	$db->commit();
+	return 1;
+}
+
+/**
+ * Close the open period of a plot on a date (for example the end of the conversion, before the period BIO)
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	User	$user		User
+ * @param	int		$plotid		Plot
+ * @param	int		$dateend	End (timestamp of the day)
+ * @param	string	$error		Error message (translated)
+ * @return	int					>0 if OK, <0 if KO
+ */
+function dolifarmBioClosePeriod($db, $user, $plotid, $dateend, &$error)
+{
+	global $langs;
+
+	$error = '';
+	$history = dolifarmBioHistory($db, $plotid);
+	$n = count($history);
+	if (!$n || $history[$n - 1]->date_end !== null) {
+		$error = $langs->trans('ErrorBioNoOpenPeriod');
+		return -1;
+	}
+	if ((int) $dateend < (int) $history[$n - 1]->date_start) {
+		$error = $langs->trans('ErrorBioPeriodEndBeforeStart');
+		return -1;
+	}
+	$db->begin();
+	$sql = "UPDATE ".$db->prefix()."dolifarm_plot_biostatus SET date_end = '".$db->idate($dateend)."', fk_user_modif = ".((int) $user->id);
+	$sql .= " WHERE rowid = ".((int) $history[$n - 1]->rowid);
+	if (!$db->query($sql) || dolifarmBioSync($db, $plotid) < 0) {
+		$error = $db->lasterror();
+		$db->rollback();
+		return -1;
+	}
+	$db->commit();
+	return 1;
+}
+
+/**
+ * Organic status of a product harvested on a plot, from the status of the plot at the date of the harvest:
+ * BIO (organic, also biodynamic), INCONV (in conversion: at least 12 months of conversion before the harvest,
+ * Reg. EU 2018/848 art. 30.3), NONBIO (conventional, or first year of conversion)
+ *
+ * @param	string	$plotcode	Code of the dictionary dolifarm_c_biostatus at the date (dolifarmBioStatusAt)
+ * @return	string				BIO, INCONV, NONBIO, '' when the status of the plot is unknown
+ */
+function dolifarmBioProductStatus($plotcode)
+{
+	$plotcode = (string) $plotcode;
+	if ($plotcode === '') {
+		return '';
+	}
+	if (in_array($plotcode, array('BIO_FULL', 'BIODYNAMIC'))) {
+		return 'BIO';
+	}
+	if (in_array($plotcode, array('BIO_CONV_2', 'BIO_CONV_3'))) {
+		return 'INCONV';
+	}
+	return 'NONBIO';
+}
+
+/**
+ * Suffix of the lot of a harvested product, so that organic and conventional lots are never the same lot
+ *
+ * @param	string	$status		BIO, INCONV, NONBIO
+ * @return	string				-BIO, -INCONV or ''
+ */
+function dolifarmBioLotSuffix($status)
+{
+	return ($status == 'BIO' ? '-BIO' : ($status == 'INCONV' ? '-INCONV' : ''));
+}
+
+/**
+ * Organic status a warehouse is dedicated to (extrafield dolifarm_bio_dedicated)
+ *
+ * @param	DoliDB	$db				Database handler
+ * @param	int		$warehouseid	Warehouse
+ * @return	string					BIO, INCONV, NONBIO, '' when not dedicated
+ */
+function dolifarmBioWarehouseDedication($db, $warehouseid)
+{
+	$resql = $db->query("SELECT dolifarm_bio_dedicated FROM ".$db->prefix()."entrepot_extrafields WHERE fk_object = ".((int) $warehouseid));
+	if (!$resql) {
+		return '';
+	}
+	$obj = $db->fetch_object($resql);
+	$db->free($resql);
+	return ($obj ? (string) $obj->dolifarm_bio_dedicated : '');
+}
+
+/**
+ * Warehouse for a product of an organic status: the warehouse itself when it is dedicated to this status, otherwise
+ * its first open sub-warehouse dedicated to this status (e.g. "Products BIO" under the warehouse of the products of
+ * the farm), otherwise the warehouse itself (the caller warns when it is dedicated to another status).
+ *
+ * @param	DoliDB	$db				Database handler
+ * @param	int		$warehouseid	Warehouse of the farm
+ * @param	string	$status			BIO, INCONV, NONBIO ('' = no choice)
+ * @return	int						Warehouse
+ */
+function dolifarmBioWarehouseFor($db, $warehouseid, $status)
+{
+	if ($warehouseid <= 0 || $status === '') {
+		return $warehouseid;
+	}
+	if (dolifarmBioWarehouseDedication($db, $warehouseid) == $status) {
+		return $warehouseid;
+	}
+	// A sub-warehouse dedicated to the status wins, also under a warehouse that is not dedicated
+	$sql = "SELECT e.rowid FROM ".$db->prefix()."entrepot as e";
+	$sql .= " INNER JOIN ".$db->prefix()."entrepot_extrafields as x ON x.fk_object = e.rowid";
+	$sql .= " WHERE e.fk_parent = ".((int) $warehouseid)." AND e.statut > 0 AND x.dolifarm_bio_dedicated = '".$db->escape($status)."'";
+	$sql .= " ORDER BY e.rowid".$db->plimit(1);
+	$resql = $db->query($sql);
+	if ($resql && ($obj = $db->fetch_object($resql))) {
+		return (int) $obj->rowid;
+	}
+	return $warehouseid;
+}

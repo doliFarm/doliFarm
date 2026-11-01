@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2017      Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2025 Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026      SuperAdmin
+ * Copyright (C) 2026      Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,14 @@ class DoliFarmFertilizer extends CommonObject
 		"n_content" => array("type" => "double(8,2)", "label" => "NitrogenContent", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"p2o5_content" => array("type" => "double(8,2)", "label" => "PhosphorusContent", "enabled" => "1", 'position' => 31, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"k2o_content" => array("type" => "double(8,2)", "label" => "PotassiumContent", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
+		"cu_content" => array("type" => "double(8,2)", "label" => "CopperContent", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
+		"efficiency" => array("type" => "double(8,2)", "label" => "FertilizerEfficiency", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerEfficiencyHelp"),
+		"density" => array("type" => "double(8,3)", "label" => "FertilizerDensity", "enabled" => "1", 'position' => 36, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDensityHelp"),
+		"dry_matter" => array("type" => "double(8,2)", "label" => "FertilizerDryMatter", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDryMatterHelp"),
+		"product_kind" => array("type" => "select", "label" => "FertilizerKind", "enabled" => "1", 'position' => 21, 'notnull' => 0, "visible" => "1", "arrayofkeyval" => array('FERTILIZER' => 'FertilizerKindFertilizer', 'AMENDMENT' => 'FertilizerKindAmendment', 'CORROBORANT' => 'FertilizerKindCorroborant', 'BIOSTIMULANT' => 'FertilizerKindBiostimulant'), "help" => "FertilizerKindHelp"),
 		"organic" => array("type" => "boolean", "label" => "AllowedInOrganic", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "help" => "AllowedInOrganicHelp"),
+		"annex2_code" => array("type" => "sellist:dolifarm_organic_fertilizer:label:code::active=1", "label" => "FertilizerAnnex2", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "help" => "FertilizerAnnex2Help"),
+		"organic_check_date" => array("type" => "date", "label" => "FertilizerOrganicCheckDate", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "help" => "FertilizerOrganicCheckDateHelp"),
 		"note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
 		"note_private" => array("type" => "html", "label" => "NotePrivate", "enabled" => "1", 'position' => 105, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-2"),
@@ -112,9 +119,44 @@ class DoliFarmFertilizer extends CommonObject
 	public $manufacturer;
 	public $registration_number;
 	public $n_content;
+
+	/**
+	 * @var float|string|null	Copper content (%), AGEA field notebook sheet 7
+	 */
+	public $cu_content;
+
+	/**
+	 * @var float|string|null	Efficiency of the nitrogen (coefficient from 0 to 1), AGEA field notebook sheet 6
+	 */
+	public $efficiency;
+
+	/**
+	 * @var float|string|null	Dry matter (%), AGEA field notebook sheet 6
+	 */
+	public $dry_matter;
+
+	/**
+	 * @var float|string|null	Density in kg/l of a liquid fertilizer, for the nitrogen applied
+	 */
+	public $density;
 	public $p2o5_content;
 	public $k2o_content;
 	public $organic;
+
+	/**
+	 * @var string|null	Kind of product: FERTILIZER, AMENDMENT, CORROBORANT, BIOSTIMULANT
+	 */
+	public $product_kind;
+
+	/**
+	 * @var string|null	Category of annex II of Reg. EU 2021/1165 (code of llx_dolifarm_organic_fertilizer)
+	 */
+	public $annex2_code;
+
+	/**
+	 * @var int|string|null	Date of the last check of the product in the register of fertilisers allowed in organic farming
+	 */
+	public $organic_check_date;
 	public $note_public;
 	public $note_private;
 	public $date_creation;
@@ -150,11 +192,19 @@ class DoliFarmFertilizer extends CommonObject
 		global $langs;
 
 		$langs->load('dolifarm@dolifarm');
-		foreach (array('n_content', 'p2o5_content', 'k2o_content') as $field) {
+		foreach (array('n_content', 'p2o5_content', 'k2o_content', 'cu_content', 'dry_matter') as $field) {
 			if ($this->$field !== null && $this->$field !== '' && ((float) $this->$field < 0 || (float) $this->$field > 100)) {
 				$this->error = $langs->trans('ErrorNutrientContent', $langs->transnoentitiesnoconv($this->fields[$field]['label']));
 				return -1;
 			}
+		}
+		if ($this->efficiency !== null && $this->efficiency !== '' && ((float) $this->efficiency < 0 || (float) $this->efficiency > 1)) {
+			$this->error = $langs->trans('ErrorFertilizerEfficiency');
+			return -1;
+		}
+		if ($this->density !== null && $this->density !== '' && ((float) $this->density <= 0 || (float) $this->density > 3)) {
+			$this->error = $langs->trans('ErrorFertilizerDensity');
+			return -1;
 		}
 		return 1;
 	}

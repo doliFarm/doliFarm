@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004-2017  Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
- * Copyright (C) 2026		SuperAdmin
+ * Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,15 +127,8 @@ $item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
 if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
 	$item = $formSetup->newItem('DOLIFARM_FARM_SOCID');
 	$item->helpText = $langs->transnoentities('DOLIFARM_FARM_SOCIDHelp');
-	$item->fieldInputOverride = img_picto('', 'company', 'class="pictofixedwidth"').$formSetup->form->select_company(getDolGlobalInt('DOLIFARM_FARM_SOCID'), 'DOLIFARM_FARM_SOCID', '', 1, 0, 0, array(), 0, 'minwidth300');
-	$item->fieldOutputOverride = '';
-	if (getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0) {
-		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
-		$farmsoc = new Societe($db);
-		if ($farmsoc->fetch(getDolGlobalInt('DOLIFARM_FARM_SOCID')) > 0) {
-			$item->fieldOutputOverride = $farmsoc->getNomUrl(1);
-		}
-	}
+	// Input and output are built after the actions, so they show the value just saved
+	$farmsocitem = $item;
 	$item->setValueFromPostCallBack(function () use ($item) {
 		$item->fieldValue = (string) max(0, GETPOSTINT('DOLIFARM_FARM_SOCID'));
 		return 1;
@@ -238,6 +231,26 @@ include DOL_DOCUMENT_ROOT.'/core/actions_setmoduleoptions.inc.php';
 // The expiry threshold must be a number of days
 if ($action == 'update' && GETPOSTISSET('DOLIFARM_EXPIRY_DAYS')) {
 	dolibarr_set_const($db, 'DOLIFARM_EXPIRY_DAYS', max(0, GETPOSTINT('DOLIFARM_EXPIRY_DAYS')), 'chaine', 0, '', $conf->entity);
+}
+
+if (isset($farmsocitem)) {
+	$farmsocitem->fieldInputOverride = img_picto('', 'company', 'class="pictofixedwidth"').$formSetup->form->select_company(getDolGlobalInt('DOLIFARM_FARM_SOCID'), 'DOLIFARM_FARM_SOCID', '', 1, 0, 0, array(), 0, 'minwidth300');
+	$farmsocitem->fieldOutputOverride = '';
+	if (getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0) {
+		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+		$farmsoc = new Societe($db);
+		if ($farmsoc->fetch(getDolGlobalInt('DOLIFARM_FARM_SOCID')) > 0) {
+			$farmsocitem->fieldOutputOverride = $farmsoc->getNomUrl(1);
+			// The farm dossier accepts only third parties of type "Azienda agricola"
+			$farmtypentid = dolifarmGetTypentId($db, 'TE_FARM');
+			if ($farmtypentid > 0 && (int) $farmsoc->typent_id != $farmtypentid) {
+				$farmsocitem->fieldOutputOverride .= ' '.img_warning($langs->trans('DOLIFARM_FARM_SOCIDNotFarm')).' <span class="warning">'.$langs->trans('DOLIFARM_FARM_SOCIDNotFarm').'</span>';
+				if ($action == 'update') {
+					setEventMessages($langs->trans('DOLIFARM_FARM_SOCIDNotFarm'), null, 'warnings');
+				}
+			}
+		}
+	}
 }
 
 // Put the agenda events of the expiry dates in step with the data (data saved before, imports)

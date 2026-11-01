@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026		SuperAdmin
+/* Copyright (C) 2026		Luigi Grillo - doliFarm.com	<info@dolifarm.com>
  * Copyright (C) 2025       Frédéric France         <frederic.france@free.fr>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -69,6 +69,11 @@ function dolifarmAdminPrepareHead()
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/eppo.php", 1));
 	$head[$h][1] = $langs->trans("EppoCodes");
 	$head[$h][2] = 'eppo';
+	$h++;
+
+	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/ppp.php", 1));
+	$head[$h][1] = $langs->trans("PppCatalog");
+	$head[$h][2] = 'ppp';
 	$h++;
 
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/about.php", 1));
