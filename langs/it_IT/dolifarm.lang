@@ -634,3 +634,7 @@ AgroDrugUseSafetyDaysHelp = Giorni tra l'ultimo trattamento e la raccolta su que
 AgroDrugUseMaxApplicationsHelp = Numero massimo di trattamenti all'anno su questa coltura. Se vuoto vale il numero della scheda del prodotto
 ErrorAgroDrugUseNegative = Il valore di "%s" non può essere negativo
 ErrorAgroDrugUseDoseRange = La dose minima non può superare la dose massima
+# Home di Dolibarr
+DashboardFarm = Azienda agricola
+DashboardExpiries = Scadenze entro %s giorni (patentini, controlli delle irroratrici, autorizzazioni...)
+DashboardExpiriesShort = Scadenze

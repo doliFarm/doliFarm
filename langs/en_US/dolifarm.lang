@@ -599,3 +599,7 @@ AgroDrugUseSafetyDaysHelp = Days between the last application and the harvest on
 AgroDrugUseMaxApplicationsHelp = Maximum number of applications per year on this crop. When empty, the number of the product card applies
 ErrorAgroDrugUseNegative = "%s" cannot be negative
 ErrorAgroDrugUseDoseRange = The minimum dose cannot be higher than the maximum dose
+# Home page of Dolibarr
+DashboardFarm = Farm
+DashboardExpiries = Expiries within %s days (licences, sprayer checks, authorisations...)
+DashboardExpiriesShort = Expiries

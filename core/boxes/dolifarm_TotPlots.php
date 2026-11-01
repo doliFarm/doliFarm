@@ -72,7 +72,7 @@ class dolifarm_TotPlots extends ModeleBoxes
         }
 
         // 2. HEADER
-        $title_text = $langs->trans("Plots") . " (" . $total_active . ")";
+        $title_text = $langs->trans("DoliFarmPlots") . " (" . $total_active . ")";
         
         $this->info_box_head = array(
             'text' => $title_text,

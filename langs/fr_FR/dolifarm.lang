@@ -575,3 +575,7 @@ AgroDrugUseSafetyDaysHelp = Jours entre la dernière application et la récolte 
 AgroDrugUseMaxApplicationsHelp = Nombre maximal d'applications par an sur cette culture. Si vide, le nombre de la fiche du produit s'applique
 ErrorAgroDrugUseNegative = La valeur de « %s » ne peut pas être négative
 ErrorAgroDrugUseDoseRange = La dose minimale ne peut pas dépasser la dose maximale
+# Accueil de Dolibarr
+DashboardFarm = Exploitation agricole
+DashboardExpiries = Échéances dans les %s jours (certificats, contrôles des pulvérisateurs, autorisations...)
+DashboardExpiriesShort = Échéances

@@ -112,7 +112,7 @@ class modDolifarm extends DolibarrModules
 			'theme' => 0,
 			// Set this to relative path of css file if module has its own css file
 			'css' => array(
-				//    '/dolifarm/css/dolifarm.css.php',
+				'/dolifarm/css/dolifarm.css',	// Icons of the farm groups in the dashboard of the home page
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
@@ -123,6 +123,7 @@ class modDolifarm extends DolibarrModules
 			'hooks' => array(
 				   'data' => array(
 				       'afterlogin',
+				       'index',	// Home page: farm group of the dashboard of open elements
 				   ),
 				   'entity' => '0',
 			),
@@ -362,18 +363,20 @@ class modDolifarm extends DolibarrModules
         /* END MODULEBUILDER DICTIONARIES */
 
 		// Boxes/Widgets
+		// 'Home': added to the home page of Dolibarr when the module is enabled (users can remove or move them).
+		// 'dolifarm' is not a page code: those widgets are only on the Area Gestione Agricola and in the list of widgets.
 		// Add here list of php file(s) stored in dolifarm/core/boxes that contains a class to show a widget.
 /* BEGIN MODULEBUILDER WIDGETS */
         $this->boxes = array(
             0 => array(
                 'file' => 'dolifarm_TotDossiers.php@dolifarm',
                 'note' => $langs->trans('BoxTotDossiersDescription'), 
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
             1 => array(
                 'file' => 'dolifarm_TotPlots.php@dolifarm',
                 'note' => $langs->trans('BoxTotPlotsDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
             2 => array(
                 'file' => 'dolifarm_TotMachines.php@dolifarm',
@@ -383,7 +386,7 @@ class modDolifarm extends DolibarrModules
             3 => array(
                 'file' => 'dolifarm_CropPlansMonitoring.php@dolifarm',
                 'note' => $langs->trans('BoxCropPlansMonitoringDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
 			 4 => array(
                 'file' => 'dolifarmwidgettopplannedproducts.php@dolifarm',
@@ -393,7 +396,7 @@ class modDolifarm extends DolibarrModules
             5 => array(
                 'file' => 'dolifarm_Expiry.php@dolifarm',
                 'note' => $langs->trans('BoxExpiryDescription'),
-                'enabledbydefaulton' => 'dolifarm',
+                'enabledbydefaulton' => 'Home',
             ),
         );
         /* END MODULEBUILDER WIDGETS */
