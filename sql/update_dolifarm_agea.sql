@@ -100,3 +100,7 @@ ALTER TABLE llx_dolifarm_building ADD COLUMN address varchar(255);
 
 -- Fertilizers: density of the liquids, for the nitrogen applied with quantities in l or m3
 ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN density double(8,3);
+
+-- Plant protection products: maximum of applications and groups of the mode of action (resistance management)
+ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN max_applications integer;
+ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN moa_codes varchar(128);

@@ -508,6 +508,12 @@ ErrorFertilizerEfficiency = L'efficienza deve essere compresa tra 0 e 1
 FertilizerDensity = Densità (kg/l)
 FertilizerDensityHelp = Densità del fertilizzante liquido: serve a calcolare l'azoto distribuito quando la quantità è in litri o m³. Vuota per gli effluenti zootecnici = 1 kg/l
 ErrorFertilizerDensity = La densità deve essere maggiore di 0 e al massimo 3 kg/l
+AgroDrugMaxApplications = N. massimo di trattamenti per ciclo
+AgroDrugMaxApplicationsHelp = Numero massimo di trattamenti all'anno o per ciclo colturale indicato in etichetta. Il registro avvisa quando si supera sullo stesso piano colturale
+AgroDrugMoaCodes = Gruppi del modo d'azione (FRAC/IRAC/HRAC)
+AgroDrugMoaCodesHelp = Gruppi indicati in etichetta, separati da punto e virgola, per esempio FRAC 3; FRAC M01 oppure IRAC 4A. Il registro avvisa quando lo stesso gruppo si ripete in troppi trattamenti di fila sullo stesso piano colturale
+ErrorAgroDrugMaxApplications = Il numero massimo di trattamenti non può essere negativo
+ErrorAgroDrugMoaCodes = "%s" non è un gruppo del modo d'azione: scrivere FRAC, IRAC o HRAC seguito dal codice (per esempio FRAC 3)
 DictionaryFertilizerType = Tipi di fertilizzante
 WarehouseInputs = Magazzino forniture
 WarehouseInputsHelp = Magazzino da cui i trattamenti e le fertilizzazioni scaricano agrofarmaci e fertilizzanti dell'azienda

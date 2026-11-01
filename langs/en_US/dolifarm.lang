@@ -277,6 +277,12 @@ ErrorFertilizerEfficiency = The efficiency must be between 0 and 1
 FertilizerDensity = Density (kg/l)
 FertilizerDensityHelp = Density of the liquid fertilizer: used to compute the nitrogen applied when the quantity is in litres or m³. Empty for livestock effluents = 1 kg/l
 ErrorFertilizerDensity = The density must be greater than 0 and at most 3 kg/l
+AgroDrugMaxApplications = Max. applications per cycle
+AgroDrugMaxApplicationsHelp = Maximum number of applications a year or for each crop cycle given on the label. The register warns when it is exceeded on the same crop plan
+AgroDrugMoaCodes = Mode of action groups (FRAC/IRAC/HRAC)
+AgroDrugMoaCodesHelp = Groups given on the label, separated by semicolons, for example FRAC 3; FRAC M01 or IRAC 4A. The register warns when the same group is repeated in too many applications in a row on the same crop plan
+ErrorAgroDrugMaxApplications = The maximum number of applications cannot be negative
+ErrorAgroDrugMoaCodes = "%s" is not a mode of action group: write FRAC, IRAC or HRAC followed by the code (for example FRAC 3)
 DictionaryFertilizerType = Fertilizer types
 WarehouseInputs = Inputs warehouse
 WarehouseInputsHelp = Warehouse from which the treatments and fertilizations of the farm take the agrodrugs and fertilizers

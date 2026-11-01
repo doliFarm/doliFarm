@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_agrodrug(
 	-- Dati Agronomici
 	safety_days_default int, 
 	max_dose_ha double(24,8), 
+	max_applications integer,
+	moa_codes varchar(128),
 	note_public text, 
 	note_private text, 
 	status int, 
