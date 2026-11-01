@@ -247,7 +247,7 @@ class DoliFarmAgroDrugUse extends CommonObject
 		}
 		// EPPO codes checked on the imported data (only the syntax without them); empty labels from the EPPO names
 		dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
-		foreach (array('crop' => array('crop_eppo', 'crop_label'), 'pest' => array('adversity_code', 'adversity_label')) as $use => $fields) {
+		foreach (array('cropgroup' => array('crop_eppo', 'crop_label'), 'pest' => array('adversity_code', 'adversity_label')) as $use => $fields) {
 			$code = (string) $this->{$fields[0]};
 			if ($code === '') {
 				continue;

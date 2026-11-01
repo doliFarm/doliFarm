@@ -66,6 +66,7 @@ dol_include_once('/dolifarm/class/dolifarmagrodrug.class.php');
 dol_include_once('/dolifarm/class/dolifarmagrodruguse.class.php');
 dol_include_once('/dolifarm/lib/dolifarm_agrodrug.lib.php');
 dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+dol_include_once('/dolifarm/class/dolifarmsianreader.class.php');
 
 $langs->loadLangs(array("dolifarm@dolifarm", "other"));
 
@@ -204,6 +205,126 @@ if (empty($reshook) && $permissiontoadd) {
 		$action = ($action == 'add' ? '' : 'edit');
 	}
 
+	// Reading of the uses from the SIAN (one product, on request): proposals to confirm
+	if ($action == 'sianread') {
+		$labeldir = '';
+		if (GETPOSTINT('sian_label')) {
+			$labeldir = $conf->dolifarm->multidir_output[$object->entity ? $object->entity : $conf->entity].'/dolifarmagrodrug/'.get_exdir(0, 0, 0, 1, $object);
+		}
+		$reader = new DoliFarmSianReader($db);
+		$nb = $reader->read($object, $user, $labeldir);
+		if ($nb < 0) {
+			setEventMessages($reader->error, null, 'errors');
+		} else {
+			setEventMessages($langs->trans('SianReadDone', $nb, $reader->nbcrops, $reader->nbrequests), null, 'mesgs');
+			if ($reader->labelfile !== '') {
+				setEventMessages($langs->trans('SianLabelSaved', $reader->labelfile, $reader->labeldate), null, 'mesgs');
+			} elseif ($labeldir !== '') {
+				setEventMessages($langs->trans('SianLabelNotSaved'), null, 'warnings');
+			}
+		}
+		header('Location: '.$selfurl);
+		exit;
+	}
+
+	if ($action == 'siandiscard') {
+		$db->query("DELETE FROM ".$db->prefix()."dolifarm_agrodrug_sianuse WHERE fk_agrodrug = ".((int) $object->id));
+		setEventMessages($langs->trans('SianDiscarded'), null, 'mesgs');
+		header('Location: '.$selfurl);
+		exit;
+	}
+
+	if ($action == 'sianimport') {
+		$proposals = DoliFarmSianReader::fetchProposals($db, $object->id);
+		$error = 0;
+		$db->begin();
+		// EPPO codes chosen for the crops and for the pests without code: they are kept for the next products
+		$done = array();
+		foreach ($proposals as $proposal) {
+			foreach (array('crop' => array($proposal->crop_sian, $proposal->crop_label), 'pest' => array($proposal->pest_sian, $proposal->pest_class.' - '.$proposal->pest_label)) as $type => $sian) {
+				$field = 'sian_'.$type.'_'.preg_replace('/[^A-Za-z0-9]/', '', (string) $sian[0]);
+				if ((string) $sian[0] === '' || isset($done[$field]) || !GETPOSTISSET($field)) {
+					continue;
+				}
+				$done[$field] = 1;
+				$eppo = strtoupper(trim(GETPOST($field, 'alphanohtml')));
+				$check = ($eppo === '' ? '' : dolifarmEppoCheckCode($db, $eppo, ($type == 'crop' ? 'cropgroup' : $type)));
+				if ($check !== '') {
+					setEventMessages($sian[1].': '.$check, null, 'errors');
+					$error++;
+					continue;
+				}
+				if (DoliFarmSianReader::saveMap($db, $type, $sian[0], $sian[1], $eppo, ($eppo === '' ? 0 : 1), true) < 0) {
+					setEventMessages($db->lasterror(), null, 'errors');
+					$error++;
+				}
+			}
+		}
+		$checked = array_map('intval', (array) GETPOST('sian_row', 'array'));
+		$counts = array('imported' => 0, 'crop' => 0, 'pest' => 0, 'dup' => 0);
+		if (!$error) {
+			$existing = array();
+			foreach (DoliFarmAgroDrugUse::fetchAllForAgroDrug($db, $object->id) as $use) {
+				$existing[strtoupper((string) $use->crop_eppo).'|'.strtoupper((string) $use->adversity_code)] = 1;
+			}
+			foreach (DoliFarmSianReader::fetchProposals($db, $object->id) as $id => $proposal) {
+				if (!in_array($id, $checked)) {
+					continue;
+				}
+				if ((string) $proposal->crop_eppo === '') {
+					$counts['crop']++;
+					continue;
+				}
+				if ((string) $proposal->pest_label !== '' && (string) $proposal->pest_eppo === '') {
+					$counts['pest']++;
+					continue;
+				}
+				$key = strtoupper($proposal->crop_eppo).'|'.strtoupper((string) $proposal->pest_eppo);
+				if (isset($existing[$key])) {
+					$counts['dup']++;
+					continue;
+				}
+				$use = new DoliFarmAgroDrugUse($db);
+				$use->fk_agrodrug = $object->id;
+				$use->crop_eppo = $proposal->crop_eppo;
+				$use->crop_label = dol_ucfirst(dol_strtolower($proposal->crop_label));
+				$use->adversity_code = ((string) $proposal->pest_eppo === '' ? null : $proposal->pest_eppo);
+				$use->adversity_label = ((string) $proposal->pest_label === '' ? null : dol_ucfirst(dol_strtolower($proposal->pest_label)));
+				$use->safety_days = ($proposal->safety_days === null ? null : (int) $proposal->safety_days);
+				$note = $langs->transnoentities('SianNote', dol_print_date($db->jdate($proposal->date_read), 'day'));
+				if ($proposal->safety_days_greenhouse !== null && (int) $proposal->safety_days_greenhouse != (int) $proposal->safety_days) {
+					$note .= ', '.$langs->transnoentities('SianNoteGreenhouse', (int) $proposal->safety_days_greenhouse);
+				}
+				if ((string) $proposal->safety_text !== '') {
+					$note .= ', '.$langs->transnoentities('AgroDrugUseSafetyDays').': '.$proposal->safety_text;
+				}
+				$use->note = dol_trunc($note, 250, 'right', 'UTF-8', 1);
+				if ($use->create($user) < 0) {
+					setEventMessages($proposal->crop_label.' / '.$proposal->pest_label.': '.$use->error, $use->errors, 'errors');
+					$error++;
+					break;
+				}
+				$existing[$key] = 1;
+				$db->query("DELETE FROM ".$db->prefix()."dolifarm_agrodrug_sianuse WHERE rowid = ".((int) $id));
+				$counts['imported']++;
+			}
+		}
+		if ($error) {
+			$db->rollback();
+		} else {
+			$db->commit();
+			setEventMessages($langs->trans('SianImported', $counts['imported']), null, 'mesgs');
+			foreach (array('crop' => 'SianSkippedCrop', 'pest' => 'SianSkippedPest', 'dup' => 'SianSkippedDup') as $count => $key) {
+				if ($counts[$count]) {
+					setEventMessages($langs->trans($key, $counts[$count]), null, 'warnings');
+				}
+			}
+			header('Location: '.$selfurl);
+			exit;
+		}
+		$action = '';
+	}
+
 	if ($action == 'confirm_delete' && GETPOST('confirm', 'alpha') == 'yes' && $lineid > 0) {
 		$use = new DoliFarmAgroDrugUse($db);
 		if ($use->fetch($lineid) > 0 && (int) $use->fk_agrodrug == (int) $object->id) {
@@ -279,7 +400,7 @@ function dolifarmAgroDrugUseInputs($use, $doseunits, $form)
 	global $db, $conf;
 	if (dolifarmEppoDataAvailable() && !empty($conf->use_javascript_ajax)) {
 		// Search on the whole EPPO database; the label is optional (EPPO name when empty)
-		$out = '<td>'.dolifarmEppoSelect($db, 'crop_eppo', $val('crop_eppo'), 'crop', 'minwidth200 maxwidth250');
+		$out = '<td>'.dolifarmEppoSelect($db, 'crop_eppo', $val('crop_eppo'), 'cropgroup', 'minwidth200 maxwidth250');
 		$out .= '<br><input type="text" name="crop_label" class="minwidth100 maxwidth200" maxlength="255" value="'.dol_escape_htmltag($val('crop_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseCropLabel')).'"></td>';
 		$out .= '<td>'.dolifarmEppoSelect($db, 'adversity_code', $val('adversity_code'), 'pest', 'minwidth200 maxwidth250');
 		$out .= '<br><input type="text" name="adversity_label" class="minwidth100 maxwidth200" maxlength="255" value="'.dol_escape_htmltag($val('adversity_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseAdversityLabel')).'"></td>';
@@ -392,6 +513,73 @@ if ($permissiontoadd && $action != 'edit') {
 print '</table>';
 print '</div>';
 print '</form>';
+
+// Reading from the SIAN, and the uses read waiting for a confirmation
+if ($permissiontoadd && $action != 'edit') {
+	print '<br><form method="POST" action="'.$selfurl.'" class="inline-block">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="sianread">';
+	print '<span class="opacitymedium">'.$langs->trans('SianReadHelp').'</span><br>';
+	print '<label class="marginrightonly"><input type="checkbox" name="sian_label" value="1" checked> '.$langs->trans('SianWithLabel').'</label>';
+	print '<input type="submit" class="button small reposition"'.((string) $object->reg_number === '' ? ' disabled title="'.dol_escape_htmltag($langs->trans('ErrorSianNoRegNumber')).'"' : '').' value="'.dol_escape_htmltag($langs->trans('SianRead')).'">';
+	print '</form>';
+}
+
+$proposals = DoliFarmSianReader::fetchProposals($db, $object->id);
+if (count($proposals) && $permissiontoadd && $action != 'edit') {
+	$first = reset($proposals);
+	$existing = array();
+	foreach ($uses as $use) {
+		$existing[strtoupper((string) $use->crop_eppo).'|'.strtoupper((string) $use->adversity_code)] = 1;
+	}
+	print '<br><br>'.load_fiche_titre($langs->trans('SianProposals', dol_print_date($db->jdate($first->date_read), 'dayhour')), '', 'fa-download');
+	print '<div class="opacitymedium marginbottomonly">'.$langs->trans('SianProposalsHelp').'<br>'.$langs->trans('SianSource').'</div>';
+	print '<form method="POST" action="'.$selfurl.'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="sianimport">';
+
+	// Correspondences: crops of the SIAN, and pests without EPPO code
+	$crops = array();
+	$pests = array();
+	foreach ($proposals as $proposal) {
+		$crops[$proposal->crop_sian] = $proposal;
+		if ((string) $proposal->pest_label !== '' && (string) $proposal->pest_eppo === '') {
+			$pests[$proposal->pest_sian] = $proposal;
+		}
+	}
+	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td>'.$langs->trans('SianCrops').'</td><td>'.$langs->trans('AgroDrugUseCropCode').'</td></tr>';
+	foreach ($crops as $code => $proposal) {
+		print '<tr class="oddeven"><td>'.dol_escape_htmltag($proposal->crop_label).' <span class="opacitymedium">('.dol_escape_htmltag($proposal->crop_class.' '.$code).')</span></td>';
+		print '<td>'.dolifarmEppoSelect($db, 'sian_crop_'.preg_replace('/[^A-Za-z0-9]/', '', $code), (string) $proposal->crop_eppo, 'cropgroup', 'minwidth300').($proposal->crop_eppo !== null && empty($proposal->crop_confirmed) ? ' '.img_picto($langs->trans('SianProposed'), 'warning') : '').'</td></tr>';
+	}
+	if (count($pests)) {
+		print '<tr class="liste_titre"><td>'.$langs->trans('SianPestsNoCode').'</td><td>'.$langs->trans('AgroDrugUseAdversityCode').'</td></tr>';
+		foreach ($pests as $code => $proposal) {
+			print '<tr class="oddeven"><td>'.dol_escape_htmltag($proposal->pest_class.' - '.$proposal->pest_label).'</td>';
+			print '<td>'.dolifarmEppoSelect($db, 'sian_pest_'.preg_replace('/[^A-Za-z0-9]/', '', $code), '', 'pest', 'minwidth300').'</td></tr>';
+		}
+	}
+	print '</table></div><br>';
+
+	// Uses read
+	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td class="center"><input type="checkbox" checked onclick="$(\'.sianrow\').prop(\'checked\', this.checked);"></td>';
+	print '<td>'.$langs->trans('SianCropSian').'</td><td>'.$langs->trans('SianPestSian').'</td><td class="center">'.$langs->trans('AgroDrugUseSafetyDays').'</td><td></td></tr>';
+	foreach ($proposals as $id => $proposal) {
+		$there = isset($existing[strtoupper((string) $proposal->crop_eppo).'|'.strtoupper((string) $proposal->pest_eppo)]) && (string) $proposal->crop_eppo !== '';
+		print '<tr class="oddeven"><td class="center"><input type="checkbox" class="sianrow" name="sian_row[]" value="'.((int) $id).'"'.($there ? '' : ' checked').'></td>';
+		print '<td>'.dol_escape_htmltag($proposal->crop_label).((string) $proposal->crop_eppo !== '' ? ' <span class="badge badge-secondary">'.dol_escape_htmltag($proposal->crop_eppo).'</span>' : '').'</td>';
+		print '<td>'.((string) $proposal->pest_label === '' ? '<span class="opacitymedium">'.$langs->trans('AgroDrugUseAllAdversities').'</span>' : dol_escape_htmltag($proposal->pest_class.' - '.$proposal->pest_label).((string) $proposal->pest_eppo !== '' ? ' <span class="badge badge-secondary">'.dol_escape_htmltag($proposal->pest_eppo).'</span>' : '')).'</td>';
+		print '<td class="center">'.($proposal->safety_days !== null ? (int) $proposal->safety_days : dol_escape_htmltag((string) $proposal->safety_text));
+		print ($proposal->safety_days_greenhouse !== null ? ' <span class="opacitymedium">('.$langs->trans('SianSafetyGreenhouse').' '.((int) $proposal->safety_days_greenhouse).')</span>' : '').'</td>';
+		print '<td>'.($there ? '<span class="opacitymedium">'.$langs->trans('SianAlreadyThere').'</span>' : '').'</td></tr>';
+	}
+	print '</table></div>';
+	print '<div class="center margintoponly"><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('SianImport')).'"> ';
+	print '<a class="button button-cancel" href="'.dolBuildUrl($_SERVER['PHP_SELF'], ['id' => $object->id, 'action' => 'siandiscard', 'token' => newToken()]).'">'.$langs->trans('SianDiscard').'</a></div>';
+	print '</form>';
+}
 
 print '</div>';
 

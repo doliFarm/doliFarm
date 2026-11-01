@@ -30,8 +30,65 @@ function dolifarmEppoDatatypes()
 {
 	return array(
 		'crop' => array('PFL'),
-		'pest' => array('GAI', 'GAF', 'PFL', 'NTX'),	// weeds are plants, abiotic damages are non-taxonomic entries
+		// Authorised uses of a label: also groups of plants (genus, family: SPT) and non-taxonomic groups (fruit crops...)
+		'cropgroup' => array('PFL', 'SPT', 'NTX'),
+		// Weeds are plants, abiotic damages are non-taxonomic entries; groups of invertebrates, fungi/bacteria and plants
+		'pest' => array('GAI', 'GAF', 'PFL', 'NTX', 'SIT', 'SFT', 'SPT'),
 	);
+}
+
+/**
+ * Codes of the taxonomy above an EPPO code, the code itself first (e.g. CIDSI, 1CIDG, 1AURS, 1RUTF, ...).
+ * Without the imported data, only the code itself.
+ *
+ * @param	DoliDB		$db		Database handler
+ * @param	string		$code	EPPO code
+ * @return	string[]			Codes, from the code to the highest group
+ */
+function dolifarmEppoAncestors($db, $code)
+{
+	static $cache = array();
+
+	$code = strtoupper(trim((string) $code));
+	if ($code === '') {
+		return array();
+	}
+	if (isset($cache[$code])) {
+		return $cache[$code];
+	}
+	$codes = array($code);
+	if (dolifarmEppoDataAvailable()) {
+		$current = $code;
+		for ($depth = 0; $depth < 20; $depth++) {
+			$resql = $db->query("SELECT parent_code FROM ".$db->prefix()."dolifarm_eppo_code WHERE eppocode = '".$db->escape($current)."'");
+			$obj = $resql ? $db->fetch_object($resql) : null;
+			if ($resql) {
+				$db->free($resql);
+			}
+			$parent = ($obj ? strtoupper(trim((string) $obj->parent_code)) : '');
+			if ($parent === '' || in_array($parent, $codes)) {
+				break;
+			}
+			$codes[] = $parent;
+			$current = $parent;
+		}
+	}
+	$cache[$code] = $codes;
+	return $codes;
+}
+
+/**
+ * Whether a code of an authorised use (crop or pest, possibly a group) covers a code of a record
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	string	$usecode	Code of the use (species or group)
+ * @param	string	$code		Code of the record
+ * @return	bool
+ */
+function dolifarmEppoCovers($db, $usecode, $code)
+{
+	$usecode = strtoupper(trim((string) $usecode));
+	return $usecode !== '' && in_array($usecode, dolifarmEppoAncestors($db, $code));
 }
 
 /**
