@@ -1176,6 +1176,26 @@ class modDolifarm extends DolibarrModules
 			$this->error = $extrafields->error;
 			return -1;
 		}
+		// Organic production: certificate of the third parties (suppliers of inputs, buyers), Reg. EU 2021/771 art. 1
+		// (traceability: supplier, its certificate); the end of validity is in the widget of the expiries
+		$bioextrafields = array(
+			array('dolifarm_bio_cert', 'DolifarmBioCert', 'varchar', 1001, '64', 'DolifarmBioCertHelp'),
+			array('dolifarm_bio_body', 'DolifarmBioBody', 'varchar', 1002, '128', 'DolifarmBioBodyHelp'),
+			array('dolifarm_bio_cert_end', 'DolifarmBioCertEnd', 'date', 1003, '', 'DolifarmBioCertEndHelp'),
+		);
+		foreach ($bioextrafields as $def) {
+			$result = $extrafields->addExtraField($def[0], $def[1], $def[2], $def[3], $def[4], 'thirdparty', 0, 0, '', '', 1, '', '1', $def[5], '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+			if ($result < 0) {
+				$this->error = $extrafields->error;
+				return -1;
+			}
+		}
+		// Organic production: warehouse dedicated to one organic status (separation, Reg. EU 2018/848 art. 9.10)
+		$result = $extrafields->addExtraField('dolifarm_bio_dedicated', "DolifarmBioDedicated", 'select', 1000, '', 'entrepot', 0, 0, '', array('options' => array('BIO' => 'SeedStatusBio', 'INCONV' => 'SeedStatusInConversion', 'NONBIO' => 'SeedStatusNonBio')), 1, '', '1', 'DolifarmBioDedicatedHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && isModEnabled("stock")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
 		//$result0=$extrafields->addExtraField('dolifarm_separator1', "Separator 1", 'separator', 1,  0, 'thirdparty',   0, 0, '', array('options'=>array(1=>1)), 1, '', 1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result1=$extrafields->addExtraField('dolifarm_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result2=$extrafields->addExtraField('dolifarm_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');

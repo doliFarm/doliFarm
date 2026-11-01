@@ -87,13 +87,20 @@ class dolifarm_Expiry extends ModeleBoxes
 		foreach (array_slice($all, 0, $max) as $row) {
 			$def = $row['def'];
 			if (!isset($objects[$def['class']])) {
-				dol_include_once('/dolifarm/class/'.$def['element'].'.class.php');
+				if ($def['element'] != 'societe') {
+					dol_include_once('/dolifarm/class/'.$def['element'].'.class.php');
+				}
 				$objects[$def['class']] = new $def['class']($this->db);
 			}
 			$object = $objects[$def['class']];
 			$object->id = $row['id'];
 			$object->ref = $row['ref'];
 			$object->label = $row['label'];
+			if ($def['element'] == 'societe') {
+				// Third party: its name, and the certificate as label
+				$object->name = $row['ref'];
+				$object->nom = $row['ref'];
+			}
 
 			$sochtml = '';
 			if ($row['fk_soc'] > 0) {

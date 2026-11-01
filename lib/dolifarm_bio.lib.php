@@ -421,3 +421,85 @@ function dolifarmBioClosePeriod($db, $user, $plotid, $dateend, &$error)
 	$db->commit();
 	return 1;
 }
+
+/**
+ * Organic status of a product harvested on a plot, from the status of the plot at the date of the harvest:
+ * BIO (organic, also biodynamic), INCONV (in conversion: at least 12 months of conversion before the harvest,
+ * Reg. EU 2018/848 art. 30.3), NONBIO (conventional, or first year of conversion)
+ *
+ * @param	string	$plotcode	Code of the dictionary dolifarm_c_biostatus at the date (dolifarmBioStatusAt)
+ * @return	string				BIO, INCONV, NONBIO, '' when the status of the plot is unknown
+ */
+function dolifarmBioProductStatus($plotcode)
+{
+	$plotcode = (string) $plotcode;
+	if ($plotcode === '') {
+		return '';
+	}
+	if (in_array($plotcode, array('BIO_FULL', 'BIODYNAMIC'))) {
+		return 'BIO';
+	}
+	if (in_array($plotcode, array('BIO_CONV_2', 'BIO_CONV_3'))) {
+		return 'INCONV';
+	}
+	return 'NONBIO';
+}
+
+/**
+ * Suffix of the lot of a harvested product, so that organic and conventional lots are never the same lot
+ *
+ * @param	string	$status		BIO, INCONV, NONBIO
+ * @return	string				-BIO, -INCONV or ''
+ */
+function dolifarmBioLotSuffix($status)
+{
+	return ($status == 'BIO' ? '-BIO' : ($status == 'INCONV' ? '-INCONV' : ''));
+}
+
+/**
+ * Organic status a warehouse is dedicated to (extrafield dolifarm_bio_dedicated)
+ *
+ * @param	DoliDB	$db				Database handler
+ * @param	int		$warehouseid	Warehouse
+ * @return	string					BIO, INCONV, NONBIO, '' when not dedicated
+ */
+function dolifarmBioWarehouseDedication($db, $warehouseid)
+{
+	$resql = $db->query("SELECT dolifarm_bio_dedicated FROM ".$db->prefix()."entrepot_extrafields WHERE fk_object = ".((int) $warehouseid));
+	if (!$resql) {
+		return '';
+	}
+	$obj = $db->fetch_object($resql);
+	$db->free($resql);
+	return ($obj ? (string) $obj->dolifarm_bio_dedicated : '');
+}
+
+/**
+ * Warehouse for a product of an organic status: the warehouse itself when it is dedicated to this status, otherwise
+ * its first open sub-warehouse dedicated to this status (e.g. "Products BIO" under the warehouse of the products of
+ * the farm), otherwise the warehouse itself (the caller warns when it is dedicated to another status).
+ *
+ * @param	DoliDB	$db				Database handler
+ * @param	int		$warehouseid	Warehouse of the farm
+ * @param	string	$status			BIO, INCONV, NONBIO ('' = no choice)
+ * @return	int						Warehouse
+ */
+function dolifarmBioWarehouseFor($db, $warehouseid, $status)
+{
+	if ($warehouseid <= 0 || $status === '') {
+		return $warehouseid;
+	}
+	if (dolifarmBioWarehouseDedication($db, $warehouseid) == $status) {
+		return $warehouseid;
+	}
+	// A sub-warehouse dedicated to the status wins, also under a warehouse that is not dedicated
+	$sql = "SELECT e.rowid FROM ".$db->prefix()."entrepot as e";
+	$sql .= " INNER JOIN ".$db->prefix()."entrepot_extrafields as x ON x.fk_object = e.rowid";
+	$sql .= " WHERE e.fk_parent = ".((int) $warehouseid)." AND e.statut > 0 AND x.dolifarm_bio_dedicated = '".$db->escape($status)."'";
+	$sql .= " ORDER BY e.rowid".$db->plimit(1);
+	$resql = $db->query($sql);
+	if ($resql && ($obj = $db->fetch_object($resql))) {
+		return (int) $obj->rowid;
+	}
+	return $warehouseid;
+}

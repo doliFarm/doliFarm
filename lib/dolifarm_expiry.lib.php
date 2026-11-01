@@ -200,6 +200,32 @@ function dolifarmExpiryList($db, $user, $limit = 0, $filters = array())
 		$db->free($resql);
 	}
 
+	// Organic certificates of the third parties (extrafields of doliFarm), not with a filter on a dossier
+	if ($user->hasRight('societe', 'lire') && empty($filters['fk_dossier'])) {
+		$def = array('element' => 'societe', 'class' => 'Societe', 'label' => 'ExpiryBioCertificate', 'milestone' => 0);
+		$sql = "SELECT s.rowid, s.nom as ref, x.dolifarm_bio_cert as label, x.dolifarm_bio_cert_end as dateexp";
+		$sql .= " FROM ".$db->prefix()."societe as s";
+		$sql .= " INNER JOIN ".$db->prefix()."societe_extrafields as x ON x.fk_object = s.rowid";
+		$sql .= " WHERE s.entity IN (".getEntity('societe').") AND s.status = 1";
+		$sql .= " AND x.dolifarm_bio_cert_end IS NOT NULL AND x.dolifarm_bio_cert_end <= '".$db->idate($limitdate)."'";
+		$sql .= dolifarmSqlSocFilter($user, 's.rowid');
+		if (!empty($filters['fk_soc'])) {
+			$sql .= " AND s.rowid = ".((int) $filters['fk_soc']);
+		}
+		$resql = $db->query($sql);
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				$date = $db->jdate($obj->dateexp);
+				$rows[] = array('key' => 'thirdparty_biocert', 'def' => $def, 'id' => (int) $obj->rowid, 'ref' => $obj->ref, 'label' => (string) $obj->label,
+					'fk_soc' => 0, 'date' => $date, 'state' => dolifarmExpiryState($date, 0));
+			}
+			$db->free($resql);
+		} else {
+			// Extrafields not created yet (module not reactivated)
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_DEBUG);
+		}
+	}
+
 	usort($rows, function ($a, $b) {
 		return $a['date'] - $b['date'];
 	});
