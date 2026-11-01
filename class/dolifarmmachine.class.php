@@ -148,13 +148,15 @@ class DoliFarmMachine extends CommonObject
         "year_registration" => array("type" => "int", "label" => "MachineYearRegistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
         "date_revision_next" => array("type" => "date", "label" => "MachineRevisionNext", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "-1", "help" => "MachineRevisionNextHelp",),
         "date_insurance_end" => array("type" => "date", "label" => "MachineInsuranceEnd", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1", "help" => "MachineInsuranceEndHelp",),
-        "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
+        "sprayer_cert_ref" => array("type" => "varchar(64)", "label" => "MachineSprayerCertRef", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCertRefHelp",),
+        "date_sprayer_check" => array("type" => "date", "label" => "MachineSprayerCheckDate", "enabled" => "1", 'position' => 54, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckDateHelp",),
+        "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
         
         "status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1",),
         
-        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-5",),
-        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-5",),
-        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-5",),
+        "datec" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 56, 'notnull' => 0, "visible" => "-5",),
+        "date_valid" => array("type" => "datetime", "label" => "DateValidation", "enabled" => "1", 'position' => 57, 'notnull' => 0, "visible" => "-5",),
+        "tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 58, 'notnull' => 0, "visible" => "-5",),
         
         // Standard Dolibarr tracking
         "fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-5", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
@@ -178,6 +180,8 @@ class DoliFarmMachine extends CommonObject
     public $year_registration;
     public $date_revision_next;
     public $date_insurance_end;
+    public $sprayer_cert_ref;
+    public $date_sprayer_check;
     public $date_sprayer_check_end;
     public $status;
     public $datec;
@@ -292,6 +296,10 @@ class DoliFarmMachine extends CommonObject
         if (! isset($this->entity)) {
             global $conf;
             $this->entity = $conf->entity;
+        }
+
+        if ($this->checkSprayerDates() < 0) {
+            return -1;
         }
 
         // Machines have no validation step: the final ref is given at creation
@@ -529,6 +537,37 @@ class DoliFarmMachine extends CommonObject
     }
 
     /**
+     * Check the dates of the functional check of the sprayer: the last check is not in the future and not after its expiry
+     *
+     * @return int<-1,1>  1 if OK, -1 if KO
+     */
+    public function checkSprayerDates()
+    {
+        global $langs;
+
+        $langs->load('dolifarm@dolifarm');
+        $check = $this->date_sprayer_check;
+        $end = $this->date_sprayer_check_end;
+        if ($check !== null && $check !== '' && !is_numeric($check)) {
+            $check = dol_stringtotime($check);
+        }
+        if ($end !== null && $end !== '' && !is_numeric($end)) {
+            $end = dol_stringtotime($end);
+        }
+        if (!empty($check) && $check > dol_now()) {
+            $this->error = $langs->trans('ErrorMachineSprayerCheckFuture');
+            $this->errors[] = $this->error;
+            return -1;
+        }
+        if (!empty($check) && !empty($end) && $check > $end) {
+            $this->error = $langs->trans('ErrorMachineSprayerCheckAfterEnd');
+            $this->errors[] = $this->error;
+            return -1;
+        }
+        return 1;
+    }
+
+    /**
      * Update object into database
      *
      * @param   User        $user       User that modifies
@@ -537,6 +576,9 @@ class DoliFarmMachine extends CommonObject
      */
     public function update(User $user, $notrigger = 0)
     {
+        if ($this->checkSprayerDates() < 0) {
+            return -1;
+        }
         // Machines created before the ref was given at creation
         if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
             $this->ref = $this->getNextNumRef();

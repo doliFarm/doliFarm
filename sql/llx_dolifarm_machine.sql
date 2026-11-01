@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_machine(
 	year_registration int, 
 	date_revision_next date,
 	date_insurance_end date,
+	sprayer_cert_ref varchar(64),
+	date_sprayer_check date,
 	date_sprayer_check_end date,
 	datec DATETIME,
     date_valid DATETIME,

@@ -124,6 +124,9 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_c_operation_type (
   -- Raggruppamento logico per interfaccia (es. Soil, Crop, Harvest)
   category    varchar(32) DEFAULT 'GENERIC', 
   
+  -- Voce della lista AGEA del quaderno di campagna (fasi colturali e fenologiche)
+  agea_value  varchar(128) DEFAULT NULL,
+
   -- Vincoli
   UNIQUE KEY uk_dolifarm_c_operation_type_code (code)
 ) ENGINE=InnoDB;
@@ -160,7 +163,7 @@ INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category
 INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category) VALUES 
 ('GRAZING',         'Pascolo', 1, 'ANIMAL'),
 ('SCOUTING',        'Monitoraggio / Scouting', 1, 'MGMT'),
-('MOWING',          'Sfalciatura / Trinciatura', 1, 'MAINTENANCE');
+('MOWING',          'Sfalcio', 1, 'MAINTENANCE');
 
 -- f. EVENTI COLTURALI del quaderno di campagna (sezione "eventi colturali" del QDCA AGEA)
 INSERT IGNORE INTO llx_dolifarm_c_operation_type (code, label, active, category) VALUES
@@ -240,6 +243,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_c_fert_type (
     active      TINYINT DEFAULT 1,
     module      VARCHAR(32) DEFAULT NULL,
     position    INTEGER DEFAULT 0,
+    fert_group  VARCHAR(8) DEFAULT NULL,
+    agea_value  VARCHAR(128) DEFAULT NULL,
     UNIQUE INDEX uk_dolifarm_c_fert_type_code (code)
 ) ENGINE=InnoDB;
 
@@ -256,9 +261,9 @@ INSERT IGNORE INTO llx_dolifarm_c_fert_type (code, label, active, position) VALU
 ('BIOSTIM', 'Biostimolante', 1, 100),
 ('MANURE', 'Effluente zootecnico palabile (letame)', 1, 110),
 ('SLURRY', 'Effluente zootecnico non palabile (liquame)', 1, 120),
-('DIGEST', 'Digestato', 1, 130),
+('DIGEST', 'Digestato tal quale', 1, 130),
 ('SLUDGE', 'Fanghi di depurazione', 1, 140),
 ('OTHER', 'Altro', 1, 900);
 
--- Correction of a typo in a label already installed
-UPDATE llx_dolifarm_c_operation_type SET label = 'Sfalciatura / Trinciatura' WHERE code = 'MOWING' AND label = 'Sfalerciatura / Trinciatura';
+-- Label of an operation type already installed: mowing and shredding are distinct in the AGEA list
+UPDATE llx_dolifarm_c_operation_type SET label = 'Sfalcio' WHERE code = 'MOWING' AND label IN ('Sfalerciatura / Trinciatura', 'Sfalciatura / Trinciatura');

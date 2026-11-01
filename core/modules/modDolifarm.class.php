@@ -286,10 +286,10 @@ class modDolifarm extends DolibarrModules
                 'SELECT rowid, code, label, description, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_biostatus',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_machinetype',
                 'SELECT rowid, code, label, active FROM '.MAIN_DB_PREFIX.'dolifarm_c_fueltype',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type', // [NUOVO]
+                'SELECT rowid, code, label, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_paying_agency',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_livestock_species',
-                'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type'
+                'SELECT rowid, code, label, fert_group, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type'
             ),
             
             // Sort order
@@ -310,10 +310,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // List of fields (list of fields to edit a record)
@@ -322,10 +322,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // List of fields (list of fields for insert)
@@ -334,10 +334,10 @@ class modDolifarm extends DolibarrModules
                 'code,label,description',
                 'code,label',
                 'code,label',
-                'code,label', // [NUOVO]
+                'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label'
+                'code,label,fert_group,agea_value'
             ),
             
             // Name of columns with primary key (try to always name it 'rowid')
@@ -352,10 +352,10 @@ class modDolifarm extends DolibarrModules
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'description' => $langs->trans('Description')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')), // [NUOVO]
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'agea_value' => $langs->trans('AgeaValueHelp')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'))
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'fert_group' => $langs->trans('FertGroupHelp'), 'agea_value' => $langs->trans('AgeaValueHelp'))
             )
         );
 
