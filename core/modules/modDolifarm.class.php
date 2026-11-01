@@ -420,6 +420,21 @@ class modDolifarm extends DolibarrModules
 				'test' => 'isModEnabled("dolifarm")',
 				'priority' => 50,
 			),
+			// Weekly update of the catalogue of plant protection products (open data of the Ministry of Health)
+			1 => array(
+				'label' => 'DolifarmPppSyncJob',
+				'jobtype' => 'method',
+				'class' => '/dolifarm/class/dolifarmpppsync.class.php',
+				'objectname' => 'DoliFarmPppSync',
+				'method' => 'cronSync',
+				'parameters' => '',
+				'comment' => 'Download of the latest file of the dataset "fitosanitari" and update of the agrodrugs',
+				'frequency' => 1,
+				'unitfrequency' => 604800,
+				'status' => 0,
+				'test' => 'isModEnabled("dolifarm")',
+				'priority' => 50,
+			),
 			//  0 => array(
 			//      'label' => 'MyJob label',
 			//      'jobtype' => 'method',

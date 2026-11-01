@@ -148,6 +148,9 @@ class DoliFarmAgroDrug extends CommonObject
 		"moa_codes" => array("type" => "varchar(128)", "label" => "AgroDrugMoaCodes", "enabled" => "1", 'position' => 82, 'notnull' => 0, "visible" => "-1", "css" => "minwidth200", "help" => "AgroDrugMoaCodesHelp"),
 		"organic_allowed" => array("type" => "boolean", "label" => "AgroDrugOrganicAllowed", "enabled" => "1", 'position' => 83, 'notnull' => 0, "visible" => "1", "default" => "0", "help" => "AgroDrugOrganicAllowedHelp"),
 		"cu_content" => array("type" => "double(24,8)", "label" => "AgroDrugCuContent", "enabled" => "1", 'position' => 84, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugCuContentHelp"),
+		"admin_status" => array("type" => "varchar(128)", "label" => "AgroDrugAdminStatus", "enabled" => "1", 'position' => 46, 'notnull' => 0, "visible" => "5", "help" => "AgroDrugAdminStatusHelp",),
+		"date_revocation" => array("type" => "date", "label" => "AgroDrugDateRevocation", "enabled" => "1", 'position' => 47, 'notnull' => 0, "visible" => "-5",),
+		"date_catalog_sync" => array("type" => "datetime", "label" => "AgroDrugDateCatalogSync", "enabled" => "1", 'position' => 48, 'notnull' => 0, "visible" => "-5",),
 		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
@@ -191,6 +194,21 @@ class DoliFarmAgroDrug extends CommonObject
 	 * @var float|string|null	Copper metal in g for kg or l of product, as written on the label
 	 */
 	public $cu_content;
+
+	/**
+	 * @var string|null	Administrative status written by the Ministry of Health (catalogue, read only)
+	 */
+	public $admin_status;
+
+	/**
+	 * @var int|string|null	Date from which the revocation applies (catalogue, read only)
+	 */
+	public $date_revocation;
+
+	/**
+	 * @var int|string|null	Date of the last copy from the catalogue
+	 */
+	public $date_catalog_sync;
 	public $note_public;
 	public $note_private;
 	public $status;
@@ -302,6 +320,9 @@ class DoliFarmAgroDrug extends CommonObject
 			return -1;
 		}
 		$result = $this->createCommon($user, $notrigger);
+		if ($result > 0) {
+			$this->copyFromCatalog();
+		}
 
 		// uncomment lines below if you want to validate object after creation
 		// if ($result > 0) {
@@ -542,7 +563,26 @@ class DoliFarmAgroDrug extends CommonObject
 		if ($this->checkData() < 0) {
 			return -1;
 		}
-		return $this->updateCommon($user, $notrigger);
+		$result = $this->updateCommon($user, $notrigger);
+		if ($result > 0) {
+			$this->copyFromCatalog();
+		}
+		return $result;
+	}
+
+	/**
+	 * Copy status, dates and the empty fields from the catalogue of the Ministry of Health (same registration number)
+	 *
+	 * @return	int		1 if copied, 0 if the product is not in the catalogue
+	 */
+	public function copyFromCatalog()
+	{
+		dol_include_once('/dolifarm/class/dolifarmpppsync.class.php');
+		$sql = DoliFarmPppSync::agroDrugUpdateSql($this->db, (int) $this->id, DoliFarmPppSync::regKey($this->reg_number));
+		if ($sql === '' || !$this->db->query($sql)) {
+			return 0;
+		}
+		return 1;
 	}
 
 	/**
