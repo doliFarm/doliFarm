@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026       SuperAdmin */
+/* Copyright (C) 2026       Luigi Grillo - doliFarm.com	<info@dolifarm.com> */
 
 require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
 require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';

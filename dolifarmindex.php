@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 SuperAdmin */
+/* Copyright (C) 2026 Luigi Grillo - doliFarm.com	<info@dolifarm.com> */
 
 // 1. CARICAMENTO AMBIENTE
 $res = 0;
