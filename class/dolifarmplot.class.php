@@ -171,7 +171,7 @@ class DoliFarmPlot extends CommonObject
         "map_reference" => array("type" => "varchar(128)", "label" => "Mapreference", "enabled" => "1", 'position' => 78, 'notnull' => 0, "visible" => "-1",),
 
         // Linked to Dictionary: llx_dolifarm_c_biostatus
-        "fk_status_bio" => array("type" => "sellist:dolifarm_c_biostatus:label:code::active=1", "label" => "Fkstatusbio", "enabled" => "1", 'position' => 80, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_status_bio" => array("type" => "sellist:dolifarm_c_biostatus:label:code::active=1", "label" => "Fkstatusbio", "help" => "FkstatusbioHelp", "enabled" => "1", 'position' => 80, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
         "date_conversion_start" => array("type" => "date", "label" => "Dateconversionstart", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "-1",),
         "date_conversion_end" => array("type" => "date", "label" => "Dateconversionend", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "-1",),
@@ -623,7 +623,13 @@ class DoliFarmPlot extends CommonObject
         if (empty($this->ref) || preg_match('/^[\(]?PROV/i', $this->ref)) {
             $this->ref = $this->getNextNumRef();
         }
-        return $this->updateCommon($user, $notrigger);
+        $result = $this->updateCommon($user, $notrigger);
+        if ($result > 0) {
+            // With a history of the organic status, the status and the dates of the conversion are derived from it
+            dol_include_once('/dolifarm/lib/dolifarm_bio.lib.php');
+            dolifarmBioSync($this->db, $this->id);
+        }
+        return $result;
     }
 
     /**

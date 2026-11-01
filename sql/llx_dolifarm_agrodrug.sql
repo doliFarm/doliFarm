@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_agrodrug(
 	max_dose_ha double(24,8), 
 	max_applications integer,
 	moa_codes varchar(128),
+	organic_allowed smallint DEFAULT 0,
+	cu_content double(24,8),
 	note_public text, 
 	note_private text, 
 	status int, 

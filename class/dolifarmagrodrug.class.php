@@ -146,6 +146,8 @@ class DoliFarmAgroDrug extends CommonObject
 		"max_dose_ha" => array("type" => "double(24,8)", "label" => "Maxdoseha", "enabled" => "1", 'position' => 80, 'notnull' => 0, "visible" => "-1",),
 		"max_applications" => array("type" => "int", "label" => "AgroDrugMaxApplications", "enabled" => "1", 'position' => 81, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugMaxApplicationsHelp"),
 		"moa_codes" => array("type" => "varchar(128)", "label" => "AgroDrugMoaCodes", "enabled" => "1", 'position' => 82, 'notnull' => 0, "visible" => "-1", "css" => "minwidth200", "help" => "AgroDrugMoaCodesHelp"),
+		"organic_allowed" => array("type" => "boolean", "label" => "AgroDrugOrganicAllowed", "enabled" => "1", 'position' => 83, 'notnull' => 0, "visible" => "1", "default" => "0", "help" => "AgroDrugOrganicAllowedHelp"),
+		"cu_content" => array("type" => "double(24,8)", "label" => "AgroDrugCuContent", "enabled" => "1", 'position' => 84, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "help" => "AgroDrugCuContentHelp"),
 		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 85, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 90, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
@@ -179,6 +181,16 @@ class DoliFarmAgroDrug extends CommonObject
 	 * @var string|null	Groups of the mode of action (FRAC, IRAC, HRAC), for example "FRAC 3; FRAC M01"
 	 */
 	public $moa_codes;
+
+	/**
+	 * @var int|string|null	1 when the product is allowed in organic farming (Reg. EU 2021/1165, annex I)
+	 */
+	public $organic_allowed;
+
+	/**
+	 * @var float|string|null	Copper metal in g for kg or l of product, as written on the label
+	 */
+	public $cu_content;
 	public $note_public;
 	public $note_private;
 	public $status;
@@ -553,6 +565,10 @@ class DoliFarmAgroDrug extends CommonObject
 			return -1;
 		}
 		$this->moa_codes = (count($groups) ? implode('; ', $groups) : null);
+		if ($this->cu_content !== null && $this->cu_content !== '' && ((float) $this->cu_content < 0 || (float) $this->cu_content > 1000)) {
+			$this->error = $langs->trans('ErrorAgroDrugCuContent');
+			return -1;
+		}
 		return 1;
 	}
 

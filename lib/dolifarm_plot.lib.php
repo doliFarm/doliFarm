@@ -47,6 +47,22 @@ function dolifarmplotPrepareHead($object)
 	$head[$h][2] = 'card';
 	$h++;
 
+	// Organic status: history of the periods (conventional, conversion, organic)
+	$nbBio = 0;
+	$resql = $db->query("SELECT COUNT(rowid) as nb FROM ".$db->prefix()."dolifarm_plot_biostatus WHERE fk_plot = ".((int) $object->id));
+	if ($resql) {
+		$obj = $db->fetch_object($resql);
+		$nbBio = ($obj ? (int) $obj->nb : 0);
+		$db->free($resql);
+	}
+	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmplot_bio.php", 1), ['id' => $object->id]);
+	$head[$h][1] = $langs->trans("BioTab");
+	if ($nbBio > 0) {
+		$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbBio.'</span>';
+	}
+	$head[$h][2] = 'bio';
+	$h++;
+
 	if ($showtabofpagecontact) {
 		$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmplot_contact.php", 1), ['id' => $object->id]);
 		$head[$h][1] = $langs->trans("Contacts");
