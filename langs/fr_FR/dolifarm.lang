@@ -46,6 +46,7 @@ SendDoliFarmBuildingRef = Bâtiment %s
 BuildingPlot = Parcelle
 BuildingWarehouse = Entrepôt
 BuildingWarehouseHelp = Entrepôt de Dolibarr situé dans ce bâtiment : ses données cadastrales identifient le site de stockage des produits phytosanitaires et des fertilisants (cahier de campagne AGEA)
+BuildingAddressHelp = Adresse du bâtiment : identifie le site de stockage et le silo ou l'entrepôt des produits traités (cahier de campagne AGEA)
 BuildingPlotHelp = Parcelle sur laquelle se trouve le bâtiment (facultatif)
 BuildingUse = Usage
 BuildingUseHelp = Par exemple : étable, grange, entrepôt, hangar à machines, gîte rural

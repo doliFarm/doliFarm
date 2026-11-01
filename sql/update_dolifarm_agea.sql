@@ -94,3 +94,6 @@ ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN dry_matter double(8,2);
 -- No foreign key on llx_entrepot: the table exists only when the Stock module has been enabled.
 ALTER TABLE llx_dolifarm_building ADD COLUMN fk_warehouse integer;
 ALTER TABLE llx_dolifarm_building ADD INDEX idx_dolifarm_building_fk_warehouse (fk_warehouse);
+
+-- Buildings: address of the storage sites and of the treated products (sheets 4, 5 and 9)
+ALTER TABLE llx_dolifarm_building ADD COLUMN address varchar(255);

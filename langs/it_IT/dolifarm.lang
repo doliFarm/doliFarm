@@ -111,6 +111,7 @@ SendDoliFarmBuildingRef = Invio fabbricato %s
 BuildingPlot = Appezzamento
 BuildingWarehouse = Magazzino
 BuildingWarehouseHelp = Magazzino di Dolibarr che si trova in questo fabbricato: i suoi dati catastali identificano il sito di stoccaggio di agrofarmaci e fertilizzanti (quaderno di campagna AGEA)
+BuildingAddressHelp = Indirizzo del fabbricato: identifica il sito di stoccaggio e il silo o magazzino dei prodotti trattati (quaderno di campagna AGEA)
 BuildingPlotHelp = Appezzamento su cui sorge il fabbricato (facoltativo)
 BuildingUse = Destinazione d'uso
 BuildingUseHelp = Per esempio: stalla, fienile, magazzino, rimessa macchine, agriturismo

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_building(
 	cadastral_parcel varchar(10),
 	cadastral_sub varchar(10),
 	fk_warehouse integer,
+	address varchar(255),
 	fk_ownership varchar(100),
 	date_conduction_start date,
 	date_conduction_end date,

@@ -90,6 +90,7 @@ class DoliFarmBuilding extends CommonObject
 		"date_conduction_start" => array("type" => "date", "label" => "DateConductionStart", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "-1"),
 		"date_conduction_end" => array("type" => "date", "label" => "DateConductionEnd", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "-1"),
 		"fk_warehouse" => array("type" => "integer:Entrepot:product/stock/class/entrepot.class.php:0:((statut:>:0) AND (entity:IN:__SHARED_ENTITIES__))", "label" => "BuildingWarehouse", "picto" => "stock", "enabled" => "isModEnabled('stock')", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "csslist" => "tdoverflowmax150", "help" => "BuildingWarehouseHelp"),
+		"address" => array("type" => "varchar(255)", "label" => "Address", "enabled" => "1", 'position' => 39, 'notnull' => 0, "visible" => "-1", "css" => "minwidth300", "help" => "BuildingAddressHelp"),
 		"cadastral_comune" => array("type" => "varchar(100)", "label" => "Cadastralcomune", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "1", "css" => "maxwidth300"),
 		"cadastral_section" => array("type" => "varchar(10)", "label" => "CadastralSection", "enabled" => "1", 'position' => 41, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth100"),
 		"cadastral_sheet" => array("type" => "varchar(10)", "label" => "Cadastralsheet", "enabled" => "1", 'position' => 42, 'notnull' => 0, "visible" => "1", "css" => "maxwidth100"),
@@ -125,6 +126,11 @@ class DoliFarmBuilding extends CommonObject
 	 * @var int|null	Warehouse of Dolibarr kept in the building (storage site of the AGEA field notebook)
 	 */
 	public $fk_warehouse;
+
+	/**
+	 * @var string|null	Address of the building (AGEA field notebook: storage sites and treated products)
+	 */
+	public $address;
 	public $building_use;
 	public $fk_ownership;
 	public $date_conduction_start;
