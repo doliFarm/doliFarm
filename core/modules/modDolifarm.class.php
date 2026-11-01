@@ -907,6 +907,22 @@ class modDolifarm extends DolibarrModules
 			'object' => 'DoliFarmFertilizer'
 		);
 		/* END MODULEBUILDER LEFTMENU DOLIFARMFERTILIZER */
+		// Register of the technical inputs: plant protection products, fertilisers and corroborants for organic production
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'type' => 'left',
+			'titre' => 'InputsRegister',
+			'prefix' => img_picto('', 'fa-leaf', 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarminputs',
+			'url' => '/dolifarm/dolifarm_inputs.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
+			'target' => '',
+			'user' => 2,
+		);
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMCROPS */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',

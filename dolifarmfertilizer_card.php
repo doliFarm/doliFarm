@@ -151,8 +151,8 @@ $form = new Form($db);
 // Layout of the card: identification, then nutrient content
 $cardlayout = array(
 	array(
-		'left' => array('ref', 'label', 'fk_fert_type', 'fk_product'),
-		'right' => array('manufacturer', 'registration_number', 'organic'),
+		'left' => array('ref', 'label', 'product_kind', 'fk_fert_type', 'fk_product'),
+		'right' => array('manufacturer', 'registration_number', 'organic', 'annex2_code', 'organic_check_date'),
 	),
 	array(
 		'title' => 'FertilizerNutrients',

@@ -248,7 +248,8 @@ class DoliFarmPppSync
 			}
 			$seen[$key] = 1;
 			$this->nbread++;
-			$hash = md5(implode(';', $values));
+			// The prefix changes when the reading of the values changes, so that the rows are written again
+			$hash = md5('v2;'.implode(';', $values));
 			if (isset($known[$key]) && $known[$key] === $hash) {
 				continue;
 			}
@@ -287,6 +288,27 @@ class DoliFarmPppSync
 	}
 
 	/**
+	 * Repair characters encoded twice in UTF-8, as found in the file of the Ministry (Ö written as Ã + U+0096).
+	 * Only a pair of characters U+0080-U+00FF whose bytes form one valid UTF-8 character of two bytes is replaced:
+	 * ordinary accented text (à, è, ...) is not changed.
+	 *
+	 * @param	string	$value	Value read from the file
+	 * @return	string			Repaired value
+	 */
+	public static function fixDoubleUtf8($value)
+	{
+		if (!str_contains($value, "\xC3") && !str_contains($value, "\xC2")) {
+			return $value;
+		}
+		$fixed = preg_replace_callback('/[\xC2\xC3][\x80-\xBF][\xC2\xC3][\x80-\xBF]/', function ($m) {
+			$b1 = ((ord($m[0][0]) & 0x03) << 6) | (ord($m[0][1]) & 0x3F);
+			$b2 = ((ord($m[0][2]) & 0x03) << 6) | (ord($m[0][3]) & 0x3F);
+			return ($b1 >= 0xC2 && $b1 <= 0xDF && $b2 >= 0x80 && $b2 <= 0xBF) ? chr($b1).chr($b2) : $m[0];
+		}, $value);
+		return is_string($fixed) ? $fixed : $value;
+	}
+
+	/**
 	 * Values of a row for the SQL, in the order of the columns of insertColumns()
 	 *
 	 * @param	array<string,string>	$row	Row of the file
@@ -297,7 +319,7 @@ class DoliFarmPppSync
 	private function rowValues($row, $hash, $file)
 	{
 		$get = function ($name) use ($row) {
-			$value = isset($row[$name]) ? trim((string) $row[$name]) : '';
+			$value = isset($row[$name]) ? trim(self::fixDoubleUtf8((string) $row[$name])) : '';
 			return ($value === '-' ? '' : $value);
 		};
 		return array(

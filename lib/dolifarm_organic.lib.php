@@ -209,6 +209,53 @@ function dolifarmOrganicAgroDrugCheck($db, $id, $date = null)
 }
 
 /**
+ * Check of a fertiliser, soil conditioner, corroborant or biostimulant for organic production
+ *
+ * Fertilisers: field "allowed in organic farming" of the card, category of annex II of Reg. EU 2021/1165 and number
+ * of the register of fertilisers (D.Lgs. 75/2010, register of those allowed in organic farming). Corroborants (DM
+ * 6793/2018): field "allowed" and number of the list of corroborants, no category of annex II.
+ *
+ * @param	DoliDB	$db		Database handler
+ * @param	int		$id		Id of the fertiliser
+ * @return	array{result:string,reasons:string[],conditions:string[],annex2:string}
+ */
+function dolifarmOrganicFertilizerCheck($db, $id)
+{
+	global $langs;
+
+	$langs->load('dolifarm@dolifarm');
+	$check = array('result' => 'no', 'reasons' => array(), 'conditions' => array(), 'annex2' => '');
+	$sql = "SELECT f.rowid, f.organic, f.product_kind, f.annex2_code, f.registration_number, f.organic_check_date, o.label as annex2_label, o.conditions";
+	$sql .= " FROM ".$db->prefix()."dolifarm_fertilizer as f LEFT JOIN ".$db->prefix()."dolifarm_organic_fertilizer as o ON o.code = f.annex2_code";
+	$sql .= " WHERE f.rowid = ".((int) $id);
+	$resql = $db->query($sql);
+	$fert = $resql ? $db->fetch_object($resql) : null;
+	if (!$fert) {
+		$check['reasons'][] = $langs->transnoentities('OrganicCheckNoProduct');
+		return $check;
+	}
+	$check['annex2'] = (string) $fert->annex2_label;
+	if ((string) $fert->conditions !== '') {
+		$check['conditions'][] = $fert->annex2_label.': '.$fert->conditions;
+	}
+	if (empty($fert->organic)) {
+		$check['reasons'][] = $langs->transnoentities('FertCheckNotAllowed');
+		return $check;
+	}
+	$verify = array();
+	$corroborant = ($fert->product_kind == 'CORROBORANT');
+	if (!$corroborant && (string) $fert->annex2_code === '') {
+		$verify[] = $langs->transnoentities('FertCheckNoAnnex2');
+	}
+	if (trim((string) $fert->registration_number) === '') {
+		$verify[] = $langs->transnoentities($corroborant ? 'FertCheckNoCorroborantList' : 'FertCheckNoRegister');
+	}
+	$check['result'] = (count($verify) ? 'verify' : 'yes');
+	$check['reasons'] = $verify;
+	return $check;
+}
+
+/**
  * Badge of the result of the check
  *
  * @param	string	$result		yes, no, verify

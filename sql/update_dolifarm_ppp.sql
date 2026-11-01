@@ -22,3 +22,8 @@ ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN date_catalog_sync datetime;
 -- Check for organic production (annex I): confirmation by hand of the use, with user and date
 ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN organic_confirm_user integer;
 ALTER TABLE llx_dolifarm_agrodrug ADD COLUMN organic_confirm_date datetime;
+-- Register of the technical inputs (M3): kind of fertiliser, category of annex II, date of the check in the register of
+-- the fertilisers allowed in organic farming (MASAF, D.Lgs. 75/2010)
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN product_kind varchar(16);
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN annex2_code varchar(32);
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN organic_check_date date;

@@ -93,7 +93,10 @@ class DoliFarmFertilizer extends CommonObject
 		"efficiency" => array("type" => "double(8,2)", "label" => "FertilizerEfficiency", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerEfficiencyHelp"),
 		"density" => array("type" => "double(8,3)", "label" => "FertilizerDensity", "enabled" => "1", 'position' => 36, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDensityHelp"),
 		"dry_matter" => array("type" => "double(8,2)", "label" => "FertilizerDryMatter", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDryMatterHelp"),
+		"product_kind" => array("type" => "select", "label" => "FertilizerKind", "enabled" => "1", 'position' => 21, 'notnull' => 0, "visible" => "1", "arrayofkeyval" => array('FERTILIZER' => 'FertilizerKindFertilizer', 'AMENDMENT' => 'FertilizerKindAmendment', 'CORROBORANT' => 'FertilizerKindCorroborant', 'BIOSTIMULANT' => 'FertilizerKindBiostimulant'), "help" => "FertilizerKindHelp"),
 		"organic" => array("type" => "boolean", "label" => "AllowedInOrganic", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "help" => "AllowedInOrganicHelp"),
+		"annex2_code" => array("type" => "sellist:dolifarm_organic_fertilizer:label:code::active=1", "label" => "FertilizerAnnex2", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusx", "help" => "FertilizerAnnex2Help"),
+		"organic_check_date" => array("type" => "date", "label" => "FertilizerOrganicCheckDate", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "help" => "FertilizerOrganicCheckDateHelp"),
 		"note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
 		"note_private" => array("type" => "html", "label" => "NotePrivate", "enabled" => "1", 'position' => 105, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-2"),
@@ -139,6 +142,21 @@ class DoliFarmFertilizer extends CommonObject
 	public $p2o5_content;
 	public $k2o_content;
 	public $organic;
+
+	/**
+	 * @var string|null	Kind of product: FERTILIZER, AMENDMENT, CORROBORANT, BIOSTIMULANT
+	 */
+	public $product_kind;
+
+	/**
+	 * @var string|null	Category of annex II of Reg. EU 2021/1165 (code of llx_dolifarm_organic_fertilizer)
+	 */
+	public $annex2_code;
+
+	/**
+	 * @var int|string|null	Date of the last check of the product in the register of fertilisers allowed in organic farming
+	 */
+	public $organic_check_date;
 	public $note_public;
 	public $note_private;
 	public $date_creation;
