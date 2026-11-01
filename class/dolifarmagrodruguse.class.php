@@ -245,6 +245,25 @@ class DoliFarmAgroDrugUse extends CommonObject
 			$this->error = $langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('AgroDrugUseCrop'));
 			return -1;
 		}
+		// EPPO codes checked on the imported data (only the syntax without them); empty labels from the EPPO names
+		dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+		foreach (array('crop' => array('crop_eppo', 'crop_label'), 'pest' => array('adversity_code', 'adversity_label')) as $use => $fields) {
+			$code = (string) $this->{$fields[0]};
+			if ($code === '') {
+				continue;
+			}
+			$error = dolifarmEppoCheckCode($this->db, $code, $use);
+			if ($error !== '') {
+				$this->error = $error;
+				return -1;
+			}
+			if (trim((string) $this->{$fields[1]}) === '') {
+				$eppo = dolifarmEppoFetch($this->db, $code);
+				if ($eppo) {
+					$this->{$fields[1]} = dol_trunc((string) (substr($langs->defaultlang, 0, 2) == 'it' && $eppo->name_it ? $eppo->name_it : ($eppo->name_en ?: $eppo->prefname)), 250, 'right', 'UTF-8', 1);
+				}
+			}
+		}
 		foreach (array('dose_min', 'dose_max', 'safety_days', 'max_applications') as $field) {
 			if ($this->$field === '') {
 				$this->$field = null;

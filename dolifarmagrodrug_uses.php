@@ -65,6 +65,7 @@ if (!$res) {
 dol_include_once('/dolifarm/class/dolifarmagrodrug.class.php');
 dol_include_once('/dolifarm/class/dolifarmagrodruguse.class.php');
 dol_include_once('/dolifarm/lib/dolifarm_agrodrug.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
 
 $langs->loadLangs(array("dolifarm@dolifarm", "other"));
 
@@ -275,10 +276,33 @@ function dolifarmAgroDrugUseInputs($use, $doseunits, $form)
 		}
 		return '';
 	};
+	global $db, $conf;
+	if (dolifarmEppoDataAvailable() && !empty($conf->use_javascript_ajax)) {
+		// Search on the whole EPPO database; the label is optional (EPPO name when empty)
+		$out = '<td>'.dolifarmEppoSelect($db, 'crop_eppo', $val('crop_eppo'), 'crop', 'minwidth200 maxwidth250');
+		$out .= '<br><input type="text" name="crop_label" class="minwidth100 maxwidth200" maxlength="255" value="'.dol_escape_htmltag($val('crop_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseCropLabel')).'"></td>';
+		$out .= '<td>'.dolifarmEppoSelect($db, 'adversity_code', $val('adversity_code'), 'pest', 'minwidth200 maxwidth250');
+		$out .= '<br><input type="text" name="adversity_label" class="minwidth100 maxwidth200" maxlength="255" value="'.dol_escape_htmltag($val('adversity_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseAdversityLabel')).'"></td>';
+		return $out.dolifarmAgroDrugUseOtherInputs($val, $doseunits, $form);
+	}
 	$out = '<td><input type="text" name="crop_eppo" list="dolifarm_use_crops" class="maxwidth75" maxlength="10" value="'.dol_escape_htmltag($val('crop_eppo')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseCropCode')).'" required>';
 	$out .= ' <input type="text" name="crop_label" class="minwidth100 maxwidth150" maxlength="255" value="'.dol_escape_htmltag($val('crop_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseCropLabel')).'"></td>';
 	$out .= '<td><input type="text" name="adversity_code" list="dolifarm_use_adversities" class="maxwidth75" maxlength="10" value="'.dol_escape_htmltag($val('adversity_code')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseAdversityCode')).'">';
 	$out .= ' <input type="text" name="adversity_label" class="minwidth100 maxwidth150" maxlength="255" value="'.dol_escape_htmltag($val('adversity_label')).'" placeholder="'.dol_escape_htmltag($langs->trans('AgroDrugUseAdversityLabel')).'"></td>';
+	return $out.dolifarmAgroDrugUseOtherInputs($val, $doseunits, $form);
+}
+
+/**
+ * Inputs of a use after crop and pest: dose, safety days, applications, note
+ *
+ * @param	callable				$val		Value of a field
+ * @param	array<string,string>	$doseunits	Units of the dictionary of doliTrace (empty: free text)
+ * @param	Form					$form		Form
+ * @return	string
+ */
+function dolifarmAgroDrugUseOtherInputs($val, $doseunits, $form)
+{
+	$out = '';
 	$out .= '<td class="nowraponall"><input type="text" name="dose_min" class="width50 right" value="'.dol_escape_htmltag($val('dose_min')).'">';
 	$out .= ' - <input type="text" name="dose_max" class="width50 right" value="'.dol_escape_htmltag($val('dose_max')).'"> ';
 	if (count($doseunits)) {
