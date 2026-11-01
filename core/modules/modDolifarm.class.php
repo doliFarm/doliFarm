@@ -1138,6 +1138,13 @@ class modDolifarm extends DolibarrModules
 			$this->error = $extrafields->error;
 			return -1;
 		}
+		// Organic production: status of the reproductive material (seeds, seedlings) of the products, copied on the sowing
+		// in doliTrace (Reg. EU 2018/848, annex II part I point 1.8)
+		$result = $extrafields->addExtraField('dolifarm_seed_status', "DolifarmSeedStatus", 'select', 1000, '', 'product', 0, 0, '', array('options' => array('BIO' => 'SeedStatusBio', 'INCONV' => 'SeedStatusInConversion', 'NONBIO' => 'SeedStatusNonBio')), 1, '', '1', 'DolifarmSeedStatusHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
 		//$result0=$extrafields->addExtraField('dolifarm_separator1', "Separator 1", 'separator', 1,  0, 'thirdparty',   0, 0, '', array('options'=>array(1=>1)), 1, '', 1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result1=$extrafields->addExtraField('dolifarm_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
 		//$result2=$extrafields->addExtraField('dolifarm_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', -1, 0, '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
