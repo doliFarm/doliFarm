@@ -90,8 +90,11 @@ if ($id > 0) {
     // Usiamo $child->table_element per essere sicuri se la classe è configurata bene.
     // Fallback: usiamo MAIN_DB_PREFIX . "dolifarm_machine" come da tuo schema ultimo.
     
-    $sql = "SELECT t.rowid, t.ref, t.label, t.fk_type, t.power_kw, t.fuel_type, t.status";
-    $sql .= " FROM " . MAIN_DB_PREFIX . "dolifarm_machine as t"; 
+    // Labels of the type and of the fuel from their dictionaries
+    $sql = "SELECT t.rowid, t.ref, t.label, t.fk_type, t.power_kw, t.fuel_type, t.status, mt.label as type_label, ft.label as fuel_label";
+    $sql .= " FROM " . MAIN_DB_PREFIX . "dolifarm_machine as t";
+    $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "dolifarm_c_machinetype as mt ON mt.code = t.fk_type";
+    $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "dolifarm_c_fueltype as ft ON ft.code = t.fuel_type";
     $sql .= " WHERE t.fk_dossier = " . ((int)$object->id);
     $sql .= " ORDER BY t.ref ASC";
 
@@ -112,11 +115,11 @@ if ($id > 0) {
 
         print '<table class="noborder centpercent">';
         print '<tr class="liste_titre">';
-        print '<td>' . $langs->trans("Ref/Targa") . '</td>';
+        print '<td>' . $langs->trans("RefTarga") . '</td>';
         print '<td>' . $langs->trans("Label") . '</td>';
-        print '<td>' . $langs->trans("Type") . '</td>';
-        print '<td>' . $langs->trans("Fuel") . '</td>';
-        print '<td class="right">' . $langs->trans("Power (KW)") . '</td>';
+        print '<td>' . $langs->trans("MachType") . '</td>';
+        print '<td>' . $langs->trans("FuelType") . '</td>';
+        print '<td class="right">' . $langs->trans("PowerKW") . '</td>';
         print '<td class="right">' . $langs->trans("Status") . '</td>';
         print '</tr>';
 
@@ -136,13 +139,11 @@ if ($id > 0) {
                 
                 print '<td>' . dol_escape_htmltag($obj->label) . '</td>';
                 
-                // Type (Traduzione dizionario se necessario)
-                $label_type = $langs->trans($obj->fk_type);
-                print '<td>' . $label_type . '</td>';
+                // Type and fuel: label of the dictionary, else the code
+                print '<td>' . dol_escape_htmltag((string) ($obj->type_label !== null ? $obj->type_label : $obj->fk_type)) . '</td>';
+                print '<td>' . dol_escape_htmltag((string) ($obj->fuel_label !== null ? $obj->fuel_label : $obj->fuel_type)) . '</td>';
 
-                print '<td>' . dol_escape_htmltag($obj->fuel_type) . '</td>';
-
-                print '<td class="right">' . $obj->power_kw . '</td>';
+                print '<td class="right">' . ($obj->power_kw !== null ? price($obj->power_kw, 0, $langs, 0, -1, -1) : '') . '</td>';
                 print '<td class="right">' . $child->getLibStatut(5) . '</td>';
                 print '</tr>';
             }
