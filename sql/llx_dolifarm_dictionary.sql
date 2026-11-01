@@ -160,7 +160,7 @@ INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category
 INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category) VALUES 
 ('GRAZING',         'Pascolo', 1, 'ANIMAL'),
 ('SCOUTING',        'Monitoraggio / Scouting', 1, 'MGMT'),
-('MOWING',          'Sfalerciatura / Trinciatura', 1, 'MAINTENANCE');
+('MOWING',          'Sfalciatura / Trinciatura', 1, 'MAINTENANCE');
 
 -- f. EVENTI COLTURALI del quaderno di campagna (sezione "eventi colturali" del QDCA AGEA)
 INSERT IGNORE INTO llx_dolifarm_c_operation_type (code, label, active, category) VALUES
@@ -259,3 +259,6 @@ INSERT IGNORE INTO llx_dolifarm_c_fert_type (code, label, active, position) VALU
 ('DIGEST', 'Digestato', 1, 130),
 ('SLUDGE', 'Fanghi di depurazione', 1, 140),
 ('OTHER', 'Altro', 1, 900);
+
+-- Correction of a typo in a label already installed
+UPDATE llx_dolifarm_c_operation_type SET label = 'Sfalciatura / Trinciatura' WHERE code = 'MOWING' AND label = 'Sfalerciatura / Trinciatura';
