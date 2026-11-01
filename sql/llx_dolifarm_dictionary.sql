@@ -162,6 +162,15 @@ INSERT IGNORE  INTO llx_dolifarm_c_operation_type (code, label, active, category
 ('SCOUTING',        'Monitoraggio / Scouting', 1, 'MGMT'),
 ('MOWING',          'Sfalerciatura / Trinciatura', 1, 'MAINTENANCE');
 
+-- f. EVENTI COLTURALI del quaderno di campagna (sezione "eventi colturali" del QDCA AGEA)
+INSERT IGNORE INTO llx_dolifarm_c_operation_type (code, label, active, category) VALUES
+('EMERGENCE',       'Emergenza / Ripresa vegetativa', 1, 'PHENO'),
+('FLOWERING',       'Fioritura', 1, 'PHENO'),
+('FRUIT_SET',       'Allegagione', 1, 'PHENO'),
+('VERAISON',        'Invaiatura / Inizio maturazione', 1, 'PHENO'),
+('PRUNING',         'Potatura', 1, 'MAINTENANCE'),
+('CROP_END',        'Fine coltura / Estirpo', 1, 'CROP');
+
 SET FOREIGN_KEY_CHECKS=1;
 
 
