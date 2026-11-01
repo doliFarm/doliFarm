@@ -84,3 +84,8 @@ UPDATE llx_dolifarm_c_fert_type SET agea_value = 'digestato tal quale' WHERE cod
 UPDATE llx_dolifarm_c_fert_type SET agea_value = 'digestato separato solido' WHERE code = 'DIGEST_SOLID' AND agea_value IS NULL;
 UPDATE llx_dolifarm_c_fert_type SET agea_value = 'digestato separato liquido' WHERE code = 'DIGEST_LIQUID' AND agea_value IS NULL;
 UPDATE llx_dolifarm_c_fert_type SET agea_value = 'acque reflue ai sensi del decreto n. 5046/2016' WHERE code = 'WASTEWATER' AND agea_value IS NULL;
+
+-- Fertilizers: copper (sheet 7), efficiency and dry matter (sheet 6)
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN cu_content double(8,2);
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN efficiency double(8,2);
+ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN dry_matter double(8,2);

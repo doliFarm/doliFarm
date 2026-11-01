@@ -89,6 +89,9 @@ class DoliFarmFertilizer extends CommonObject
 		"n_content" => array("type" => "double(8,2)", "label" => "NitrogenContent", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"p2o5_content" => array("type" => "double(8,2)", "label" => "PhosphorusContent", "enabled" => "1", 'position' => 31, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
 		"k2o_content" => array("type" => "double(8,2)", "label" => "PotassiumContent", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
+		"cu_content" => array("type" => "double(8,2)", "label" => "CopperContent", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "NutrientContentHelp"),
+		"efficiency" => array("type" => "double(8,2)", "label" => "FertilizerEfficiency", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerEfficiencyHelp"),
+		"dry_matter" => array("type" => "double(8,2)", "label" => "FertilizerDryMatter", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth75", "csslist" => "right", "help" => "FertilizerDryMatterHelp"),
 		"organic" => array("type" => "boolean", "label" => "AllowedInOrganic", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "help" => "AllowedInOrganicHelp"),
 		"note_public" => array("type" => "html", "label" => "NotePublic", "enabled" => "1", 'position' => 100, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
 		"note_private" => array("type" => "html", "label" => "NotePrivate", "enabled" => "1", 'position' => 105, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak"),
@@ -112,6 +115,21 @@ class DoliFarmFertilizer extends CommonObject
 	public $manufacturer;
 	public $registration_number;
 	public $n_content;
+
+	/**
+	 * @var float|string|null	Copper content (%), AGEA field notebook sheet 7
+	 */
+	public $cu_content;
+
+	/**
+	 * @var float|string|null	Efficiency of the nitrogen (coefficient from 0 to 1), AGEA field notebook sheet 6
+	 */
+	public $efficiency;
+
+	/**
+	 * @var float|string|null	Dry matter (%), AGEA field notebook sheet 6
+	 */
+	public $dry_matter;
 	public $p2o5_content;
 	public $k2o_content;
 	public $organic;
@@ -150,11 +168,15 @@ class DoliFarmFertilizer extends CommonObject
 		global $langs;
 
 		$langs->load('dolifarm@dolifarm');
-		foreach (array('n_content', 'p2o5_content', 'k2o_content') as $field) {
+		foreach (array('n_content', 'p2o5_content', 'k2o_content', 'cu_content', 'dry_matter') as $field) {
 			if ($this->$field !== null && $this->$field !== '' && ((float) $this->$field < 0 || (float) $this->$field > 100)) {
 				$this->error = $langs->trans('ErrorNutrientContent', $langs->transnoentitiesnoconv($this->fields[$field]['label']));
 				return -1;
 			}
+		}
+		if ($this->efficiency !== null && $this->efficiency !== '' && ((float) $this->efficiency < 0 || (float) $this->efficiency > 1)) {
+			$this->error = $langs->trans('ErrorFertilizerEfficiency');
+			return -1;
 		}
 		return 1;
 	}
