@@ -154,6 +154,9 @@ class DoliFarmLivestock extends CommonObject
 		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('livestock');
 		$this->initFieldsDefinition();
+		// Drop-down lists only with the farms the user can see
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array('fk_dossier'));
 	}
 
 	/**

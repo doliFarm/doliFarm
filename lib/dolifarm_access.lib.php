@@ -68,6 +68,83 @@ function dolifarmSqlSocFilter($user, $field = 't.fk_soc')
 }
 
 /**
+ * Third parties the user can see, or null when the user is not restricted
+ *
+ * External users are left to Dolibarr, which already limits the lists to their own third party.
+ *
+ * @param	User		$user	User
+ * @return	int[]|null			Ids of the third parties, null if the user sees all the third parties
+ */
+function dolifarmSocVisibleIds($user)
+{
+	global $db;
+	static $cache = array();
+
+	if (!empty($user->socid)) {
+		return null;
+	}
+	$users = dolifarmSocRestrictedUsers($user);
+	if ($users === null) {
+		return null;
+	}
+	if (!isset($cache[$user->id])) {
+		$cache[$user->id] = array();
+		$sql = "SELECT DISTINCT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc";
+		$sql .= " WHERE sc.fk_user IN (".$db->sanitize(implode(',', $users)).")";
+		$resql = $db->query($sql);
+		if ($resql) {
+			while ($obj = $db->fetch_object($resql)) {
+				$cache[$user->id][] = (int) $obj->fk_soc;
+			}
+			$db->free($resql);
+		} else {
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		}
+	}
+	return $cache[$user->id];
+}
+
+/**
+ * Limit the drop-down lists of the link fields of an object (fascicolo, appezzamento, ...) to the farms the user can see
+ *
+ * The filter goes in the type of the field ('integer:Class:path:addcreate:filter'), so it also works when the list is
+ * loaded by ajax/selectobject.php, which builds the object again. The linked object must have a field fk_soc; records
+ * without third party stay in the list, as in the lists of the module.
+ *
+ * @param	CommonObject	$object			Object whose fields are changed (call it from the constructor)
+ * @param	string[]		$fieldnames		Link fields to limit
+ * @return	void
+ */
+function dolifarmRestrictLinkFields($object, $fieldnames)
+{
+	global $user;
+
+	if (!is_object($user) || empty($user->id) || !is_array($object->fields)) {
+		return;
+	}
+	$socids = dolifarmSocVisibleIds($user);
+	if ($socids === null) {
+		return;
+	}
+	$filter = "((t.fk_soc:IN:".(count($socids) ? implode(',', $socids) : '0').") OR (t.fk_soc:IS:NULL))";
+	foreach ($fieldnames as $fieldname) {
+		if (empty($object->fields[$fieldname]['type']) || strpos($object->fields[$fieldname]['type'], 'integer:') !== 0) {
+			continue;
+		}
+		// integer, class, path, add create button, filter
+		$parts = explode(':', $object->fields[$fieldname]['type'], 5);
+		if (count($parts) < 3) {
+			continue;
+		}
+		if (!isset($parts[3]) || $parts[3] === '') {
+			$parts[3] = '0';
+		}
+		$parts[4] = (isset($parts[4]) && $parts[4] !== '') ? '('.$parts[4].') AND '.$filter : $filter;
+		$object->fields[$fieldname]['type'] = implode(':', $parts);
+	}
+}
+
+/**
  * Check if the user can see a third party
  *
  * @param	User		$user		User

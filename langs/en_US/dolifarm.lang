@@ -269,6 +269,7 @@ DOLIFARM_MULTIFARM = Several farms (affiliated)
 DOLIFARM_MULTIFARMHelp = Enables the "Affiliated farm" field on the third parties: an affiliated farm automatically gets a draft dossier and the warehouses AZ-code (inputs and products). Removing the flag closes dossier and warehouses, nothing is deleted.
 DOLIFARM_FARM_SOCID = Farm (single-farm mode)
 DOLIFARM_FARM_SOCIDHelp = Third party of the managed farm. The new dossiers, plots, machines, buildings, livestock, operators and estimates propose it already filled in, with the current dossier; the modules of the suite use it as default farm (for example for the warehouses).
+DOLIFARM_FARM_SOCIDNotFarm = The third party is not of type "Farm": new farm dossiers will not propose it. Change its type in the third party card.
 DolifarmAffiliated = Affiliated farm
 DolifarmAffiliatedHelp = Farm managed by the organisation: creates the dossier and the warehouses of the farm and opens the registers and the field notebook
 DolifarmAffiliatedWarehouse = Farm warehouse

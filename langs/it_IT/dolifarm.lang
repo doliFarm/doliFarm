@@ -500,6 +500,7 @@ DOLIFARM_MULTIFARM = Gestione di più aziende (affiliate)
 DOLIFARM_MULTIFARMHelp = Attiva il campo "Azienda affiliata" sui soggetti terzi: l'azienda affiliata ottiene in automatico il fascicolo in bozza e i magazzini AZ-codice (forniture e prodotti). Togliendo il flag fascicolo e magazzini si chiudono, senza cancellazioni.
 DOLIFARM_FARM_SOCID = Azienda (modalità azienda singola)
 DOLIFARM_FARM_SOCIDHelp = Soggetto terzo dell'azienda gestita. I nuovi fascicoli, appezzamenti, macchine, fabbricati, allevamenti, operatori e stime lo propongono già compilato, insieme al fascicolo in corso; i moduli della suite lo usano come azienda predefinita (per esempio per i magazzini).
+DOLIFARM_FARM_SOCIDNotFarm = Il soggetto terzo non è di tipo "Azienda agricola": i nuovi fascicoli non lo proporranno. Cambiarne il tipo nella scheda del terzo.
 DolifarmAffiliated = Azienda affiliata
 DolifarmAffiliatedHelp = Azienda agricola gestita dall'organizzazione: crea il fascicolo e i magazzini dell'azienda e apre registri e quaderno di campagna
 DolifarmAffiliatedWarehouse = Magazzino azienda

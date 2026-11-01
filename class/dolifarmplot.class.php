@@ -296,6 +296,9 @@ class DoliFarmPlot extends CommonObject
         $this->db = $db;
 		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('plot');
+		// Drop-down lists only with the farms the user can see
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array('fk_dossier'));
 
         if (!getDolGlobalInt('MAIN_SHOW_TECHNICAL_ID') && isset($this->fields['rowid']) && !empty($this->fields['ref'])) {
             $this->fields['rowid']['visible'] = 0;

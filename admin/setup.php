@@ -241,6 +241,14 @@ if (isset($farmsocitem)) {
 		$farmsoc = new Societe($db);
 		if ($farmsoc->fetch(getDolGlobalInt('DOLIFARM_FARM_SOCID')) > 0) {
 			$farmsocitem->fieldOutputOverride = $farmsoc->getNomUrl(1);
+			// The farm dossier accepts only third parties of type "Azienda agricola"
+			$farmtypentid = dolifarmGetTypentId($db, 'TE_FARM');
+			if ($farmtypentid > 0 && (int) $farmsoc->typent_id != $farmtypentid) {
+				$farmsocitem->fieldOutputOverride .= ' '.img_warning($langs->trans('DOLIFARM_FARM_SOCIDNotFarm')).' <span class="warning">'.$langs->trans('DOLIFARM_FARM_SOCIDNotFarm').'</span>';
+				if ($action == 'update') {
+					setEventMessages($langs->trans('DOLIFARM_FARM_SOCIDNotFarm'), null, 'warnings');
+				}
+			}
 		}
 	}
 }
