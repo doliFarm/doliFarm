@@ -1,6 +1,6 @@
 # doliFarm – indicazioni per Claude
 
-Modulo esterno Dolibarr per la gestione dell'azienda agricola: fascicolo aziendale, appezzamenti, macchine, agrofarmaci, colture, stime dei costi. Fa parte della suite doliFarm insieme a doliTrace (tracciabilità e quaderno di campagna), doliAgroPass e doliGas.
+Modulo esterno Dolibarr per la gestione dell'azienda agricola: fascicolo aziendale, appezzamenti, macchine, agrofarmaci, colture, stime dei costi. Fa parte della suite doliFarm insieme a doliTrace (tracciabilità e quaderno di campagna), doliField (dati di campo: sensori, meteo, satellite; in sviluppo), doliAgroPass e doliGas.
 
 ## Regole fondamentali
 
