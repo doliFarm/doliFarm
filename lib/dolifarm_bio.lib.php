@@ -20,7 +20,7 @@
  * \ingroup dolifarm
  * \brief   Organic status of the plots: history of the periods and status at a date
  *
- * The history (table dolifarm_plot_biostatus) has periods CONV, CONVERSION and BIO (Reg. EU 2018/848, annex II
+ * The history (table dolifarm_plot_biostatus) has periods CONV, CONVERSION, BIO and BIODYNAMIC (organic and biodynamic) (Reg. EU 2018/848, annex II
  * part I point 1.7; DM 229771/2022 art. 3: the conversion starts at the date of the notification). A period without
  * end date is still open; adding a period closes the open one on the day before.
  * The status at a date is a code of the dictionary dolifarm_c_biostatus (CONV, BIO_CONV_1..3, BIO_FULL, BIODYNAMIC),
@@ -37,7 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
  */
 function dolifarmBioPeriodStatuses()
 {
-	return array('CONV' => 'BioPeriodConv', 'CONVERSION' => 'BioPeriodConversion', 'BIO' => 'BioPeriodBio');
+	return array('CONV' => 'BioPeriodConv', 'CONVERSION' => 'BioPeriodConversion', 'BIO' => 'BioPeriodBio', 'BIODYNAMIC' => 'BioPeriodBiodynamic');
 }
 
 /**
@@ -102,13 +102,15 @@ function dolifarmBioConversionEnd($period)
  *
  * @param	stdClass	$period		Period
  * @param	int			$date		Date (timestamp)
- * @param	string		$current	Current status of the plot (fk_status_bio), to keep BIODYNAMIC
  * @return	string
  */
-function dolifarmBioPeriodCode($period, $date, $current = '')
+function dolifarmBioPeriodCode($period, $date)
 {
+	if ($period->status == 'BIODYNAMIC') {
+		return 'BIODYNAMIC';
+	}
 	if ($period->status == 'BIO') {
-		return ($current == 'BIODYNAMIC' ? 'BIODYNAMIC' : 'BIO_FULL');
+		return 'BIO_FULL';
 	}
 	if ($period->status == 'CONVERSION') {
 		$years = ((int) $period->conversion_years > 0 ? (int) $period->conversion_years : 2);
@@ -171,7 +173,7 @@ function dolifarmBioStatusAt($db, $plotid, $date, $current = null)
 		return (string) $current;
 	}
 	$period = dolifarmBioPeriodAt($history, $date);
-	return ($period ? dolifarmBioPeriodCode($period, $date, (string) $current) : 'CONV');
+	return ($period ? dolifarmBioPeriodCode($period, $date) : 'CONV');
 }
 
 /**
@@ -198,18 +200,9 @@ function dolifarmBioSync($db, $plotid)
 	if (empty($history)) {
 		return 1;
 	}
-	$current = '';
-	$resql = $db->query("SELECT fk_status_bio FROM ".$db->prefix()."dolifarm_plot WHERE rowid = ".((int) $plotid));
-	if ($resql) {
-		$obj = $db->fetch_object($resql);
-		if ($obj && $obj->fk_status_bio !== null) {
-			$current = (string) $obj->fk_status_bio;
-		}
-		$db->free($resql);
-	}
 	$now = dol_now();
 	$period = dolifarmBioPeriodAt($history, $now);
-	$status = ($period ? dolifarmBioPeriodCode($period, $now, $current) : 'CONV');
+	$status = ($period ? dolifarmBioPeriodCode($period, $now) : 'CONV');
 
 	$convstart = null;
 	$convend = null;
@@ -238,7 +231,7 @@ function dolifarmBioSync($db, $plotid)
  * @param	DoliDB		$db			Database handler
  * @param	User		$user		User
  * @param	int			$plotid		Plot
- * @param	string		$status		CONV, CONVERSION or BIO
+ * @param	string		$status		CONV, CONVERSION, BIO or BIODYNAMIC
  * @param	int			$datestart	Start (timestamp of the day)
  * @param	?int		$years		Years of conversion (CONVERSION only: 2, or 3 for perennial crops)
  * @param	string		$reason		Reason (dolifarmBioPeriodReasons)

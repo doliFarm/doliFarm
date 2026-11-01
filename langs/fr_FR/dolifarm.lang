@@ -595,6 +595,7 @@ BioPeriodStatus = Statut
 BioPeriodConv = Conventionnel
 BioPeriodConversion = En conversion
 BioPeriodBio = Bio
+BioPeriodBiodynamic = Bio et biodynamique
 BioConversionYears = Années de conversion
 BioConversionYearsHelp = 2 ans pour les grandes cultures et le maraîchage, 3 pour les cultures pérennes (vergers, vignes, oliviers)
 BioReason = Motif

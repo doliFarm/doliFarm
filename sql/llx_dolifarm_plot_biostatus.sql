@@ -14,7 +14,7 @@
 -- along with this program.  If not, see https://www.gnu.org/licenses/.
 
 -- History of the organic status of a plot (Reg. EU 2018/848, annex II part I point 1.7; DM 229771/2022 art. 3).
--- status: CONV conventional, CONVERSION in conversion, BIO organic. A period without date_end is still open.
+-- status: CONV conventional, CONVERSION in conversion, BIO organic, BIODYNAMIC organic and biodynamic. A period without date_end is still open.
 -- The status of the plot at a date is read from here by the register (doliTrace).
 CREATE TABLE IF NOT EXISTS llx_dolifarm_plot_biostatus (
 	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,

@@ -654,6 +654,7 @@ BioPeriodStatus = Stato
 BioPeriodConv = Convenzionale
 BioPeriodConversion = In conversione
 BioPeriodBio = Biologico
+BioPeriodBiodynamic = Biologico e biodinamico
 BioConversionYears = Anni di conversione
 BioConversionYearsHelp = 2 anni per seminativi e orticole, 3 per le colture perenni (frutteti, vigneti, oliveti)
 BioReason = Motivo

@@ -619,6 +619,7 @@ BioPeriodStatus = Status
 BioPeriodConv = Conventional
 BioPeriodConversion = In conversion
 BioPeriodBio = Organic
+BioPeriodBiodynamic = Organic and biodynamic
 BioConversionYears = Conversion years
 BioConversionYearsHelp = 2 years for arable and vegetable crops, 3 for perennial crops (orchards, vineyards, olive groves)
 BioReason = Reason
