@@ -259,6 +259,7 @@ DolifarmAffiliatedClosed = Exploitation plus affiliée : entrepôts fermés et d
 ErrorDolifarmAffiliatedDossier = Impossible de créer le dossier de l'exploitation %s
 ErrorDolifarmAffiliatedWarehouse = Impossible de créer l'entrepôt %s
 ErrorDolifarmAffiliatedSync = Tiers enregistré, mais le dossier et les entrepôts de l'exploitation affiliée n'ont pas été mis à jour
+ErrorDolifarmFarmNotAllowed = Vous ne pouvez pas utiliser l'exploitation indiquée dans %s : ce n'est pas un de vos tiers
 
 #
 # EPPO Codes

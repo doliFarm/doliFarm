@@ -531,6 +531,7 @@ DolifarmAffiliatedClosed = Azienda non più affiliata: magazzini chiusi e fascic
 ErrorDolifarmAffiliatedDossier = Impossibile creare il fascicolo aziendale di %s
 ErrorDolifarmAffiliatedWarehouse = Impossibile creare il magazzino %s
 ErrorDolifarmAffiliatedSync = Soggetto terzo salvato, ma fascicolo e magazzini dell'azienda affiliata non sono stati aggiornati
+ErrorDolifarmFarmNotAllowed = Non puoi usare l'azienda indicata in %s: non è tra i tuoi soggetti terzi
 
 #
 # EPPO Codes

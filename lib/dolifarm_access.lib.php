@@ -141,7 +141,70 @@ function dolifarmRestrictLinkFields($object, $fieldnames)
 		}
 		$parts[4] = (isset($parts[4]) && $parts[4] !== '') ? '('.$parts[4].') AND '.$filter : $filter;
 		$object->fields[$fieldname]['type'] = implode(':', $parts);
+		// Checked again on save by dolifarmCheckObjectAccess()
+		$object->fields[$fieldname]['dolifarmrestricted'] = 1;
 	}
+}
+
+/**
+ * Check on save that the user can see the farm of the object and the farms of the objects it links to
+ *
+ * The drop-down lists only show the farms of the user (dolifarmRestrictLinkFields()): this check refuses a value
+ * sent by hand. Called by the trigger of doliFarm on the creation and the modification of the objects of the suite.
+ *
+ * @param	CommonObject	$object		Object being saved
+ * @param	User			$user		User
+ * @return	string						Error message, '' if allowed
+ */
+function dolifarmCheckObjectAccess($object, $user)
+{
+	global $db, $langs;
+
+	$external = (is_object($user) && !empty($user->socid));
+	if (!is_object($user) || empty($user->id) || (!$external && dolifarmSocVisibleIds($user) === null)) {
+		return '';
+	}
+	$langs->load('dolifarm@dolifarm');
+	if (!empty($object->module) && preg_match('/^[a-z]+$/', $object->module)) {
+		$langs->load($object->module.'@'.$object->module);
+	}
+	if (property_exists($object, 'fk_soc') && (int) $object->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $object->fk_soc)) {
+		return $langs->trans('ErrorDolifarmFarmNotAllowed', $langs->transnoentitiesnoconv('ThirdParty'));
+	}
+	if (!is_array($object->fields)) {
+		return '';
+	}
+	foreach ($object->fields as $fieldname => $field) {
+		// External users: Dolibarr limits their lists, the fields are not marked; all the links to objects of the suite are checked
+		$check = !empty($field['dolifarmrestricted']) || ($external && isset($field['type']) && preg_match('/^integer:Doli(Farm|Trace)/', $field['type']));
+		if (!$check || !property_exists($object, $fieldname) || (int) $object->$fieldname <= 0) {
+			continue;
+		}
+		$parts = explode(':', $field['type'], 5);
+		if (count($parts) < 3 || !dol_include_once('/'.$parts[2])) {
+			continue;
+		}
+		$classname = $parts[1];
+		if (!class_exists($classname)) {
+			continue;
+		}
+		$linked = new $classname($db);
+		if (empty($linked->table_element)) {
+			continue;
+		}
+		$sql = "SELECT fk_soc FROM ".$db->prefix().$linked->table_element." WHERE rowid = ".((int) $object->$fieldname);
+		$resql = $db->query($sql);
+		if (!$resql) {
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+			continue;
+		}
+		$obj = $db->fetch_object($resql);
+		$db->free($resql);
+		if ($obj && (int) $obj->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $obj->fk_soc)) {
+			return $langs->trans('ErrorDolifarmFarmNotAllowed', $langs->transnoentitiesnoconv($field['label']));
+		}
+	}
+	return '';
 }
 
 /**

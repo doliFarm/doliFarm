@@ -300,6 +300,7 @@ DolifarmAffiliatedClosed = Farm no longer affiliated: warehouses closed and doss
 ErrorDolifarmAffiliatedDossier = Cannot create the farm dossier of %s
 ErrorDolifarmAffiliatedWarehouse = Cannot create the warehouse %s
 ErrorDolifarmAffiliatedSync = Third party saved, but the dossier and warehouses of the affiliated farm were not updated
+ErrorDolifarmFarmNotAllowed = You cannot use the farm indicated in %s: it is not one of your third parties
 
 #
 # EPPO Codes

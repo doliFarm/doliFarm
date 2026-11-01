@@ -73,6 +73,19 @@ class InterfaceDolifarmTriggers extends DolibarrTriggers
 			return $res > 0 ? 1 : 0;
 		}
 
+		// Objects of doliFarm and doliTrace: the user must see the farm of the object and of the objects it links to
+		// (the drop-down lists only show them, this refuses a value sent by hand). An error cancels the save.
+		if (isModEnabled('dolifarm') && preg_match('/^DOLI(FARM|TRACE)[A-Z]+_(CREATE|MODIFY)$/', $action)) {
+			dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+			$error = dolifarmCheckObjectAccess($object, $user);
+			if ($error !== '') {
+				dol_syslog("Trigger '".$this->name."': ".$action." refused for user ".$user->id.": ".$error, LOG_WARNING);
+				$this->error = $error;
+				$this->errors[] = $error;
+				return -1;
+			}
+		}
+
 		// Codes of the common CRUD (DOLIFARMBUILDING_CREATE: class name) and of the status changes (DOLIFARM_BUILDING_CANCEL: TRIGGER_PREFIX)
 		if (!isModEnabled('dolifarm') || !preg_match('/^DOLIFARM_?[A-Z]+_(CREATE|MODIFY|DELETE|CANCEL|REOPEN|VALIDATE|UNVALIDATE)$/', $action, $reg)) {
 			return 0;
