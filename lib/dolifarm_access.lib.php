@@ -208,6 +208,66 @@ function dolifarmCheckObjectAccess($object, $user)
 }
 
 /**
+ * Value of the filter "Sales representative" of the lists (search_sale): id of the user, -2 for the third parties
+ * without sales representative, 0 for no filter
+ *
+ * @return	int
+ */
+function dolifarmSaleFilterValue()
+{
+	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) {
+		return 0;
+	}
+	$sale = GETPOSTINT('search_sale');
+	return ($sale > 0 || $sale == -2) ? $sale : 0;
+}
+
+/**
+ * SQL filter of a list on the sales representative of the farm
+ *
+ * @param	int		$sale		Value of dolifarmSaleFilterValue()
+ * @param	string	$field		Field of the third party, with the alias of the table (t.fk_soc)
+ * @return	string				SQL to add to the WHERE (" AND ..."), empty without filter
+ */
+function dolifarmSqlSaleFilter($sale, $field = 't.fk_soc')
+{
+	global $db;
+
+	if ($sale == -2) {
+		return " AND NOT EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = ".$field.")";
+	}
+	if ($sale > 0) {
+		return " AND EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = ".$field." AND sc.fk_user = ".((int) $sale).")";
+	}
+	return '';
+}
+
+/**
+ * Field "Sales representative" above a list, as in the list of the third parties
+ *
+ * Shown only to the users who can see the users and when the module Third parties is on.
+ *
+ * @param	int		$sale		Value of dolifarmSaleFilterValue()
+ * @return	string				HTML, empty when not shown
+ */
+function dolifarmSaleFilterHtml($sale)
+{
+	global $db, $langs, $user;
+
+	if (!isModEnabled('societe') || !$user->hasRight('user', 'user', 'lire')) {
+		return '';
+	}
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+	$formother = new FormOther($db);
+	$langs->loadLangs(array('companies', 'commercial'));
+	$out = '<div class="divsearchfield">';
+	$out .= img_picto($langs->trans('ThirdPartiesOfSaleRepresentative'), 'user', 'class="pictofixedwidth"');
+	$out .= $formother->select_salesrepresentatives(($sale ? $sale : ''), 'search_sale', $user, 0, $langs->trans('ThirdPartiesOfSaleRepresentative'), 'maxwidth250 widthcentpercentminusx', 1);
+	$out .= '</div>';
+	return $out;
+}
+
+/**
  * Check if the user can see a third party
  *
  * @param	User		$user		User
