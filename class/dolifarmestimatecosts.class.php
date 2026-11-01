@@ -135,7 +135,7 @@ class DoliFarmEstimateCosts extends CommonObject
 		"duration_min_ha" => array("type" => "int", "label" => "Durationminha", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1",),
 		"cost_std_ha" => array("type" => "double(24,8)", "label" => "Coststdha", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
 		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
-		"note_public" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
+		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
 		"tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
 		"fk_user_creat" => array("type" => "integer:User:user/class/user.class.php", "label" => "UserAuthor", "picto" => "user", "enabled" => "1", 'position' => 60, 'notnull' => 0, "visible" => "-2", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
