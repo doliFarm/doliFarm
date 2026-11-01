@@ -135,17 +135,17 @@ class DoliFarmMachine extends CommonObject
         "label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
         
         "fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 25, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "Fkdossier", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_dossier" => array("type" => "integer:DoliFarmFarmDossier:custom/dolifarm/class/dolifarmfarmdossier.class.php", "label" => "FkDossier", "enabled" => "1", 'position' => 30, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
         // Linked to Dictionary: llx_dolifarm_c_machinetype. Storing CODE.
-        "fk_type" => array("type" => "sellist:dolifarm_c_machinetype:label:code::active=1", "label" => "MachineType", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
+        "fk_type" => array("type" => "sellist:dolifarm_c_machinetype:label:code::active=1", "label" => "MachineTypeLabel", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
         
-        "power_kw" => array("type" => "double(10,2)", "label" => "Powerkw", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
+        "power_kw" => array("type" => "double(10,2)", "label" => "MachinePowerKw", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
         
         // Linked to Dictionary: llx_dolifarm_c_fueltype. Storing CODE.
         "fuel_type" => array("type" => "sellist:dolifarm_c_fueltype:label:code::active=1", "label" => "FuelType", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
         
-        "year_registration" => array("type" => "int", "label" => "Yearregistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
+        "year_registration" => array("type" => "int", "label" => "MachineYearRegistration", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
         "date_revision_next" => array("type" => "date", "label" => "MachineRevisionNext", "enabled" => "1", 'position' => 51, 'notnull' => 0, "visible" => "-1", "help" => "MachineRevisionNextHelp",),
         "date_insurance_end" => array("type" => "date", "label" => "MachineInsuranceEnd", "enabled" => "1", 'position' => 52, 'notnull' => 0, "visible" => "-1", "help" => "MachineInsuranceEndHelp",),
         "date_sprayer_check_end" => array("type" => "date", "label" => "MachineSprayerCheckEnd", "enabled" => "1", 'position' => 53, 'notnull' => 0, "visible" => "-1", "help" => "MachineSprayerCheckEndHelp",),
@@ -163,8 +163,8 @@ class DoliFarmMachine extends CommonObject
         "note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 70, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
         "note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 71, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 
-        "model_pdf" => array("type" => "varchar(255)", "label" => "ModelPDF", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-5",),
-        "last_main_doc" => array("type" => "varchar(255)", "label" => "LastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-5",),
+        "model_pdf" => array("type" => "varchar(255)", "label" => "Model", "enabled" => "1", 'position' => 910, 'notnull' => 0, "visible" => "-5",),
+        "last_main_doc" => array("type" => "varchar(255)", "label" => "MachineLastMainDoc", "enabled" => "1", 'position' => 920, 'notnull' => 0, "visible" => "-5",),
     );
     public $rowid;
     public $ref;

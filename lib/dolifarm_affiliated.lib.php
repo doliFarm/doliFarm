@@ -220,7 +220,14 @@ function dolifarmAffiliatedWarehouse($db, $ref, $parentid, $soc, $labelkey, $use
 
 	$warehouse = new Entrepot($db);
 	if ($warehouse->fetch(0, $ref) > 0) {
-		return (dolifarmAffiliatedOpenWarehouse($db, $warehouse, $user) < 0) ? -1 : $warehouse->id;
+		$wasclosed = ($warehouse->statut == Entrepot::STATUS_CLOSED);
+		if (dolifarmAffiliatedOpenWarehouse($db, $warehouse, $user) < 0) {
+			return -1;
+		}
+		if ($wasclosed) {
+			$messages[] = $langs->trans('DolifarmAffiliatedWarehouseReopened', $ref);
+		}
+		return $warehouse->id;
 	}
 
 	$warehouse->label = $ref;
