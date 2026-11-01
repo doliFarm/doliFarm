@@ -89,3 +89,8 @@ UPDATE llx_dolifarm_c_fert_type SET agea_value = 'acque reflue ai sensi del decr
 ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN cu_content double(8,2);
 ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN efficiency double(8,2);
 ALTER TABLE llx_dolifarm_fertilizer ADD COLUMN dry_matter double(8,2);
+
+-- Buildings: warehouse kept in the building, for the cadastral data of the storage sites (sheet 9).
+-- No foreign key on llx_entrepot: the table exists only when the Stock module has been enabled.
+ALTER TABLE llx_dolifarm_building ADD COLUMN fk_warehouse integer;
+ALTER TABLE llx_dolifarm_building ADD INDEX idx_dolifarm_building_fk_warehouse (fk_warehouse);
