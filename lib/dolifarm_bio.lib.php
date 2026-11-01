@@ -58,6 +58,36 @@ function dolifarmBioPeriodReasons()
 }
 
 /**
+ * Years of conversion proposed for a plot (Reg. EU 2018/848, annex II part I point 1.7.1)
+ *
+ * 3 years for perennial crops other than forage (orchards, vineyards, olive groves, nuts: crop types CAT_FRUIT
+ * and CAT_NUT), 2 years for annual crops, grassland and perennial forage. The crop is the one of the last crop plan
+ * of the plot in doliTrace; without doliTrace or crop plan, 2 years. The user can change the value.
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	int		$plotid		Plot
+ * @return	int					2 or 3
+ */
+function dolifarmBioDefaultConversionYears($db, $plotid)
+{
+	if (!isModEnabled('dolitrace')) {
+		return 2;
+	}
+	$sql = "SELECT c.crop_type FROM ".$db->prefix()."dolitrace_cropplan as cp";
+	$sql .= " INNER JOIN ".$db->prefix()."dolifarm_crops as c ON c.rowid = cp.fk_crop";
+	$sql .= " WHERE cp.fk_plot = ".((int) $plotid)." AND cp.status IN (1, 2)";
+	$sql .= " ORDER BY cp.date_start DESC, cp.rowid DESC";
+	$resql = $db->query($sql.$db->plimit(1, 0));
+	if (!$resql) {
+		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		return 2;
+	}
+	$obj = $db->fetch_object($resql);
+	$db->free($resql);
+	return ($obj && in_array((string) $obj->crop_type, array('CAT_FRUIT', 'CAT_NUT')) ? 3 : 2);
+}
+
+/**
  * Periods of the history of a plot, oldest first
  *
  * @param	DoliDB	$db			Database handler

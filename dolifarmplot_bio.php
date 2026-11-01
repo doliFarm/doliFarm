@@ -307,7 +307,7 @@ if ($permissiontoadd) {
 	print '<td>'.$form->selectarray('status', $liststatus, ($poststatus ? $poststatus : 'CONVERSION'), 0, 0, 0, '', 0, 0, 0, '', 'maxwidth150').'</td>';
 	print '<td class="nowraponall">'.$langs->trans('DateStart').' '.$form->selectDate($postdate, 'date_start', 0, 0, 0, '', 1, 0).'</td>';
 	print '<td class="nowraponall">'.$form->textwithpicto($langs->trans('BioConversionYears'), $langs->trans('BioConversionYearsHelp'));
-	print ' <input type="number" min="1" max="3" step="1" name="conversion_years" class="width50" value="'.($postyears > 0 ? $postyears : 2).'"></td>';
+	print ' <input type="number" min="1" max="3" step="1" name="conversion_years" class="width50" value="'.($postyears > 0 ? $postyears : dolifarmBioDefaultConversionYears($db, $object->id)).'"></td>';
 	print '<td>'.$form->selectarray('reason', $listreason, GETPOST('reason', 'aZ09'), 1, 0, 0, '', 0, 0, 0, '', 'maxwidth200').'</td>';
 	print '<td><input type="text" name="reference" class="minwidth100" maxlength="128" placeholder="'.dol_escape_htmltag($langs->trans('BioReference')).'" value="'.dol_escape_htmltag(GETPOST('reference', 'alphanohtml')).'">';
 	print ' <input type="text" name="note" class="minwidth100" maxlength="255" placeholder="'.dol_escape_htmltag($langs->trans('Note')).'" value="'.dol_escape_htmltag(GETPOST('note', 'alphanohtml')).'"></td>';
