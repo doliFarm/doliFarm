@@ -1,5 +1,33 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.4.0
+
+Produzione biologica, mezzi tecnici e dati AGEA del quaderno di campagna. È la versione richiesta da doliTrace 1.2.0: aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo (tabelle, colonne, dizionari, extrafield e menu nuovi). Requisito minimo PHP 8.2 e Dolibarr 23; provato su PHP 8.4, MySQL 8.4 e Dolibarr 24.0.2.
+
+### Produzione biologica
+- Appezzamento: storia dello stato bio (convenzionale, conversione, biologico, biodinamico) con motivo e riferimento, stato alla data, anni di conversione proposti dalla coltura (3 per frutteti, vigneti e frutta a guscio).
+- Agrofarmaci: verifica per l'uso in biologico su tre livelli (sostanze attive nell'allegato I del Reg. UE 2021/1165 con le condizioni, autorizzazione in Italia, usi dell'etichetta), esito Ammesso / Non ammesso / Da verificare, conferma manuale con data e utente; contenuto di rame.
+- Fertilizzanti: natura del prodotto, categoria dell'allegato II del Reg. UE 2021/1165, data della verifica, rame, efficienza dell'azoto, sostanza secca, densità dei liquidi.
+- Prodotti: stato bio delle sementi e del materiale di moltiplicazione (biologico, in conversione, non biologico).
+- Soggetti terzi: certificato bio, organismo di controllo e scadenza, anche nel widget delle scadenze.
+- Magazzini: "Dedicato a (biologico)" per separare i prodotti bio, in conversione e non bio.
+
+### Mezzi tecnici
+- Catalogo dei prodotti fitosanitari del Ministero della Salute (open data): sincronizzazione da Setup → Prodotti fitosanitari, cron settimanale disattivato di default; avvisi per prodotti revocati o sospesi.
+- Usi autorizzati dell'agrofarmaco (coltura e avversità EPPO, dose, intervallo di sicurezza e numero massimo di trattamenti per coltura), con i gruppi EPPO (es. agrumi) che coprono le loro specie; colture e avversità cercate su tutto il database EPPO.
+- Lettura degli usi dal SIAN su richiesta, un prodotto alla volta: proposte da confermare, corrispondenze SIAN → EPPO salvate, etichetta PDF nei Documenti.
+- Gruppi del modo d'azione FRAC/IRAC/HRAC e numero massimo di trattamenti per ciclo.
+- Pagina "Registro dei mezzi tecnici" con la verifica bio di agrofarmaci e fertilizzanti.
+
+### Quaderno di campagna AGEA
+- Macchine: certificato e data del controllo funzionale dell'irroratrice; fabbricati con indirizzo e magazzino; voci AGEA nei dizionari; tipi di operazione per gli eventi colturali.
+
+### Altro
+- Visibilità per commerciale anche negli elenchi a discesa e filtro "Commerciale" facoltativo nelle liste; controllo lato server dell'azienda al salvataggio.
+- Home: widget agricoli e gruppi della Vista globale.
+- Licenza AGPL-3.0 o successiva, titolare Luigi Grillo - doliFarm.com.
+- Pulizia: file SQL non usati, etichette delle note, traduzioni en/fr, pacchetto.
+
 ## 1.3.0
 
 Visibilità delle aziende per commerciale e modalità azienda unica. È la versione richiesta da doliTrace 1.1.0 (registro dei trattamenti): aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo.
