@@ -116,7 +116,7 @@ class modDolifarm extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				//   '/dolifarm/js/dolifarm.js.php',
+				'/dolifarm/js/dolifarm_tour.js.php',	// Guided tours, active only on the pages that have one
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
@@ -637,6 +637,22 @@ class modDolifarm extends DolibarrModules
 			'user' => 2, // 0=Menu for internal users, 1=external users, 2=both
 		);
 		/* END MODULEBUILDER TOPMENU */
+		// Getting started: steps of the first setup with their status and the guided tours
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'type' => 'left',
+			'titre' => 'StartTitle',
+			'prefix' => img_picto('', 'fa-flag-checkered', 'class="paddingright pictofixedwidth valignmiddle"'),
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarm_start',
+			'url' => '/dolifarm/dolifarm_start.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '1',
+			'target' => '',
+			'user' => 0,
+		);
 
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMFARMDOSSIER */
 		$this->menu[$r++] = array(
