@@ -342,7 +342,15 @@ class DoliFarmSianReader
 				continue;
 			}
 			$eppo = dolifarmEppoFetch($this->db, $code);
-			if (self::saveMap($this->db, 'pest', $code, $label, $eppo ? $eppo->eppocode : '', 0, false) < 0) {
+			$proposal = ($eppo ? $eppo->eppocode : '');
+			// A code disabled by EPPO: the code that replaces it, when it is active
+			if ($eppo && empty($eppo->is_active) && !empty($eppo->replacedby)) {
+				$replacement = dolifarmEppoFetch($this->db, (string) $eppo->replacedby);
+				if ($replacement && !empty($replacement->is_active)) {
+					$proposal = $replacement->eppocode;
+				}
+			}
+			if (self::saveMap($this->db, 'pest', $code, $label, $proposal, 0, false) < 0) {
 				return $this->dbFail();
 			}
 			$this->addPestCode($code, $label);
