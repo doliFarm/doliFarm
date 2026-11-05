@@ -30,7 +30,7 @@
  */
 function dolifarmplotPrepareHead($object)
 {
-	global $db, $langs, $conf;
+	global $db, $langs, $conf, $user;
 
 	$langs->load("dolifarm@dolifarm");
 
@@ -62,6 +62,19 @@ function dolifarmplotPrepareHead($object)
 	}
 	$head[$h][2] = 'bio';
 	$h++;
+
+	// History of the production plans (doliTrace)
+	dol_include_once('/dolifarm/lib/dolifarm_plothistory.lib.php');
+	if (dolifarmPlotHistoryAvailable($user)) {
+		$nbPlans = dolifarmPlotCountCropPlans($db, (int) $object->id);
+		$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmplot_cropplans.php", 1), ['id' => $object->id]);
+		$head[$h][1] = $langs->trans("PlotCropPlansTab");
+		if ($nbPlans > 0) {
+			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbPlans.'</span>';
+		}
+		$head[$h][2] = 'cropplans';
+		$h++;
+	}
 
 	if ($showtabofpagecontact) {
 		$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmplot_contact.php", 1), ['id' => $object->id]);
