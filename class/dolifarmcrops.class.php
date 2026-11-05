@@ -137,7 +137,9 @@ class DoliFarmCrops extends CommonObject
 		"family" => array("type" => "varchar(128)", "label" => "Family", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
 		"variety" => array("type" => "varchar(128)", "label" => "Variety", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
 		"crop_type" => array("type" => "varchar(32)", "label" => "Croptype", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
-		"planting_unit" => array("type" => "varchar(32)", "label" => "Plantingunit", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
+		// Unit of the planting density (a rate per surface, not a unit of the dictionary "Units"): the keys are the values saved
+		"planting_unit" => array("type" => "select", "label" => "Plantingunit", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1", "help" => "PlantingUnitHelp",
+			"arrayofkeyval" => array('kg/ha' => 'PlantingUnitKgHa', 'q/ha' => 'PlantingUnitQHa', 'seeds/ha' => 'PlantingUnitSeedsHa', 'seeds/m2' => 'PlantingUnitSeedsM2', 'plants/ha' => 'PlantingUnitPlantsHa', 'plants/m2' => 'PlantingUnitPlantsM2'),),
 		"estimated_yield_std" => array("type" => "double(24,8)", "label" => "Estimatedyieldstd", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
 		"status" => array("type" => "int", "label" => "Status", "enabled" => "1", 'position' => 500, 'notnull' => 0, "visible" => "-1",),
 		"note_private" => array("type" => "text", "label" => "NotePrivate", "enabled" => "1", 'position' => 65, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),

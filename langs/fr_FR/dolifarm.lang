@@ -1026,3 +1026,13 @@ DolifarmProcessorWarehouseHelp = Créé par doliFarm quand le transformateur est
 DolifarmAffiliatedWarehouseClosed = Entrepôt %s fermé
 FarmSummaryStock = %s unités, valeur %s
 FarmSummaryBioCert = Certification bio
+
+# Planting density units of the crops
+PlantingUnitHelp = Unité de la densité de plantation ou de semis de la culture
+PlantingUnitKgHa = kg de semence par hectare (kg/ha)
+PlantingUnitQHa = quintaux par hectare (q/ha, ex. tubercules)
+PlantingUnitSeedsHa = graines par hectare
+PlantingUnitSeedsM2 = graines par m²
+PlantingUnitPlantsHa = plants par hectare
+PlantingUnitPlantsM2 = plants par m²
+Plantingunit = Unité de plantation

@@ -1050,3 +1050,13 @@ DolifarmProcessorWarehouseHelp = Created by doliFarm when the processor is affil
 DolifarmAffiliatedWarehouseClosed = Warehouse %s closed
 FarmSummaryStock = %s units, value %s
 FarmSummaryBioCert = Organic certification
+
+# Planting density units of the crops
+PlantingUnitHelp = Unit of the planting or sowing density of the crop
+PlantingUnitKgHa = kg of seed per hectare (kg/ha)
+PlantingUnitQHa = quintals per hectare (q/ha, e.g. tubers)
+PlantingUnitSeedsHa = seeds per hectare
+PlantingUnitSeedsM2 = seeds per m²
+PlantingUnitPlantsHa = plants per hectare
+PlantingUnitPlantsM2 = plants per m²
+Plantingunit = Planting unit
