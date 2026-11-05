@@ -266,7 +266,8 @@ class modDolifarm extends DolibarrModules
                 'dolifarm_c_operation_type', // [NUOVO] Tabella Tipi Operazione
                 'dolifarm_c_paying_agency',
                 'dolifarm_c_livestock_species',
-                'dolifarm_c_fert_type'
+                'dolifarm_c_fert_type',
+                'dolifarm_c_biocontrolbody'
             ),
             
             // Label of tables
@@ -278,7 +279,8 @@ class modDolifarm extends DolibarrModules
                 'DictionaryOperationType',   // [NUOVO] Chiave da tradurre in dolifarm.lang
                 'DictionaryPayingAgency',
                 'DictionaryLivestockSpecies',
-                'DictionaryFertilizerType'
+                'DictionaryFertilizerType',
+                'DictionaryBioControlBody'
             ),
             
             // Request to select fields
@@ -290,7 +292,8 @@ class modDolifarm extends DolibarrModules
                 'SELECT rowid, code, label, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_operation_type',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_paying_agency',
                 'SELECT rowid, code, label, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_livestock_species',
-                'SELECT rowid, code, label, fert_group, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type'
+                'SELECT rowid, code, label, fert_group, agea_value, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_fert_type',
+                'SELECT rowid, code, label, acronym, address, zip, town, country_code, phone, email, url, active, position FROM '.MAIN_DB_PREFIX.'dolifarm_c_biocontrolbody'
             ),
             
             // Sort order
@@ -302,7 +305,8 @@ class modDolifarm extends DolibarrModules
                 'position ASC, code ASC', // [NUOVO]
                 'position ASC, code ASC',
                 'position ASC, code ASC',
-                'position ASC, code ASC'
+                'position ASC, code ASC',
+                'code ASC'
             ),
             
             // List of fields (result of select to show dictionary)
@@ -314,7 +318,8 @@ class modDolifarm extends DolibarrModules
                 'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label,fert_group,agea_value'
+                'code,label,fert_group,agea_value',
+                'code,label,acronym,address,zip,town,country_code,phone,email,url'
             ),
             
             // List of fields (list of fields to edit a record)
@@ -326,7 +331,8 @@ class modDolifarm extends DolibarrModules
                 'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label,fert_group,agea_value'
+                'code,label,fert_group,agea_value',
+                'code,label,acronym,address,zip,town,country_code,phone,email,url'
             ),
             
             // List of fields (list of fields for insert)
@@ -338,14 +344,15 @@ class modDolifarm extends DolibarrModules
                 'code,label,agea_value',
                 'code,label',
                 'code,label',
-                'code,label,fert_group,agea_value'
+                'code,label,fert_group,agea_value',
+                'code,label,acronym,address,zip,town,country_code,phone,email,url'
             ),
             
             // Name of columns with primary key (try to always name it 'rowid')
-            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
+            'tabrowid' => array('rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid', 'rowid'),
             
             // Condition to show each dictionary (Always 1 if the module is active)
-            'tabcond' => array(1, 1, 1, 1, 1, 1, 1, 1),
+            'tabcond' => array(1, 1, 1, 1, 1, 1, 1, 1, 1),
             
             // Tooltip for every fields of dictionaries
             'tabhelp' => array(
@@ -356,7 +363,8 @@ class modDolifarm extends DolibarrModules
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'agea_value' => $langs->trans('AgeaValueHelp')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
                 array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label')),
-                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'fert_group' => $langs->trans('FertGroupHelp'), 'agea_value' => $langs->trans('AgeaValueHelp'))
+                array('code' => $langs->trans('Code'), 'label' => $langs->trans('Label'), 'fert_group' => $langs->trans('FertGroupHelp'), 'agea_value' => $langs->trans('AgeaValueHelp')),
+                array('code' => $langs->trans('BioBodyCodeHelp'), 'label' => $langs->trans('Label'), 'acronym' => $langs->trans('BioBodyAcronymHelp'), 'country_code' => $langs->trans('CountryCode'))
             )
         );
 
@@ -1205,6 +1213,15 @@ class modDolifarm extends DolibarrModules
 				$this->error = $extrafields->error;
 				return -1;
 			}
+		}
+		// Organic control body of the certificate (and code of a third party that is a body): from the official list
+		// (dictionary dolifarm_c_biocontrolbody). The free texts of older versions get the matching code first.
+		dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+		dolifarmBioBodyMigrate($this->db);
+		$result = $extrafields->update('dolifarm_bio_body', 'DolifarmBioBody', 'sellist', '', 'thirdparty', 0, 0, 1002, array('options' => array('dolifarm_c_biocontrolbody:code|label:code::active=1' => null)), 1, '', '1', 'DolifarmBioBodyHelp', '', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
 		}
 		// Organic production: warehouse dedicated to one organic status (separation, Reg. EU 2018/848 art. 9.10)
 		$result = $extrafields->addExtraField('dolifarm_bio_dedicated', "DolifarmBioDedicated", 'select', 1000, '', 'entrepot', 0, 0, '', array('options' => array('BIO' => 'SeedStatusBio', 'INCONV' => 'SeedStatusInConversion', 'NONBIO' => 'SeedStatusNonBio')), 1, '', '1', 'DolifarmBioDedicatedHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && isModEnabled("stock")');

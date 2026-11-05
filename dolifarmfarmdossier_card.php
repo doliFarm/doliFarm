@@ -208,6 +208,14 @@ if (empty($reshook)) {
 		$object->note_private = GETPOST('note_private', 'restricthtml');
 	}
 
+	// Organic control body chosen from the official list: its third party, created when needed
+	if (in_array($action, array('add', 'update')) && $permissiontoadd && !$cancel) {
+		dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+		if (dolifarmBioBodyHandlePost($db, $user, 'fk_soc_bio_body') < 0) {
+			$action = ($action == 'add' ? 'create' : 'edit');
+		}
+	}
+
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
@@ -300,6 +308,10 @@ if ($action == 'create') {
 
 	print '<table class="border centpercent tableforfieldcreate">'."\n";
 
+	// Organic control body: third parties of the bodies and official list
+	dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+	dolifarmBioBodyPrepareField($object, 'fk_soc_bio_body');
+
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
@@ -367,6 +379,10 @@ if (($id || $ref) && $action == 'edit') {
 	print dol_get_fiche_head();
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	// Organic control body: third parties of the bodies and official list
+	dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+	dolifarmBioBodyPrepareField($object, 'fk_soc_bio_body');
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';

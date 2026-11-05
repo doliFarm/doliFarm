@@ -710,6 +710,20 @@ if (empty($setupnotempty)) {
 	print '<br>'.$langs->trans("NothingToSetup");
 }
 
+// Organic control bodies: list of the dictionary, and certificates of third parties with a text not in the list
+dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+print '<br>';
+print load_fiche_titre($langs->trans('BioBodySetupTitle'), '', '');
+print '<div class="opacitymedium">'.$langs->trans('BioBodySetupHelp', count(dolifarmBioBodyList($db)), '<a href="'.DOL_URL_ROOT.'/admin/dict.php?mainmenu=home">'.$langs->trans('Dictionaries').'</a>').'</div>';
+$unmatched = dolifarmBioBodyUnmatched($db);
+if (count($unmatched)) {
+	$links = array();
+	foreach ($unmatched as $socid => $row) {
+		$links[] = '<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.((int) $socid).'">'.dol_escape_htmltag($row['name']).'</a> ("'.dol_escape_htmltag($row['text']).'")';
+	}
+	print '<div class="warning">'.$langs->trans('BioBodyUnmatched', count($unmatched)).' '.implode(', ', $links).'</div>';
+}
+
 // Page end
 print dol_get_fiche_end();
 

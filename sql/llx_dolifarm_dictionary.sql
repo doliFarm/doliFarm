@@ -267,3 +267,48 @@ INSERT IGNORE INTO llx_dolifarm_c_fert_type (code, label, active, position) VALU
 
 -- Label of an operation type already installed: mowing and shredding are distinct in the AGEA list
 UPDATE llx_dolifarm_c_operation_type SET label = 'Sfalcio' WHERE code = 'MOWING' AND label IN ('Sfalerciatura / Trinciatura', 'Sfalciatura / Trinciatura');
+
+-- Organic control bodies authorised in Italy (official code IT-BIO-xxx), with the data of the national head office.
+-- Source: list of the authorised control bodies of the Regione Emilia-Romagna, update of 03/10/2024 (from the MASAF
+-- authorisations). The administrator updates it in Setup > Dictionaries; a body chosen in a dossier or an inspection
+-- becomes a third party of type "Organic control body" with these data.
+CREATE TABLE IF NOT EXISTS llx_dolifarm_c_biocontrolbody (
+    rowid        INTEGER AUTO_INCREMENT PRIMARY KEY,
+    code         VARCHAR(32) NOT NULL,
+    label        VARCHAR(255) NOT NULL,
+    acronym      VARCHAR(64) DEFAULT NULL,
+    address      VARCHAR(255) DEFAULT NULL,
+    zip          VARCHAR(25) DEFAULT NULL,
+    town         VARCHAR(100) DEFAULT NULL,
+    country_code VARCHAR(2) DEFAULT 'IT',
+    phone        VARCHAR(32) DEFAULT NULL,
+    email        VARCHAR(128) DEFAULT NULL,
+    url          VARCHAR(255) DEFAULT NULL,
+    active       TINYINT DEFAULT 1,
+    module       VARCHAR(32) DEFAULT NULL,
+    position     INTEGER DEFAULT 0,
+    UNIQUE INDEX uk_dolifarm_c_biocontrolbody_code (code)
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO llx_dolifarm_c_biocontrolbody (code, label, acronym, address, zip, town, country_code, phone, email, url, active, position) VALUES
+('IT-BIO-002', 'Codex S.r.l.', 'CODEX', 'Via G. Amendola, 14', '95048', 'Scordia', 'IT', '095 650634', 'codex@codexsrl.it', 'www.codexsrl.it', 1, 10),
+('IT-BIO-004', 'Suolo e Salute S.r.l.', 'Suolo e Salute', 'Via P. Borsellino, 12/B', '61032', 'Fano', 'IT', '0721 860543', 'info@suoloesalute.it', 'www.suoloesalute.it', 1, 20),
+('IT-BIO-005', 'BIOS S.r.l.', 'BIOS', 'Via Montello, 6', '36063', 'Marostica', 'IT', '0424 471125', 'info@certbios.it', 'www.certbios.it', 1, 30),
+('IT-BIO-006', 'Istituto per la Certificazione Etica e Ambientale', 'ICEA', 'Via Giovanni Brugnoli, 15', '40122', 'Bologna', 'IT', '051 272986', 'icea@icea.info', 'www.icea.it', 1, 40),
+('IT-BIO-007', 'Bioagricert S.r.l.', 'Bioagricert', 'Via dei Macabraccia, 8/3-4-5', '40033', 'Casalecchio di Reno', 'IT', '051 562158', 'info@bioagricert.org', 'www.bioagricert.org', 1, 50),
+('IT-BIO-008', 'Ecogruppo Italia S.r.l.', 'Ecogruppo Italia', 'Via Siracusa snc', '95037', 'San Giovanni La Punta', 'IT', '095 8256464', 'info@ecogruppoitalia.it', 'www.ecogruppoitalia.it', 1, 60),
+('IT-BIO-009', 'CCPB S.r.l.', 'CCPB', 'Viale Masini, 36', '40126', 'Bologna', 'IT', '051 6089811', 'ccpb@ccpb.it', 'www.ccpb.it', 1, 70),
+('IT-BIO-012', 'Sidel S.p.A.', 'Sidel', 'Via Tosarelli, 362', '40055', 'Villanova di Castenaso', 'IT', '051 0403611', 'segreteria.bio@sidelitalia.it', 'www.sidelitalia.it', 1, 80),
+('IT-BIO-013', 'ABCert S.r.l.', 'ABCert', 'Zona industriale, 1/5', '39011', 'Lana', 'IT', '0473 864500', 'info@abcert.it', 'www.abcert.it', 1, 90),
+('IT-BIO-014', 'QCertificazioni S.r.l.', 'QCertificazioni', 'Via Paolo Fraiese, 37', '53100', 'Siena', 'IT', '0577 327234', 'lettera@qc.bureauveritas.com', 'www.qcertificazioni.it', 1, 100),
+('IT-BIO-015', 'Valoritalia S.r.l.', 'Valoritalia', 'Via Venti Settembre, 98/G', '00187', 'Roma', 'IT', '0141 436915', 'biologico@valoritalia.it', 'www.valoritalia.it', 1, 110),
+('IT-BIO-016', 'Siquria S.p.A.', 'Siquria', 'Via Pigafetta, 47', '37047', 'San Bonifacio', 'IT', '045 4857514', 'info@siquria.it', 'www.siquria.it', 1, 120),
+('IT-BIO-017', 'CEVIQ S.r.l.', 'CEVIQ', 'Via Bortolossi, 1', '33040', 'Pradamano', 'IT', '0432 510619', 'info@ceviq.it', 'www.ceviq.it', 1, 130),
+('IT-BIO-018', 'RINA Agrifood S.p.A.', 'RINA Agrifood', 'Viale Cesare Pavese, 305', '00144', 'Roma', 'IT', '06 54228675', 'biologico@rina.org', 'www.rina.org', 1, 140),
+('IT-BIO-019', 'Istituto Nord Ovest Qualità Soc. Coop.', 'INOQ', 'Piazza Carlo Alberto Grosso, 82', '12033', 'Moretta', 'IT', '0172 911323', 'bio@inoq.it', 'www.inoq.it', 1, 150),
+('IT-BIO-020', 'Dipartimento di Qualità Agroalimentare S.r.l.', 'DQA', 'Via Nazionale, 89/A', '00161', 'Roma', 'IT', '06 85451246', 'info@dqacertificazioni.it', 'www.dqacertificazioni.it', 1, 160),
+('IT-BIO-021', 'CSQA Certificazioni S.r.l.', 'CSQA', 'Via S. Gaetano, 74', '36016', 'Thiene', 'IT', '0445 313011', 'csqa@csqa.it', 'www.csqa.it', 1, 170),
+('IT-BIO-022', 'Ambiente Sostenibilità e Territorio S.r.l.', 'A.S.TER.', 'Via Ravegnana, 126', '47122', 'Forlì', 'IT', '0543 1796986', 'info@aster.bio', 'www.aster.bio', 1, 180),
+('IT-BIO-023', 'Qualitaly S.r.l.', 'Qualitaly', 'Via Case Sparse, 2', '29010', 'Castelvetro Piacentino', 'IT', '0523 815106', 'info@qualitaly.bio', 'www.qualitaly.bio', 1, 190),
+('IT-BIO-001BZ', 'Bio Garantie S.r.l. (solo Provincia di Bolzano)', 'Bio Garantie', 'Troyenbachstraße, 1E', '39030', 'Vandoies', 'IT', '+43 5 9292 3100', 'suedtirol@bio-garantie.it', 'www.bio-garantie.it', 1, 200),
+('IT-BIO-003BZ', 'QC&I GmbH (solo Provincia di Bolzano)', 'QC&I', 'Gleuelerstrasse, 286', '50935', 'Köln', 'DE', '+49 6551 147641', 'qci.koeln@qci.de', 'www.qci.de', 1, 210);
