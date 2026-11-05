@@ -162,42 +162,48 @@ dol_banner_tab($object, 'socid', $linkback, ($user->socid ? 0 : 1), 'rowid', 'no
 print '<div class="underbanner clearboth"></div>';
 print dol_get_fiche_end();
 
-if (!dolifarmIsManagedFarm($socid)) {
+// A processor has no dossier, land, means or production plans: warehouses, organic certificate, expiries, inspections
+$isprocessor = ($object->typent_code == 'TE_PROCESSOR');
+if (!dolifarmIsManagedFarm($socid, true)) {
 	print info_admin($langs->trans('FarmSummaryNotManaged'), 0, 0, 'warning');
 }
+$object->fetch_optionals();
 
 print '<div class="fichecenter"><div class="fichehalfleft">';
 
 // Dossier
-$dossierid = dolifarmGetFarmDossier($db, $socid);
-print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
-$printTitle($langs->trans('DoliFarmFarmDossier'), 'fa-folder-open', dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1).'?search_fk_soc='.$socid);
-if ($dossierid > 0) {
-	$dossier = new DoliFarmFarmDossier($db);
-	$dossier->fetch($dossierid);
-	print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('Ref').'</td><td>'.$dossier->getNomUrl(1).' '.$dossier->getLibStatut(5).'</td></tr>';
-	foreach (array('paying_agency', 'sheet_number', 'date_signature', 'date_validity_end', 'fk_soc_caa', 'ote_code', 'fk_soc_bio_body', 'date_bio_membership') as $key) {
-		if ($dossier->$key === null || $dossier->$key === '' || (in_array($key, array('fk_soc_caa', 'fk_soc_bio_body')) && (int) $dossier->$key <= 0)) {
-			continue;
+$dossierid = ($isprocessor ? 0 : dolifarmGetFarmDossier($db, $socid));
+$dossier = null;
+if (!$isprocessor) {
+	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+	$printTitle($langs->trans('DoliFarmFarmDossier'), 'fa-folder-open', dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1).'?search_fk_soc='.$socid);
+	if ($dossierid > 0) {
+		$dossier = new DoliFarmFarmDossier($db);
+		$dossier->fetch($dossierid);
+		print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('Ref').'</td><td>'.$dossier->getNomUrl(1).' '.$dossier->getLibStatut(5).'</td></tr>';
+		foreach (array('paying_agency', 'sheet_number', 'date_signature', 'date_validity_end', 'fk_soc_caa', 'ote_code', 'fk_soc_bio_body', 'date_bio_membership') as $key) {
+			if ($dossier->$key === null || $dossier->$key === '' || (in_array($key, array('fk_soc_caa', 'fk_soc_bio_body')) && (int) $dossier->$key <= 0)) {
+				continue;
+			}
+			$value = $dossier->showOutputField($dossier->fields[$key], $key, $dossier->$key, '');
+			if ($key == 'date_validity_end') {
+				$value .= ' '.dolifarmExpiryBadge($dossier->$key, 0);
+			}
+			print '<tr class="oddeven"><td>'.$langs->trans($dossier->fields[$key]['label']).'</td><td>'.$value.'</td></tr>';
 		}
-		$value = $dossier->showOutputField($dossier->fields[$key], $key, $dossier->$key, '');
-		if ($key == 'date_validity_end') {
-			$value .= ' '.dolifarmExpiryBadge($dossier->$key, 0);
+		print '<tr class="oddeven"><td colspan="2" class="right"><a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_document.php', 1).'?id='.$dossierid.'">'.img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans('FarmSummaryDossierPdf').'</a></td></tr>';
+	} else {
+		print '<tr class="oddeven"><td colspan="2"><span class="opacitymedium">'.$langs->trans('FarmSummaryNoDossier').'</span>';
+		if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write')) {
+			print ' <a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?action=create&fk_soc='.$socid.'">'.img_picto('', 'add', 'class="pictofixedwidth"').$langs->trans('New').'</a>';
 		}
-		print '<tr class="oddeven"><td>'.$langs->trans($dossier->fields[$key]['label']).'</td><td>'.$value.'</td></tr>';
+		print '</td></tr>';
 	}
-	print '<tr class="oddeven"><td colspan="2" class="right"><a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_document.php', 1).'?id='.$dossierid.'">'.img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans('FarmSummaryDossierPdf').'</a></td></tr>';
-} else {
-	print '<tr class="oddeven"><td colspan="2"><span class="opacitymedium">'.$langs->trans('FarmSummaryNoDossier').'</span>';
-	if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'write')) {
-		print ' <a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?action=create&fk_soc='.$socid.'">'.img_picto('', 'add', 'class="pictofixedwidth"').$langs->trans('New').'</a>';
-	}
-	print '</td></tr>';
+	print '</table></div><br>';
 }
-print '</table></div><br>';
 
 // Land
-if ($user->hasRight('dolifarm', 'dolifarmplot', 'read')) {
+if (!$isprocessor && $user->hasRight('dolifarm', 'dolifarmplot', 'read')) {
 	$land = dolifarmFarmSummaryLand($db, $langs, $socid);
 	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
 	$printTitle($langs->trans('FarmSummaryLand'), 'fa-map', dol_buildpath('/dolifarm/dolifarmplot_list.php', 1).'?search_fk_soc='.$socid, 3);
@@ -226,6 +232,9 @@ $means = array(
 	array('dolifarmoperator', 'dolifarm_operator', 'FarmSummaryOperators', 'fa-user-tie', '/dolifarm/dolifarmoperator_list.php'),
 );
 $rows = '';
+if ($isprocessor) {
+	$means = array();
+}
 foreach ($means as $mean) {
 	if (!$user->hasRight('dolifarm', $mean[0], 'read')) {
 		continue;
@@ -241,6 +250,47 @@ if ($rows) {
 	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
 	$printTitle($langs->trans('FarmSummaryMeans'), 'fa-tools');
 	print $rows;
+	print '</table></div><br>';
+}
+
+// Warehouses: of the dossier for a farm, of the third party for a processor
+if (isModEnabled('stock') && $user->hasRight('stock', 'lire')) {
+	require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+	$warehouses = array();
+	if ($isprocessor) {
+		$warehouses = array('WarehouseRawMaterials' => (int) ($object->array_options['options_dolifarm_wh_inputs'] ?? 0), 'WarehouseFinishedProducts' => (int) ($object->array_options['options_dolifarm_wh_products'] ?? 0));
+	} elseif (is_object($dossier)) {
+		$warehouses = array('WarehouseInputs' => (int) $dossier->fk_warehouse_inputs, 'WarehouseProducts' => (int) $dossier->fk_warehouse_products);
+	}
+	$rows = '';
+	foreach ($warehouses as $label => $warehouseid) {
+		$warehouse = new Entrepot($db);
+		if ($warehouseid <= 0 || $warehouse->fetch($warehouseid) <= 0) {
+			continue;
+		}
+		$stock = $warehouse->nb_products();
+		$rows .= '<tr class="oddeven"><td>'.$langs->trans($label).'</td><td class="tdoverflowmax150">'.$warehouse->getNomUrl(1).'</td>';
+		$rows .= '<td class="right nowraponall">'.$langs->trans('FarmSummaryStock', price2num($stock['nb'] ?? 0, 'MS'), price($stock['value'] ?? 0, 0, $langs, 1, -1, -1, getDolCurrency())).'</td></tr>';
+	}
+	if ($rows) {
+		print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+		$printTitle($langs->trans('Warehouses'), 'stock', '', 3);
+		print $rows;
+		print '</table></div><br>';
+	}
+}
+
+// Organic certificate of the third party
+if (!empty($object->array_options['options_dolifarm_bio_cert']) || !empty($object->array_options['options_dolifarm_bio_body'])) {
+	dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+	$certend = $object->array_options['options_dolifarm_bio_cert_end'] ?? '';
+	print '<div class="div-table-responsive-no-min"><table class="noborder centpercent">';
+	$printTitle($langs->trans('FarmSummaryBioCert'), 'fa-leaf');
+	print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('DolifarmBioCert').'</td><td>'.dol_escape_htmltag((string) ($object->array_options['options_dolifarm_bio_cert'] ?? '')).'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans('DolifarmBioBody').'</td><td>'.dol_escape_htmltag(dolifarmBioBodyLabel($db, (string) ($object->array_options['options_dolifarm_bio_body'] ?? ''))).'</td></tr>';
+	if (!empty($certend)) {
+		print '<tr class="oddeven"><td>'.$langs->trans('DolifarmBioCertEnd').'</td><td>'.dol_print_date($certend, 'day').dolifarmExpiryBadge($certend, 0).'</td></tr>';
+	}
 	print '</table></div><br>';
 }
 
@@ -282,7 +332,7 @@ print '</div><div class="fichehalfright">';
 
 if ($withtrace) {
 	// Production plans of the last season
-	if ($user->hasRight('dolitrace', 'dolitracecropplan', 'read')) {
+	if (!$isprocessor && $user->hasRight('dolitrace', 'dolitracecropplan', 'read')) {
 		dol_include_once('/dolitrace/class/dolitracecropplan.class.php');
 		$season = dolifarmFarmSummaryLastSeason($db, $socid);
 		$ids = array();
@@ -298,7 +348,7 @@ if ($withtrace) {
 	}
 
 	// Last harvests (farm of the production plan)
-	if ($user->hasRight('dolitrace', 'dolitraceharvest', 'read')) {
+	if (!$isprocessor && $user->hasRight('dolitrace', 'dolitraceharvest', 'read')) {
 		dol_include_once('/dolitrace/class/dolitraceharvest.class.php');
 		$ids = dolifarmFarmSummaryIds($db, "SELECT h.rowid FROM ".$db->prefix()."dolitrace_harvest as h"
 			." INNER JOIN ".$db->prefix()."dolitrace_cropplan as cp ON cp.rowid = h.fk_cropplan"
@@ -311,7 +361,7 @@ if ($withtrace) {
 	}
 
 	// Last field operations (farm of the production plan)
-	if ($user->hasRight('dolitrace', 'dolitraceoperation', 'read')) {
+	if (!$isprocessor && $user->hasRight('dolitrace', 'dolitraceoperation', 'read')) {
 		dol_include_once('/dolitrace/class/dolitraceoperation.class.php');
 		$ids = dolifarmFarmSummaryIds($db, "SELECT o.rowid FROM ".$db->prefix()."dolitrace_operation as o"
 			." INNER JOIN ".$db->prefix()."dolitrace_cropplan as cp ON cp.rowid = o.fk_cropplan"
@@ -324,7 +374,7 @@ if ($withtrace) {
 	}
 
 	// Last treatments and fertilizations
-	if ($user->hasRight('dolitrace', 'dolitracetreatment', 'read')) {
+	if (!$isprocessor && $user->hasRight('dolitrace', 'dolitracetreatment', 'read')) {
 		dol_include_once('/dolitrace/class/dolitracetreatment.class.php');
 		$ids = dolifarmFarmSummaryIds($db, "SELECT t.rowid FROM ".$db->prefix()."dolitrace_treatment as t"
 			." WHERE t.fk_soc = ".((int) $socid)." AND t.entity IN (".getEntity('dolitracetreatment').")"

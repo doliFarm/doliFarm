@@ -264,7 +264,7 @@ if (isset($farmsocitem)) {
 
 // Managed farms: which ones, warnings when none, objects hidden because on other third parties
 dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
-$managedids = dolifarmManagedFarmIds(true);
+$managedids = dolifarmManagedFarmIds(true, true);	// Farms and processors
 $managedhtml = '';
 if ($managedids === null || empty($managedids)) {
 	$managedwarning = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');

@@ -300,7 +300,7 @@ DOLIFARM_FARM_SOCID = Farm (single-farm mode)
 DOLIFARM_FARM_SOCIDHelp = Third party of the managed farm. Dossiers, plots, machines, buildings, livestock, operators, estimates, production plans and treatments get it automatically and it cannot be changed; the new objects also propose the current dossier. The modules of the suite use it as default farm (for example for the warehouses).
 DOLIFARM_FARM_SOCIDNotFarm = The third party is not of type "Farm": new farm dossiers will not propose it. Change its type in the third party card.
 DolifarmAffiliated = Affiliated farm
-DolifarmAffiliatedHelp = Farm managed by the organization (the third party must be of type "Farm"): creates the dossier and the warehouses of the farm and opens registers and field register
+DolifarmAffiliatedHelp = Business managed by the organization. Type "Farm": creates the dossier and the warehouses of the farm and opens registers and field register. Type "Processor": creates the warehouses of raw materials and finished products and opens the organic inspections (no dossier, no land)
 DolifarmAffiliatedWarehouse = Farm warehouse
 DolifarmAffiliatedDossierCreated = Draft farm dossier %s created
 DolifarmAffiliatedDossierReopened = Farm dossier %s set back to draft
@@ -910,7 +910,7 @@ TourBio2Title = Filters
 TourBio2 = Farm, year or period, and for the stock register also warehouse, organic status and product.
 TourBio3Title = Prints
 TourBio3 = PDF and CSV of the register, and the annual organic dossier with all the sections for the control body.
-DolifarmAffiliatedNotFarmType = %s has the flag "Affiliated farm" but is not of type "Farm": it is not a managed farm. Change its type to manage it.
+DolifarmAffiliatedNotFarmType = %s has the flag "Affiliated farm" but is not of type "Farm" or "Processor": it is not managed. Change its type to manage it.
 DolifarmManagedFarms = Managed farms
 DolifarmManagedFarmsHelp = The farm drop-downs offer only the managed farms; lists, registers and field register hide the objects of the other third parties, which cannot be saved.
 DolifarmManagedFarmsCount = Total %s
@@ -1014,7 +1014,7 @@ BioBodySetupHelp = Official list: %s active bodies, editable in %s (Organic cont
 BioBodyUnmatched = %s third parties have as body of the organic certificate a text that is not in the list: correct it in their card.
 
 # Tab "Farm" of the managed farms
-FarmSummaryTab = Farm
+FarmSummaryTab = Managed business
 FarmSummaryNotManaged = This third party is not a managed farm: the summary is for information only.
 FarmSummaryDossierPdf = Dossier document (PDF)
 FarmSummaryNoDossier = No farm dossier.
@@ -1039,3 +1039,14 @@ FarmSummaryOperations = Last field operations
 FarmSummaryTreatments = Last treatments and fertilizations
 FarmSummaryInspections = Organic inspections
 FarmSummaryNoTrace = Production plans, harvests, operations and treatments are shown with the doliTrace module.
+
+# Processors (affiliated)
+TE_PROCESSOR = Processor
+DolifarmProcessing = Processes its own products
+DolifarmProcessingHelp = For a farm that also prepares or processes its products (oil, wine, preserves...). A business that processes without farming has the type "Processor".
+WarehouseRawMaterials = Raw materials warehouse
+WarehouseFinishedProducts = Finished products warehouse
+DolifarmProcessorWarehouseHelp = Created by doliFarm when the processor is affiliated; closed (not deleted) when the flag is removed
+DolifarmAffiliatedWarehouseClosed = Warehouse %s closed
+FarmSummaryStock = %s units, value %s
+FarmSummaryBioCert = Organic certification

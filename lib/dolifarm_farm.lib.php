@@ -25,65 +25,152 @@
  * The farm drop-downs of the suite offer only the managed farms, lists and registers hide the objects of the
  * other third parties and the save of an object on another farm is refused.
  * In single-farm mode the new objects get the farm, not editable, with its current dossier.
+ *
+ * Managed processors (multi-farm mode): third parties of type processor (TE_PROCESSOR) flagged as affiliated. They have
+ * no dossier, plots or production plans: they are managed only by the objects listed in dolifarmProcessorElements()
+ * (organic inspections), by the tab "Farm" and by their warehouses. The functions below take them into account only
+ * with $withprocessors = true.
  */
 
 /**
- * Ids of the managed farms
+ * Codes of the types of third party that can be affiliated: farm and processor
  *
- * @param	bool		$reset	True to read again the affiliated farms (after a change of a third party)
- * @return	int[]|null			Ids of the managed farms, null when there is no restriction (single-farm mode with no farm set)
+ * @return	string[]
  */
-function dolifarmManagedFarmIds($reset = false)
+function dolifarmAffiliableTypes()
+{
+	return array('TE_FARM', 'TE_PROCESSOR');
+}
+
+/**
+ * Elements of the suite whose third party can also be a managed processor (not only a managed farm)
+ *
+ * @return	string[]
+ */
+function dolifarmProcessorElements()
+{
+	return array('dolitracebioinspection');
+}
+
+/**
+ * Whether the third party of an object can also be a managed processor
+ *
+ * @param	object	$object		Object of the suite
+ * @return	bool
+ */
+function dolifarmAcceptsProcessors($object)
+{
+	return (is_object($object) && !empty($object->element) && in_array($object->element, dolifarmProcessorElements(), true));
+}
+
+/**
+ * Ids of the affiliated third parties of a type (multi-farm mode)
+ *
+ * @param	string	$typecode	Code of the type of third party (TE_FARM, TE_PROCESSOR)
+ * @return	int[]
+ */
+function dolifarmAffiliatedIds($typecode)
 {
 	global $db;
-	static $cache = null;
 
-	if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
-		$socid = getDolGlobalInt('DOLIFARM_FARM_SOCID');
-		return ($socid > 0 ? array($socid) : null);
-	}
-	if ($cache !== null && !$reset) {
-		return $cache;
-	}
-	$cache = array();
+	$ids = array();
 	$sql = "SELECT s.rowid FROM ".$db->prefix()."societe as s";
 	$sql .= " INNER JOIN ".$db->prefix()."societe_extrafields as x ON x.fk_object = s.rowid";
 	$sql .= " INNER JOIN ".$db->prefix()."c_typent as ty ON ty.id = s.fk_typent";
-	$sql .= " WHERE ty.code = 'TE_FARM' AND x.dolifarm_affiliated = 1";
+	$sql .= " WHERE ty.code = '".$db->escape($typecode)."' AND x.dolifarm_affiliated = 1";
 	$sql .= " AND s.entity IN (".getEntity('societe').")";
 	$resql = $db->query($sql);
 	if (!$resql) {
 		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
-		return $cache;
+		return $ids;
 	}
 	while ($obj = $db->fetch_object($resql)) {
-		$cache[] = (int) $obj->rowid;
+		$ids[] = (int) $obj->rowid;
 	}
 	$db->free($resql);
+	return $ids;
+}
+
+/**
+ * Ids of the managed processors (multi-farm mode only)
+ *
+ * @param	bool	$reset	True to read them again (after a change of a third party)
+ * @return	int[]
+ */
+function dolifarmManagedProcessorIds($reset = false)
+{
+	static $cache = null;
+
+	if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
+		return array();
+	}
+	if ($cache === null || $reset) {
+		$cache = dolifarmAffiliatedIds('TE_PROCESSOR');
+	}
+	return $cache;
+}
+
+/**
+ * Ids of the managed farms
+ *
+ * @param	bool		$reset			True to read again the affiliated farms (after a change of a third party)
+ * @param	bool		$withprocessors	True to add the managed processors
+ * @return	int[]|null					Ids of the managed farms, null when there is no restriction (single-farm mode with no farm set)
+ */
+function dolifarmManagedFarmIds($reset = false, $withprocessors = false)
+{
+	static $cache = null;
+
+	if ($reset) {
+		dolifarmManagedProcessorIds(true);
+	}
+	if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
+		$socid = getDolGlobalInt('DOLIFARM_FARM_SOCID');
+		return ($socid > 0 ? array($socid) : null);
+	}
+	if ($cache === null || $reset) {
+		$cache = dolifarmAffiliatedIds('TE_FARM');
+	}
+	if ($withprocessors) {
+		return array_values(array_unique(array_merge($cache, dolifarmManagedProcessorIds())));
+	}
 	return $cache;
 }
 
 /**
  * Whether a third party is a managed farm
  *
+ * @param	int		$socid			Id of the third party
+ * @param	bool	$withprocessors	True to accept also a managed processor
+ * @return	bool
+ */
+function dolifarmIsManagedFarm($socid, $withprocessors = false)
+{
+	$ids = dolifarmManagedFarmIds(false, $withprocessors);
+	return ($ids === null || in_array((int) $socid, $ids, true));
+}
+
+/**
+ * Whether a third party is a managed processor
+ *
  * @param	int		$socid	Id of the third party
  * @return	bool
  */
-function dolifarmIsManagedFarm($socid)
+function dolifarmIsManagedProcessor($socid)
 {
-	$ids = dolifarmManagedFarmIds();
-	return ($ids === null || in_array((int) $socid, $ids, true));
+	return in_array((int) $socid, dolifarmManagedProcessorIds(), true);
 }
 
 /**
  * SQL filter on the farm of an object: only the managed farms (objects with no farm are kept)
  *
- * @param	string	$field	Field of the third party in the query
- * @return	string			SQL to append to the WHERE, '' when there is no restriction
+ * @param	string	$field			Field of the third party in the query
+ * @param	bool	$withprocessors	True to accept also the managed processors
+ * @return	string					SQL to append to the WHERE, '' when there is no restriction
  */
-function dolifarmSqlManagedFarmFilter($field = 't.fk_soc')
+function dolifarmSqlManagedFarmFilter($field = 't.fk_soc', $withprocessors = false)
 {
-	$ids = dolifarmManagedFarmIds();
+	$ids = dolifarmManagedFarmIds(false, $withprocessors);
 	if ($ids === null) {
 		return '';
 	}
@@ -132,15 +219,16 @@ function dolifarmCountHiddenObjects($db)
  * Farm field of an object:the drop-down offers only the managed farms; in single-farm mode the farm is fixed
  *
  * @param	CommonObject	$object		Object with a field linked to a third party
- * @param	string			$field		Name of the field
+ * @param	string			$field			Name of the field
+ * @param	bool			$withprocessors	True to offer also the managed processors
  * @return	void
  */
-function dolifarmRestrictFarmField($object, $field = 'fk_soc')
+function dolifarmRestrictFarmField($object, $field = 'fk_soc', $withprocessors = false)
 {
 	if (empty($object->fields[$field]['type']) || strpos($object->fields[$field]['type'], 'integer:Societe:') !== 0) {
 		return;
 	}
-	$ids = dolifarmManagedFarmIds();
+	$ids = dolifarmManagedFarmIds(false, $withprocessors);
 	if ($ids === null) {
 		return;
 	}

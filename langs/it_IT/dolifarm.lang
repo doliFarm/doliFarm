@@ -531,7 +531,7 @@ DOLIFARM_FARM_SOCID = Azienda (modalità azienda singola)
 DOLIFARM_FARM_SOCIDHelp = Soggetto terzo dell'azienda gestita. Fascicoli, appezzamenti, macchine, fabbricati, allevamenti, operatori, stime, piani di produzione e trattamenti la ricevono in automatico e non si può cambiare; i nuovi oggetti propongono anche il fascicolo in corso. I moduli della suite la usano come azienda predefinita (per esempio per i magazzini).
 DOLIFARM_FARM_SOCIDNotFarm = Il soggetto terzo non è di tipo "Azienda agricola": i nuovi fascicoli non lo proporranno. Cambiarne il tipo nella scheda del terzo.
 DolifarmAffiliated = Azienda affiliata
-DolifarmAffiliatedHelp = Azienda agricola gestita dall'organizzazione (il soggetto terzo deve essere di tipo "Azienda agricola"): crea il fascicolo e i magazzini dell'azienda e apre registri e quaderno di campagna
+DolifarmAffiliatedHelp = Azienda gestita dall'organizzazione. Tipo "Azienda agricola": crea il fascicolo e i magazzini dell'azienda e apre registri e quaderno di campagna. Tipo "Trasformatore": crea i magazzini materie prime e prodotti finiti e apre le ispezioni bio (senza fascicolo né terreni)
 DolifarmAffiliatedWarehouse = Magazzino azienda
 DolifarmAffiliatedDossierCreated = Creato il fascicolo aziendale in bozza %s
 DolifarmAffiliatedDossierReopened = Il fascicolo aziendale %s è tornato in bozza
@@ -945,7 +945,7 @@ TourBio2Title = Filtri
 TourBio2 = Azienda, anno o periodo, e per il carico e scarico anche magazzino, stato bio e prodotto.
 TourBio3Title = Stampe
 TourBio3 = PDF e CSV del registro, e il fascicolo bio annuale con tutte le sezioni da consegnare all'organismo di controllo.
-DolifarmAffiliatedNotFarmType = %s ha il flag "Azienda affiliata" ma non è di tipo "Azienda agricola": non è un'azienda gestita. Cambiarne il tipo per gestirla.
+DolifarmAffiliatedNotFarmType = %s ha il flag "Azienda affiliata" ma non è di tipo "Azienda agricola" o "Trasformatore": non è un'azienda gestita. Cambiarne il tipo per gestirla.
 DolifarmManagedFarms = Aziende gestite
 DolifarmManagedFarmsHelp = Gli elenchi a discesa dell'azienda propongono solo le aziende gestite; elenchi, registri e quaderno di campagna nascondono gli oggetti degli altri soggetti terzi, che non si possono salvare.
 DolifarmManagedFarmsCount = Totale %s
@@ -1049,7 +1049,7 @@ BioBodySetupHelp = Elenco ufficiale: %s organismi attivi, modificabile in %s (Or
 BioBodyUnmatched = %s soggetti terzi hanno come organismo del certificato bio un testo che non è nell'elenco: correggerlo nella loro scheda.
 
 # Tab "Farm" of the managed farms
-FarmSummaryTab = Azienda agricola
+FarmSummaryTab = Azienda gestita
 FarmSummaryNotManaged = Questo soggetto terzo non è un'azienda gestita: il riepilogo è solo informativo.
 FarmSummaryDossierPdf = Documento del fascicolo (PDF)
 FarmSummaryNoDossier = Nessun fascicolo aziendale.
@@ -1074,3 +1074,14 @@ FarmSummaryOperations = Ultime operazioni colturali
 FarmSummaryTreatments = Ultimi trattamenti e fertilizzazioni
 FarmSummaryInspections = Ispezioni bio
 FarmSummaryNoTrace = Piani di produzione, raccolte, operazioni e trattamenti compaiono con il modulo doliTrace.
+
+# Processors (affiliated)
+TE_PROCESSOR = Trasformatore
+DolifarmProcessing = Trasforma i propri prodotti
+DolifarmProcessingHelp = Per un'azienda agricola che svolge anche attività di preparazione o trasformazione (olio, vino, conserve...). Chi trasforma senza coltivare ha il tipo "Trasformatore".
+WarehouseRawMaterials = Magazzino materie prime
+WarehouseFinishedProducts = Magazzino prodotti finiti
+DolifarmProcessorWarehouseHelp = Creato da doliFarm quando il trasformatore è affiliato; chiuso (non cancellato) se il flag viene tolto
+DolifarmAffiliatedWarehouseClosed = Chiuso il magazzino %s
+FarmSummaryStock = %s pezzi, valore %s
+FarmSummaryBioCert = Certificazione bio

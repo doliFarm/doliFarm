@@ -83,3 +83,14 @@ SELECT
     'dolifarm'
 FROM DUAL
 WHERE NOT EXISTS (SELECT code FROM llx_c_typent WHERE code = 'TE_BIOCTRL');
+
+-- 7. TE_PROCESSOR: Trasformatore (preparazione e trasformazione; con il flag "Affiliata" è un soggetto gestito)
+INSERT IGNORE INTO llx_c_typent (id, code, libelle, active, module)
+SELECT
+    (SELECT COALESCE(MAX(id), 0) + 1 FROM llx_c_typent),
+    'TE_PROCESSOR',
+    'Trasformatore',
+    1,
+    'dolifarm'
+FROM DUAL
+WHERE NOT EXISTS (SELECT code FROM llx_c_typent WHERE code = 'TE_PROCESSOR');

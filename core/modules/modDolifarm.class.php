@@ -194,9 +194,9 @@ class modDolifarm extends DolibarrModules
 		/* BEGIN MODULEBUILDER TABS */
 		// Don't forget to deactivate/reactivate your module to test your changes
 		$this->tabs = array();
-		// Tab "Farm" on the managed farms: multi-farm mode, type farm with the flag "affiliated farm"; single-farm mode, the farm of the setup.
+		// Tab "Farm" on the managed farms and processors: multi-farm mode, type farm or processor with the flag "affiliated"; single-farm mode, the farm of the setup.
 		// The condition is evaluated by dol_eval with the third party in $objectoffield: only white-listed functions, no ":" (separator)
-		$this->tabs[] = array('data' => 'thirdparty:+(1)dolifarmfarm:FarmSummaryTab:dolifarm@dolifarm:isModEnabled("dolifarm") && $user->hasRight("dolifarm", "dolifarmfarmdossier", "read") && ((getDolGlobalInt("DOLIFARM_MULTIFARM") && $objectoffield->typent_code == "TE_FARM" && $objectoffield->array_options["options_dolifarm_affiliated"] == 1) || (!getDolGlobalInt("DOLIFARM_MULTIFARM") && $objectoffield->id == getDolGlobalInt("DOLIFARM_FARM_SOCID"))):/dolifarm/dolifarm_farmsummary.php?socid=__ID__');
+		$this->tabs[] = array('data' => 'thirdparty:+(1)dolifarmfarm:FarmSummaryTab:dolifarm@dolifarm:isModEnabled("dolifarm") && $user->hasRight("dolifarm", "dolifarmfarmdossier", "read") && ((getDolGlobalInt("DOLIFARM_MULTIFARM") && ($objectoffield->typent_code == "TE_FARM" || $objectoffield->typent_code == "TE_PROCESSOR") && $objectoffield->array_options["options_dolifarm_affiliated"] == 1) || (!getDolGlobalInt("DOLIFARM_MULTIFARM") && $objectoffield->id == getDolGlobalInt("DOLIFARM_FARM_SOCID"))):/dolifarm/dolifarm_farmsummary.php?socid=__ID__');
 		/* END MODULEBUILDER TABS */
 		// Example:
 		// To add a new tab identified by code tabname1
@@ -1195,6 +1195,26 @@ class modDolifarm extends DolibarrModules
 		if ($result < 0) {
 			$this->error = $extrafields->error;
 			return -1;
+		}
+		// Farm that also processes its products (oil, wine, preserves): the type stays "farm", one type per third party
+		// Hidden on the processors (it is their type); update() also corrects an installation created before
+		$processingvisibility = '$objectoffield->typent_code == "TE_PROCESSOR" ? 0 : 1';
+		$result = $extrafields->addExtraField('dolifarm_processing', "DolifarmProcessing", 'boolean', 1000, '', 'thirdparty', 0, 0, '', '', 1, '', $processingvisibility, 'DolifarmProcessingHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+		if ($result >= 0) {
+			$result = $extrafields->update('dolifarm_processing', "DolifarmProcessing", 'boolean', '', 'thirdparty', 0, 0, 1000, '', 1, '', $processingvisibility, 'DolifarmProcessingHelp', '', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm")');
+		}
+		if ($result < 0) {
+			$this->error = $extrafields->error;
+			return -1;
+		}
+		// Warehouses of an affiliated processor (it has no dossier, where the warehouses of a farm are): set by doliFarm,
+		// shown read only on the processors
+		foreach (array('dolifarm_wh_inputs' => array('WarehouseRawMaterials', 1010), 'dolifarm_wh_products' => array('WarehouseFinishedProducts', 1011)) as $attrname => $def) {
+			$result = $extrafields->addExtraField($attrname, $def[0], 'link', $def[1], '', 'thirdparty', 0, 0, '', array('options' => array('Entrepot:product/stock/class/entrepot.class.php' => null)), 0, '', '$objectoffield->typent_code == "TE_PROCESSOR" ? 5 : 0', 'DolifarmProcessorWarehouseHelp', '', '', 'dolifarm@dolifarm', 'isModEnabled("dolifarm") && isModEnabled("stock") && getDolGlobalInt("DOLIFARM_MULTIFARM")');
+			if ($result < 0) {
+				$this->error = $extrafields->error;
+				return -1;
+			}
 		}
 		// Organic production: status of the reproductive material (seeds, seedlings) of the products, copied on the sowing
 		// in doliTrace (Reg. EU 2018/848, annex II part I point 1.8)
