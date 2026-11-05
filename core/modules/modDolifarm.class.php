@@ -431,7 +431,7 @@ class modDolifarm extends DolibarrModules
 				'comment' => 'Download of the latest file of the dataset "fitosanitari" and update of the agrodrugs',
 				'frequency' => 1,
 				'unitfrequency' => 604800,
-				'status' => 0,
+				'status' => 1,
 				'test' => 'isModEnabled("dolifarm")',
 				'priority' => 50,
 			),
@@ -1291,7 +1291,17 @@ class modDolifarm extends DolibarrModules
             }
         }
 
-		return $this->_init($sql, $options);
+		$result = $this->_init($sql, $options);
+
+		// Weekly sync of the catalogue of the plant protection products: enabled once, also where the job was created
+		// disabled by an older version; a later choice of the administrator (job disabled) is kept
+		if ($result > 0 && !getDolGlobalInt('DOLIFARM_PPP_CRON_ENABLED')) {
+			$this->db->query("UPDATE ".$this->db->prefix()."cronjob SET status = 1 WHERE label = 'DolifarmPppSyncJob' AND module_name = 'dolifarm' AND entity = ".((int) $conf->entity));
+			require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+			dolibarr_set_const($this->db, 'DOLIFARM_PPP_CRON_ENABLED', 1, 'chaine', 0, '', $conf->entity);
+		}
+
+		return $result;
 	}
 
 	/**

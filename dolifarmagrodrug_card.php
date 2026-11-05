@@ -192,6 +192,21 @@ if (empty($reshook)) {
 	$triggermodname = $object->TRIGGER_PREFIX.'_MODIFY'; // Name of trigger action code to execute when we modify record. Used in actions_addupdatedelete.inc.php
 
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
+	// Creation from the catalogue of the Ministry of Health: the agrodrug gets the data of the catalogue
+	if ($action == 'addfromcatalog' && $permissiontoadd) {
+		dol_include_once('/dolifarm/lib/dolifarm_ppp.lib.php');
+		$catalogerror = '';
+		$catalogcreated = false;
+		$newid = dolifarmAgroDrugResolve($db, $user, GETPOST('ppp_catalog', 'alphanohtml'), $catalogerror, $catalogcreated);
+		if ($newid > 0) {
+			setEventMessages($langs->trans($catalogcreated ? 'PppAgroDrugCreated' : 'InputsAlreadyThere'), null, 'mesgs');
+			header('Location: '.dol_buildpath('/dolifarm/dolifarmagrodrug_card.php', 1).'?id='.$newid);
+			exit;
+		}
+		setEventMessages($catalogerror !== '' ? $catalogerror : $langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('PppCatalog')), null, 'errors');
+		$action = 'create';
+	}
+
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
 	// Actions when linking object each other
@@ -264,6 +279,19 @@ if ($action == 'create') {
 	}
 
 	print load_fiche_titre($title, '', $object->picto);
+
+	// From the catalogue of the Ministry of Health: name, registration, holder, substances, status and expiry
+	dol_include_once('/dolifarm/lib/dolifarm_ppp.lib.php');
+	print '<form method="POST" action="'.dolBuildUrl($_SERVER["PHP_SELF"]).'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="addfromcatalog">';
+	print '<div class="div-table-responsive-no-min marginbottomonly"><table class="border centpercent">';
+	print '<tr><td class="titlefieldcreate">'.$form->textwithpicto($langs->trans('PppFromCatalog'), $langs->trans('PppFromCatalogHelp')).'</td><td>';
+	print dolifarmAgroDrugSelect($db, 'ppp_catalog', '', true, 'minwidth500');
+	print ' <input type="submit" class="button small" value="'.dol_escape_htmltag($langs->trans('PppCreateFromCatalog')).'">';
+	print '</td></tr></table></div>';
+	print '</form>';
+	print '<div class="opacitymedium marginbottomonly">'.$langs->trans('PppOrManual').'</div>';
 
 	print '<form method="POST" action="'.dolBuildUrl($_SERVER["PHP_SELF"]).'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
