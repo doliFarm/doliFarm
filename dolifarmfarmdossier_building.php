@@ -89,8 +89,7 @@ llxHeader('', $title, '', '', 0, 0, '', '', '', 'mod-dolifarm page-card-building
 $head = dolifarmfarmdossierPrepareHead($object);
 print dol_get_fiche_head($head, 'building', $langs->trans("DoliFarmFarmDossier"), -1, $object->picto);
 
-$linkback = '<a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1).'?restore_lastsearch_values=1">'.$langs->trans("BackToList").'</a>';
-dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref');
+dolifarmFarmDossierBanner($object);
 
 print '<div class="fichecenter">';
 print '<div class="underbanner clearboth"></div>';

@@ -189,3 +189,45 @@ function dolifarmfarmdossierPrepareHead($object)
 
     return $head;
 }
+/**
+ * Banner of the dossier, the same in all its tabs: ref, farm with its CUAA, paying agency, validity with its expiry badge
+ *
+ * @param	DoliFarmFarmDossier	$object		Dossier
+ * @param	int					$onlybanner	1 to print only the banner (no navigation), as dol_banner_tab()
+ * @return	void
+ */
+function dolifarmFarmDossierBanner($object, $onlybanner = 0)
+{
+	global $langs;
+
+	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
+	$langs->load('dolifarm@dolifarm');
+
+	$linkback = '<a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1).'?restore_lastsearch_values=1">'.$langs->trans('BackToList').'</a>';
+
+	$morehtmlref = '<div class="refidno">';
+	// Farm and its CUAA (tax code, idprof4 of the third party), the key of the dossier at AGEA
+	if ($object->fk_soc > 0 && (is_object($object->thirdparty) || $object->fetch_thirdparty() > 0)) {
+		$morehtmlref .= $object->thirdparty->getNomUrl(1);
+		if (!empty($object->thirdparty->idprof4)) {
+			$morehtmlref .= ' <span class="opacitymedium">- '.$langs->trans('CUAA').':</span> '.dol_escape_htmltag($object->thirdparty->idprof4);
+		} else {
+			$morehtmlref .= ' '.img_warning($langs->trans('CUAAMissingHelp')).' <span class="opacitymedium">'.$langs->trans('CUAAMissing').'</span>';
+		}
+	}
+	// Paying agency and validity of the dossier
+	$more = array();
+	if (!empty($object->paying_agency)) {
+		$more[] = '<span class="opacitymedium">'.$langs->trans($object->fields['paying_agency']['label']).':</span> '.$object->showOutputField($object->fields['paying_agency'], 'paying_agency', $object->paying_agency, '');
+	}
+	if (!empty($object->date_validity_end)) {
+		// With the badge of the expiry (the only expiry date of a dossier)
+		$more[] = '<span class="opacitymedium">'.$langs->trans($object->fields['date_validity_end']['label']).':</span> '.dol_print_date($object->date_validity_end, 'day').dolifarmExpiryBadge($object->date_validity_end, 0);
+	}
+	if ($more) {
+		$morehtmlref .= '<br>'.implode(' &nbsp; ', $more);
+	}
+	$morehtmlref .= '</div>';
+
+	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref, '', 0, '', '', $onlybanner);
+}

@@ -77,10 +77,7 @@ if ($id > 0) {
     print dol_get_fiche_head($head, 'machines', $langs->trans("DoliFarmFarmDossier"), -1, $object->picto);
 
     // Link al padre
-    $linkback = '<a href="' . dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1) . '">' . $langs->trans("BackToList") . '</a>';
-    
-    // Banner Principale
-    dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref');
+    dolifarmFarmDossierBanner($object);
 
     print '<div class="fichecenter">';
     print '<div class="underbanner clearboth"></div>';
