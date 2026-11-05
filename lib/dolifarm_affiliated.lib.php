@@ -20,13 +20,16 @@
  * \ingroup dolifarm
  * \brief   Affiliated farms (multi-farm mode): dossier and warehouses kept in step with the flag of the third party
  *
- * In multi-farm mode (DOLIFARM_MULTIFARM) a third party with the extrafield dolifarm_affiliated gets a draft
+ * In multi-farm mode (DOLIFARM_MULTIFARM) a third party of type farm (TE_FARM) with the extrafield dolifarm_affiliated
+ * is a managed farm (lib/dolifarm_farm.lib.php). It gets a draft
  * dossier and the warehouses "AZ-<code>" (parent), "AZ-<code>-IN" (inputs) and "AZ-<code>-PROD" (products),
  * linked on the dossier. When the flag is removed nothing is deleted: the warehouses are closed and the
  * dossier is disabled, so that the registers stay readable.
  */
 
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+dol_include_once('/dolifarm/lib/dolifarm.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
 
 /**
  * Code used in the refs of the warehouses of a farm: customer or supplier code of the third party, else its id
@@ -66,10 +69,19 @@ function dolifarmSyncAffiliatedFarm($db, $soc, $user, &$messages)
 	if (!isset($soc->array_options['options_dolifarm_affiliated'])) {
 		$soc->fetch_optionals();
 	}
-	$affiliated = !empty($soc->array_options['options_dolifarm_affiliated']);
-	$wasaffiliated = (is_object($soc->oldcopy) && !empty($soc->oldcopy->array_options['options_dolifarm_affiliated']));
+	// Affiliated farm: flag and type farm, both required
+	$farmtypeid = dolifarmGetTypentId($db, 'TE_FARM');
+	$flag = !empty($soc->array_options['options_dolifarm_affiliated']);
+	$affiliated = ($flag && $farmtypeid > 0 && (int) $soc->typent_id == $farmtypeid);
+	$wasaffiliated = (is_object($soc->oldcopy) && !empty($soc->oldcopy->array_options['options_dolifarm_affiliated'])
+		&& $farmtypeid > 0 && (int) $soc->oldcopy->typent_id == $farmtypeid);
+	// The list of the managed farms changes with this third party
+	dolifarmManagedFarmIds(true);
 
 	$langs->load('dolifarm@dolifarm');
+	if ($flag && !$affiliated) {
+		setEventMessages($langs->trans('DolifarmAffiliatedNotFarmType', $soc->name), null, 'warnings');
+	}
 	dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
 	if (isModEnabled('stock')) {
 		require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';

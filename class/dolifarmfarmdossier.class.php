@@ -280,6 +280,9 @@ class DoliFarmFarmDossier extends CommonObject
                 $this->fields[$key]['type'] .= str_repeat(':', max(1, 5 - $nbparts)).'(t.fk_typent:=:'.$typentid.')';
             }
         }
+        // Farm: only the managed farms, fixed in single-farm mode
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+        dolifarmRestrictLinkFields($this, array());
 
         // Example to show how to set values of fields definition dynamically
         /*if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read')) {

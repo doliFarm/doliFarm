@@ -119,7 +119,7 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
 $item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
-// Multi-farm mode: the affiliated third parties get their dossier and warehouses
+// Managed farms: the farm of the setup (single-farm mode) or the affiliated farms (multi-farm mode)
 $formSetup->newItem('FarmMode')->setAsTitle();
 $item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
@@ -134,6 +134,15 @@ if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
 		return 1;
 	});
 }
+// State of the managed farms, not saved: built after the actions
+$managedfarmsitem = $formSetup->newItem('DolifarmManagedFarms');
+$managedfarmsitem->helpText = $langs->transnoentities('DolifarmManagedFarmsHelp');
+$managedfarmsitem->setValueFromPostCallBack(function () {
+	return 0;
+});
+$managedfarmsitem->setSaveCallBack(function () {
+	return 0;
+});
 
 // Warehouses used when the farm dossier has none (single-farm mode)
 if (isModEnabled('stock')) {
@@ -252,6 +261,30 @@ if (isset($farmsocitem)) {
 		}
 	}
 }
+
+// Managed farms: which ones, warnings when none, objects hidden because on other third parties
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+$managedids = dolifarmManagedFarmIds(true);
+$managedhtml = '';
+if ($managedids === null || empty($managedids)) {
+	$managedwarning = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');
+	$managedhtml = img_warning($managedwarning).' <span class="warning">'.$managedwarning.'</span>';
+} else {
+	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+	$managednames = array();
+	foreach (array_slice($managedids, 0, 10) as $managedid) {
+		$managedsoc = new Societe($db);
+		if ($managedsoc->fetch($managedid) > 0) {
+			$managednames[] = $managedsoc->getNomUrl(1);
+		}
+	}
+	$managedhtml = $langs->trans('DolifarmManagedFarmsCount', count($managedids)).': '.implode(', ', $managednames).(count($managedids) > 10 ? ', ...' : '');
+}
+$nbhidden = dolifarmCountHiddenObjects($db);
+if ($nbhidden > 0) {
+	$managedhtml .= '<br>'.img_warning().' <span class="warning">'.$langs->trans('DolifarmManagedFarmsHidden', $nbhidden).'</span>';
+}
+$managedfarmsitem->fieldOverride = $managedhtml;
 
 // Put the agenda events of the expiry dates in step with the data (data saved before, imports)
 if ($action == 'syncexpiry') {

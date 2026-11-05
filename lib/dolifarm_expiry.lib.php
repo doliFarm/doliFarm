@@ -208,7 +208,7 @@ function dolifarmExpiryList($db, $user, $limit = 0, $filters = array())
 		$sql .= " INNER JOIN ".$db->prefix()."societe_extrafields as x ON x.fk_object = s.rowid";
 		$sql .= " WHERE s.entity IN (".getEntity('societe').") AND s.status = 1";
 		$sql .= " AND x.dolifarm_bio_cert_end IS NOT NULL AND x.dolifarm_bio_cert_end <= '".$db->idate($limitdate)."'";
-		$sql .= dolifarmSqlSocFilter($user, 's.rowid');
+		$sql .= dolifarmSqlSocFilter($user, 's.rowid', false);
 		if (!empty($filters['fk_soc'])) {
 			$sql .= " AND s.rowid = ".((int) $filters['fk_soc']);
 		}
