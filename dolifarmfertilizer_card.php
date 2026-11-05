@@ -147,6 +147,7 @@ if (empty($reshook)) {
  */
 
 $form = new Form($db);
+$object->showSianLink = true;
 
 // Layout of the card: identification, then nutrient content
 $cardlayout = array(

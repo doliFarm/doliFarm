@@ -1088,3 +1088,5 @@ MenuQualifiedOperators = Qualified operators
 PppGroupOrganicYes = Allowed in organic farming
 PppGroupOrganicVerify = To verify for organic farming
 PppGroupOrganicNo = Not allowed in organic farming
+FertilizerSianSearch = Search the SIAN register
+FertilizerSianSearchHelp = Opens in a new tab the consultation of the Italian register of fertilisers on the SIAN (conventional and organic use): search by manufacturer or trade name and copy here the register number and the admission in organic farming. The SIAN asks for a confirmation code.

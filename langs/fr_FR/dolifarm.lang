@@ -1064,3 +1064,5 @@ MenuQualifiedOperators = Opérateurs certifiés
 PppGroupOrganicYes = Autorisés en agriculture biologique
 PppGroupOrganicVerify = À vérifier pour le bio
 PppGroupOrganicNo = Non autorisés en agriculture biologique
+FertilizerSianSearch = Chercher dans le registre SIAN
+FertilizerSianSearchHelp = Ouvre dans un nouvel onglet la consultation du registre italien des fertilisants sur le SIAN (usage conventionnel et biologique) : chercher par fabricant ou nom commercial et reporter ici le numéro de registre et l'admission en bio. Le SIAN demande un code de confirmation.

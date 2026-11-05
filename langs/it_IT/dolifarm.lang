@@ -1123,3 +1123,5 @@ MenuQualifiedOperators = Operatori abilitati
 PppGroupOrganicYes = Ammessi in biologico
 PppGroupOrganicVerify = Da verificare per il biologico
 PppGroupOrganicNo = Non ammessi in biologico
+FertilizerSianSearch = Cerca nel registro SIAN
+FertilizerSianSearchHelp = Apre in una nuova scheda la consultazione del registro dei fertilizzanti sul SIAN (uso convenzionale e biologico): cercare per fabbricante o nome commerciale e riportare qui numero di registro e ammissione in biologico. Il SIAN chiede un codice di conferma.
