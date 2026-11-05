@@ -30,7 +30,7 @@
  * @param	string	$where		More conditions (SQL, trusted)
  * @return	int
  */
-function dolifarmStartCount($db, $table, $element = '', $where = '')
+function dolifarmStartCount($db, $table, $element = '', $where = '', $socfield = '')
 {
 	$sql = "SELECT COUNT(*) as nb FROM ".$db->prefix().$table." as t WHERE 1 = 1";
 	if ($element !== '') {
@@ -38,6 +38,11 @@ function dolifarmStartCount($db, $table, $element = '', $where = '')
 	}
 	if ($where !== '') {
 		$sql .= " AND ".$where;
+	}
+	if ($socfield !== '') {
+		// Only the objects of the managed farms
+		dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+		$sql .= dolifarmSqlManagedFarmFilter($socfield);
 	}
 	$resql = $db->query($sql);
 	if (!$resql) {
@@ -72,7 +77,8 @@ function dolifarmStartSteps($db, $user)
 	// Setup
 	if ($admin) {
 		$add('Setup', 'Company', 0, !empty($mysoc->name) && !empty($mysoc->country_code), false, DOL_URL_ROOT.'/admin/company.php');
-		$add('Setup', 'Mode', 0, getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0 || getDolGlobalInt('DOLIFARM_MULTIFARM'), false, dol_buildpath('/dolifarm/admin/setup.php', 1));
+		dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+		$add('Setup', 'Mode', 0, count(dolifarmManagedFarmIds()) > 0, false, dol_buildpath('/dolifarm/admin/setup.php', 1));
 		$add('Setup', 'Stock', 0, isModEnabled('stock') && isModEnabled('productbatch'), false, DOL_URL_ROOT.'/admin/modules.php?search_keyword=stock');
 		$add('Setup', 'Eppo', dolifarmStartCount($db, 'dolifarm_eppo_code'), dolifarmStartCount($db, 'dolifarm_eppo_code') > 0, true, dol_buildpath('/dolifarm/admin/eppo.php', 1));
 		$add('Setup', 'Catalog', dolifarmStartCount($db, 'dolifarm_ppp_catalog'), dolifarmStartCount($db, 'dolifarm_ppp_catalog') > 0, true, dol_buildpath('/dolifarm/admin/ppp.php', 1));
@@ -80,31 +86,31 @@ function dolifarmStartSteps($db, $user)
 
 	// Farm
 	if ($user->hasRight('societe', 'lire')) {
-		// Third parties of type farm, or with a farm dossier
-		$nb = dolifarmStartCount($db, 'societe', 'societe', "(t.fk_typent IN (SELECT ty.id FROM ".$db->prefix()."c_typent as ty WHERE ty.code = 'TE_FARM')"
-			." OR t.rowid IN (SELECT d.fk_soc FROM ".$db->prefix()."dolifarm_farmdossier as d))");
+		// Managed farms: the farm of the setup, or the affiliated farms
+		dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+		$nb = count(dolifarmManagedFarmIds());
 		$add('Farm', 'Farm', $nb, $nb > 0, false, DOL_URL_ROOT.'/societe/card.php?action=create');
 	}
 	if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read')) {
-		$nb = dolifarmStartCount($db, 'dolifarm_farmdossier', 'dolifarmfarmdossier');
+		$nb = dolifarmStartCount($db, 'dolifarm_farmdossier', 'dolifarmfarmdossier', '', 't.fk_soc');
 		$add('Farm', 'Dossier', $nb, $nb > 0, false, dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?action=create', 'dossier_create');
 		if (isModEnabled('stock')) {
-			$nb = dolifarmStartCount($db, 'dolifarm_farmdossier', 'dolifarmfarmdossier', 't.fk_warehouse_inputs > 0 AND t.fk_warehouse_products > 0');
+			$nb = dolifarmStartCount($db, 'dolifarm_farmdossier', 'dolifarmfarmdossier', 't.fk_warehouse_inputs > 0 AND t.fk_warehouse_products > 0', 't.fk_soc');
 			$add('Farm', 'Warehouses', $nb, $nb > 0, false, dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1), 'dossier_create');
 		}
 	}
 	if ($user->hasRight('dolifarm', 'dolifarmplot', 'read')) {
-		$nb = dolifarmStartCount($db, 'dolifarm_plot', 'dolifarmplot');
+		$nb = dolifarmStartCount($db, 'dolifarm_plot', 'dolifarmplot', '', 't.fk_soc');
 		$add('Farm', 'Plots', $nb, $nb > 0, false, dol_buildpath('/dolifarm/dolifarmplot_card.php', 1).'?action=create', 'plot_create');
-		$nb = dolifarmStartCount($db, 'dolifarm_plot', 'dolifarmplot', "(t.fk_status_bio IS NOT NULL AND t.fk_status_bio <> '' AND t.fk_status_bio <> 'CONV')");
+		$nb = dolifarmStartCount($db, 'dolifarm_plot', 'dolifarmplot', "(t.fk_status_bio IS NOT NULL AND t.fk_status_bio <> '' AND t.fk_status_bio <> 'CONV')", 't.fk_soc');
 		$add('Farm', 'Organic', $nb, $nb > 0, true, dol_buildpath('/dolifarm/dolifarmplot_list.php', 1));
 	}
 	if ($user->hasRight('dolifarm', 'dolifarmmachine', 'read')) {
-		$nb = dolifarmStartCount($db, 'dolifarm_machine', 'dolifarmmachine');
+		$nb = dolifarmStartCount($db, 'dolifarm_machine', 'dolifarmmachine', '', 't.fk_soc');
 		$add('Farm', 'Machines', $nb, $nb > 0, true, dol_buildpath('/dolifarm/dolifarmmachine_card.php', 1).'?action=create', 'machine_create');
 	}
 	if ($user->hasRight('dolifarm', 'dolifarmoperator', 'read')) {
-		$nb = dolifarmStartCount($db, 'dolifarm_operator', 'dolifarmoperator');
+		$nb = dolifarmStartCount($db, 'dolifarm_operator', 'dolifarmoperator', '', 't.fk_soc');
 		$add('Farm', 'Operators', $nb, $nb > 0, false, dol_buildpath('/dolifarm/dolifarmoperator_card.php', 1).'?action=create', 'operator_create');
 	}
 
@@ -121,15 +127,15 @@ function dolifarmStartSteps($db, $user)
 	// Field notebook (doliTrace)
 	if (isModEnabled('dolitrace')) {
 		if ($user->hasRight('dolitrace', 'dolitracecropplan', 'read')) {
-			$nb = dolifarmStartCount($db, 'dolitrace_cropplan', 'dolitracecropplan', 't.status IN (1, 2)');
+			$nb = dolifarmStartCount($db, 'dolitrace_cropplan', 'dolitracecropplan', 't.status IN (1, 2)', 't.fk_soc');
 			$add('Notebook', 'CropPlans', $nb, $nb > 0, false, dol_buildpath('/dolitrace/dolitracecropplan_card.php', 1).'?action=create', 'cropplan_create');
 		}
 		if ($user->hasRight('dolitrace', 'dolitracetreatment', 'read')) {
-			$nb = dolifarmStartCount($db, 'dolitrace_treatment', 'dolitracetreatment', 't.status = 1');
+			$nb = dolifarmStartCount($db, 'dolitrace_treatment', 'dolitracetreatment', 't.status = 1', 't.fk_soc');
 			$add('Notebook', 'Treatments', $nb, $nb > 0, false, dol_buildpath('/dolitrace/dolitracetreatment_card.php', 1).'?action=create', 'treatment_create');
 		}
 		if ($user->hasRight('dolitrace', 'dolitraceharvest', 'read')) {
-			$nb = dolifarmStartCount($db, 'dolitrace_harvest', 'dolitraceharvest', 't.status = 1');
+			$nb = dolifarmStartCount($db, 'dolitrace_harvest', '', 't.status = 1 AND t.fk_cropplan IN (SELECT cp.rowid FROM '.$db->prefix().'dolitrace_cropplan as cp WHERE cp.entity IN ('.getEntity('dolitracecropplan').')'.dolifarmSqlManagedFarmFilter('cp.fk_soc').')');
 			$add('Notebook', 'Harvests', $nb, $nb > 0, true, dol_buildpath('/dolitrace/dolitraceharvest_card.php', 1).'?action=create', 'harvest_create');
 			// The registers have something to show once there is a validated harvest
 			$add('Notebook', 'BioRegisters', 0, $nb > 0, true, dol_buildpath('/dolitrace/dolitrace_bioregister.php', 1), 'bioregister');

@@ -123,6 +123,8 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 $formSetup->newItem('FarmMode')->setAsTitle();
 $item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_MULTIFARMHelp');
+// The switch saves by ajax: reload the page so the farm of the single-farm mode appears or disappears
+$item->fieldParams['forcereload'] = 1;
 // Single-farm mode: the farm of the installation, proposed in the new objects
 if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
 	$item = $formSetup->newItem('DOLIFARM_FARM_SOCID');
@@ -243,7 +245,10 @@ if ($action == 'update' && GETPOSTISSET('DOLIFARM_EXPIRY_DAYS')) {
 }
 
 if (isset($farmsocitem)) {
-	$farmsocitem->fieldInputOverride = img_picto('', 'company', 'class="pictofixedwidth"').$formSetup->form->select_company(getDolGlobalInt('DOLIFARM_FARM_SOCID'), 'DOLIFARM_FARM_SOCID', '', 1, 0, 0, array(), 0, 'minwidth300');
+	// Only third parties of type "Azienda agricola" (and the one already chosen, to show it even if its type changed)
+	$farmtypeid = dolifarmGetTypentId($db, 'TE_FARM');
+	$farmfilter = ($farmtypeid > 0 ? '((s.fk_typent:=:'.((int) $farmtypeid).')'.(getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0 ? ' OR (s.rowid:=:'.getDolGlobalInt('DOLIFARM_FARM_SOCID').')' : '').')' : '');
+	$farmsocitem->fieldInputOverride = img_picto('', 'company', 'class="pictofixedwidth"').$formSetup->form->select_company(getDolGlobalInt('DOLIFARM_FARM_SOCID'), 'DOLIFARM_FARM_SOCID', $farmfilter, 1, 0, 0, array(), 0, 'minwidth300');
 	$farmsocitem->fieldOutputOverride = '';
 	if (getDolGlobalInt('DOLIFARM_FARM_SOCID') > 0) {
 		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
@@ -264,9 +269,24 @@ if (isset($farmsocitem)) {
 
 // Managed farms: which ones, warnings when none, objects hidden because on other third parties
 dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+// Multi-farm mode: dossier and warehouses of the affiliated farms and processors that do not have them yet
+// (they are created when the third party is saved, so the farms affiliated before the switch of the mode lack them)
+if ($action == 'syncaffiliated' && getDolGlobalInt('DOLIFARM_MULTIFARM')) {
+	dol_include_once('/dolifarm/lib/dolifarm_affiliated.lib.php');
+	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+	$syncmessages = array();
+	$syncerror = 0;
+	foreach (dolifarmManagedFarmIds(true, true) as $syncsocid) {
+		$syncsoc = new Societe($db);
+		if ($syncsoc->fetch($syncsocid) > 0 && dolifarmSyncAffiliatedFarm($db, $syncsoc, $user, $syncmessages) < 0) {
+			$syncerror++;
+		}
+	}
+	setEventMessages($langs->trans($syncerror ? 'DolifarmAffiliatedSyncError' : 'DolifarmAffiliatedSyncDone'), $syncmessages, $syncerror ? 'errors' : 'mesgs');
+}
 $managedids = dolifarmManagedFarmIds(true, true);	// Farms and processors
 $managedhtml = '';
-if ($managedids === null || empty($managedids)) {
+if (empty($managedids)) {
 	$managedwarning = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');
 	$managedhtml = img_warning($managedwarning).' <span class="warning">'.$managedwarning.'</span>';
 } else {
@@ -283,6 +303,19 @@ if ($managedids === null || empty($managedids)) {
 $nbhidden = dolifarmCountHiddenObjects($db);
 if ($nbhidden > 0) {
 	$managedhtml .= '<br>'.img_warning().' <span class="warning">'.$langs->trans('DolifarmManagedFarmsHidden', $nbhidden).'</span>';
+}
+// Affiliated farms without a dossier (affiliated before the switch to the multi-farm mode)
+if (getDolGlobalInt('DOLIFARM_MULTIFARM') && !empty($managedids)) {
+	$nodossier = 0;
+	foreach (dolifarmManagedFarmIds() as $managedid) {
+		if (dolifarmGetFarmDossier($db, $managedid) <= 0) {
+			$nodossier++;
+		}
+	}
+	if ($nodossier > 0) {
+		$managedhtml .= '<br>'.img_warning().' <span class="warning">'.$langs->trans('DolifarmAffiliatedNoDossier', $nodossier).'</span>';
+		$managedhtml .= ' <a class="butActionSmall" href="'.$_SERVER['PHP_SELF'].'?action=syncaffiliated&token='.newToken().'">'.$langs->trans('DolifarmAffiliatedSync').'</a>';
+	}
 }
 $managedfarmsitem->fieldOverride = $managedhtml;
 

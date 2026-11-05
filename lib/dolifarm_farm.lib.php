@@ -22,6 +22,7 @@
  *
  * Managed farms: in single-farm mode (DOLIFARM_MULTIFARM off) the farm chosen in the setup (DOLIFARM_FARM_SOCID),
  * in multi-farm mode the third parties of type farm (TE_FARM) flagged as affiliated (extrafield dolifarm_affiliated).
+ * In single-farm mode with no farm chosen there is no managed farm: the setup must be completed first.
  * The farm drop-downs of the suite offer only the managed farms, lists and registers hide the objects of the
  * other third parties and the save of an object on another farm is refused.
  * In single-farm mode the new objects get the farm, not editable, with its current dossier.
@@ -115,7 +116,7 @@ function dolifarmManagedProcessorIds($reset = false)
  *
  * @param	bool		$reset			True to read again the affiliated farms (after a change of a third party)
  * @param	bool		$withprocessors	True to add the managed processors
- * @return	int[]|null					Ids of the managed farms, null when there is no restriction (single-farm mode with no farm set)
+ * @return	int[]						Ids of the managed farms, empty when there is none (single-farm mode with no farm set)
  */
 function dolifarmManagedFarmIds($reset = false, $withprocessors = false)
 {
@@ -126,7 +127,7 @@ function dolifarmManagedFarmIds($reset = false, $withprocessors = false)
 	}
 	if (!getDolGlobalInt('DOLIFARM_MULTIFARM')) {
 		$socid = getDolGlobalInt('DOLIFARM_FARM_SOCID');
-		return ($socid > 0 ? array($socid) : null);
+		return ($socid > 0 ? array($socid) : array());
 	}
 	if ($cache === null || $reset) {
 		$cache = dolifarmAffiliatedIds('TE_FARM');
@@ -260,6 +261,64 @@ function dolifarmSingleFarmSocid()
 		return 0;
 	}
 	return getDolGlobalInt('DOLIFARM_FARM_SOCID');
+}
+
+/**
+ * Farm of a page filter: in single-farm mode always the farm of the installation
+ *
+ * @param	int		$socid	Farm asked by the page (0 = all the managed farms)
+ * @return	int				Farm to use
+ */
+function dolifarmForcedSocid(int $socid): int
+{
+	$single = dolifarmSingleFarmSocid();
+	return ($single > 0 ? $single : $socid);
+}
+
+/**
+ * Warning shown when there is no managed farm, according to the mode
+ *
+ * @return	string		HTML
+ */
+function dolifarmNoManagedFarmWarning(): string
+{
+	global $langs;
+
+	$langs->load('dolifarm@dolifarm');
+	$text = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');
+	return img_warning($text).' <span class="warning">'.$text.'</span>';
+}
+
+/**
+ * Farm field of the filters and forms of the pages: in single-farm mode the farm of the installation, fixed;
+ * in multi-farm mode a drop-down with the managed farms the user can see
+ *
+ * @param	Form		$form			Form handler
+ * @param	int			$selected		Selected farm
+ * @param	string		$htmlname		Name of the field
+ * @param	int|string	$showempty		Empty choice: 0 none, 1 empty, or its label (for example "All")
+ * @param	bool		$withprocessors	True to offer also the managed processors
+ * @param	string		$morecss		CSS of the drop-down
+ * @return	string						HTML
+ */
+function dolifarmFarmSelectHtml($form, int $selected, string $htmlname = 'socid', $showempty = 1, bool $withprocessors = false, string $morecss = 'minwidth300'): string
+{
+	global $db, $user;
+
+	$single = dolifarmSingleFarmSocid();
+	if ($single > 0) {
+		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+		$soc = new Societe($db);
+		$out = ($soc->fetch($single) > 0 ? $soc->getNomUrl(1) : '');
+		return $out.'<input type="hidden" name="'.dol_escape_htmltag($htmlname).'" value="'.$single.'">';
+	}
+	dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+	$ids = dolifarmAllowedSocIds($user, $withprocessors);
+	if (is_array($ids) && empty($ids)) {
+		return dolifarmNoManagedFarmWarning();
+	}
+	$filter = (is_array($ids) ? '(s.rowid:IN:'.implode(',', array_map('intval', $ids)).')' : '');
+	return $form->select_company($selected, $htmlname, $filter, $showempty, 0, 0, array(), 0, $morecss);
 }
 
 /**

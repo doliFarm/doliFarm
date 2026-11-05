@@ -8,6 +8,7 @@ Aziende gestite, catalogo dei fitosanitari nei trattamenti, costi standard delle
 - Multi-azienda: sono gestiti i soggetti terzi di tipo "Azienda agricola" o "Trasformatore" con il flag "Azienda affiliata"; azienda singola: quella della configurazione, fissa in tutte le schede. Gli oggetti di altri soggetti terzi sono nascosti in elenchi, registri e widget e non si salvano; la configurazione mostra le aziende gestite e gli oggetti nascosti.
 - Tab "Azienda agricola" sul soggetto terzo: fascicolo corrente, terreni con riepiloghi per titolo di conduzione e stato bio, macchine, fabbricati, allevamenti, scadenze; con doliTrace piani, raccolte, operazioni, trattamenti e ispezioni.
 - Tipo "Trasformatore": soggetto gestito senza fascicolo, con magazzini propri e certificazione bio; flag "Trasforma i propri prodotti" per le aziende agricole.
+- Modalità azienda singola: l'azienda (obbligatoria, scelta tra le aziende agricole) è sempre e solo quella in tutte le schermate, anche nei filtri di export, import, registri bio e ispezioni; senza azienda configurata nessun oggetto è gestito e le pagine lo segnalano. Il cambio di modalità ricarica la configurazione; con più aziende, pulsante per creare fascicolo e magazzini delle aziende affiliate prima del cambio. Primi passi, widget e home di doliTrace contano solo le aziende gestite.
 
 ### Fascicolo e appezzamenti
 - Documento PDF del fascicolo (modello "Fascicolo"): azienda, dati del fascicolo, terreni con totali e riepiloghi, macchine, fabbricati, allevamenti, piani di produzione.
