@@ -17,9 +17,14 @@
 CREATE TABLE IF NOT EXISTS llx_dolifarm_dolifarmestimatecosts(
 	-- BEGIN MODULEBUILDER FIELDS
 	rowid int AUTO_INCREMENT PRIMARY KEY NOT NULL, 
+	entity integer DEFAULT 1 NOT NULL, 
 	fk_operation_type varchar(32) NOT NULL, 
 	fk_soc integer, 
+	date_start date, 
 	duration_min_ha int, 
+	cost_manpower_ha double(24,8), 
+	cost_machine_ha double(24,8), 
+	cost_service_ha double(24,8), 
 	cost_std_ha double(24,8), 
 	label varchar(255), 
 	note_public text, 

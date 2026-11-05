@@ -140,6 +140,9 @@ class DoliFarmOperator extends CommonObject
 		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('operator');
 		$this->initFieldsDefinition();
+		// Farm: only the managed farms, fixed in single-farm mode
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array());
 	}
 
 	/**

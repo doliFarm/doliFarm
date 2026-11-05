@@ -1,5 +1,37 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.0
+
+Aziende gestite, catalogo dei fitosanitari nei trattamenti, costi standard delle operazioni, organismi di controllo bio e traduzioni complete. È la versione richiesta da doliTrace 1.3.0: aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo: all'attivazione si aggiungono colonne (nome locale delle colture, tariffe dei costi standard), dizionari (organismi di controllo bio) e tipi di soggetto terzo (Trasformatore), e cambiano i menu. Requisito minimo PHP 8.2 e Dolibarr 23; provato su PHP 8.4, MySQL 8.4 e Dolibarr 24.0.2.
+
+### Aziende gestite
+- Multi-azienda: sono gestiti i soggetti terzi di tipo "Azienda agricola" o "Trasformatore" con il flag "Azienda affiliata"; azienda singola: quella della configurazione, fissa in tutte le schede. Gli oggetti di altri soggetti terzi sono nascosti in elenchi, registri e widget e non si salvano; la configurazione mostra le aziende gestite e gli oggetti nascosti.
+- Tab "Azienda agricola" sul soggetto terzo: fascicolo corrente, terreni con riepiloghi per titolo di conduzione e stato bio, macchine, fabbricati, allevamenti, scadenze; con doliTrace piani, raccolte, operazioni, trattamenti e ispezioni.
+- Tipo "Trasformatore": soggetto gestito senza fascicolo, con magazzini propri e certificazione bio; flag "Trasforma i propri prodotti" per le aziende agricole.
+
+### Fascicolo e appezzamenti
+- Documento PDF del fascicolo (modello "Fascicolo"): azienda, dati del fascicolo, terreni con totali e riepiloghi, macchine, fabbricati, allevamenti, piani di produzione.
+- Stessa intestazione in tutti i tab del fascicolo (azienda con CUAA, organismo pagatore, validità).
+- Appezzamento: tab "Storico piani di produzione" con colture, operazioni, trattamenti, azoto e rame per ettaro, resa e avviso di rotazione, CSV; i periodi bio rispettano i registri congelati da un'ispezione.
+- Un solo termine: "Piano di produzione" / "Production plan" / "Plan de production".
+
+### Mezzi tecnici e colture
+- Menu "Mezzi tecnici": registro, fitosanitari, fertilizzanti, operatori abilitati.
+- Fitosanitari dal catalogo del Ministero della Salute: la ricerca trova anche i prodotti autorizzati non ancora in anagrafica e la scelta crea l'agrofarmaco con il prodotto di magazzino; sincronizzazione settimanale attivata una volta all'attivazione.
+- Prodotti ammessi in biologico in evidenza nelle ricerche (Ammessi, Da verificare, Non ammessi).
+- Fertilizzanti: link alla consultazione del registro sul SIAN (il registro non è scaricabile).
+- Organismi di controllo bio da dizionario (21 organismi autorizzati); il campo del soggetto terzo diventa un elenco, con migrazione dei testi esistenti.
+- Colture: nome comune tradotto, nuovo campo "Nome locale", tipologia e unità di impianto da elenco.
+- Pagina EPPO in tre passi (import del file, aggiornamento dall'API, lavoro settimanale) con stato e avviso se il cron non gira; elenco e sostituzione dei codici disattivati in uso; la lettura SIAN propone il codice sostitutivo.
+
+### Costi
+- Costi standard delle operazioni per ettaro (manodopera, macchine, servizi), per tipo di operazione, facoltativamente per azienda e con data di validità: base del calcolo dei costi delle operazioni e del preventivo dei piani in doliTrace.
+
+### Altro
+- Traduzioni italiane, inglesi e francesi complete (etichette, messaggi, guide); nome e descrizione del modulo.
+- Numerazione: data di oggi quando l'oggetto non ha data di creazione.
+- Ricerca generale riattivata in tutti gli elenchi.
+
 ## 1.4.0
 
 Produzione biologica, mezzi tecnici e dati AGEA del quaderno di campagna. È la versione richiesta da doliTrace 1.2.0: aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo (tabelle, colonne, dizionari, extrafield e menu nuovi). Requisito minimo PHP 8.2 e Dolibarr 23; provato su PHP 8.4, MySQL 8.4 e Dolibarr 24.0.2.

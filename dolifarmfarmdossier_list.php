@@ -164,18 +164,18 @@ foreach ($object->fields as $key => $val) {
 
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array();
-// foreach ($object->fields as $key => $val) {
-// 	if (!empty($val['searchall'])) {
-// 		$fieldstosearchall['t.'.$key] = $val['label'];
-// 	}
-// }
-// $parameters = array('fieldstosearchall'=>$fieldstosearchall);
-// $reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
-// if ($reshook > 0) {
-// 	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
-// } elseif ($reshook == 0) {
-// 	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
-// }
+foreach ($object->fields as $key => $val) {
+	if (!empty($val['searchall'])) {
+		$fieldstosearchall['t.'.$key] = $val['label'];
+	}
+}
+$parameters = array('fieldstosearchall'=>$fieldstosearchall);
+$reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
+if ($reshook > 0) {
+	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
+} elseif ($reshook == 0) {
+	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
+}
 
 // Definition of array of fields for columns from ->fields
 $tableprefix = 't';
@@ -274,15 +274,15 @@ if ($action == 'import_xml' && $permissiontoadd) {
                 $res = $importer->importFromXML($dest_file);
 
                 if ($res > 0) {
-                    setEventMessages("Importazione completata con successo! Creato Fascicolo ID: ".$res, null, 'mesgs');
+                    setEventMessages($langs->trans("DossierImportDone", $res), null, 'mesgs');
                 } else {
-                    setEventMessages("Errore Importazione: " . $importer->error, $importer->errors, 'errors');
+                    setEventMessages($langs->trans("DossierImportError").': '.$importer->error, $importer->errors, 'errors');
                 }
                 
                 // Pulizia file temp
                 @unlink($dest_file);
             } else {
-                setEventMessages("Errore Critico: Classe DoliFarmImporter non trovata.", null, 'errors');
+                setEventMessages($langs->trans("ClassNotFound").': DoliFarmImporter', null, 'errors');
             }
 
         } else {
@@ -442,7 +442,7 @@ foreach ($search as $key => $val) {
 		}
 	}
 }
-if ($search_all) {
+if ($search_all && !empty($fieldstosearchall)) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
 }
 // Users restricted to their third parties (sales representatives): only the objects of these third parties
@@ -570,13 +570,13 @@ if ($permissiontoadd) {
     print '<input type="hidden" name="action" value="import_xml">';
     
     print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre"><td colspan="3">Importazione Rapida Fascicolo (XML)</td></tr>';
+    print '<tr class="liste_titre"><td colspan="3">'.$langs->trans('DossierImportXml').'</td></tr>';
     
     print '<tr class="oddeven">';
-    print '<td width="150">Seleziona File XML:</td>';
+    print '<td width="150">'.$langs->trans('DossierImportXmlFile').'</td>';
     print '<td><input type="file" name="file_import" accept=".xml"></td>';
     print '<td align="right">';
-    print '<input type="submit" class="button" value="Importa Fascicolo">';
+    print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('DossierImportButton')).'">';
     print '</td>';
     print '</tr>';
     

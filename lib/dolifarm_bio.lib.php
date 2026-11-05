@@ -256,6 +256,29 @@ function dolifarmBioSync($db, $plotid)
 }
 
 /**
+ * Check that the organic status of a plot from a date on can change: with doliTrace, a closed inspection of the
+ * control body freezes the registers of the farm up to its date
+ *
+ * @param	DoliDB	$db			Database handler
+ * @param	int		$plotid		Plot
+ * @param	int		$date		First day whose status changes (timestamp)
+ * @param	string	$error		Error message (translated) when frozen
+ * @return	bool				True if allowed
+ */
+function dolifarmBioFrozenAllowed($db, $plotid, $date, &$error)
+{
+	if (!isModEnabled('dolitrace') || !dol_include_once('/dolitrace/lib/dolitrace_inspection.lib.php') || !function_exists('dolitraceFrozenDateAllowed')) {
+		return true;
+	}
+	$socid = 0;
+	$resql = $db->query("SELECT fk_soc FROM ".$db->prefix()."dolifarm_plot WHERE rowid = ".((int) $plotid));
+	if ($resql && ($obj = $db->fetch_object($resql))) {
+		$socid = (int) $obj->fk_soc;
+	}
+	return dolitraceFrozenDateAllowed($db, $socid, $date, $error);
+}
+
+/**
  * Add a period to the history of a plot. The open period before it is closed on the day before.
  *
  * @param	DoliDB		$db			Database handler
@@ -291,6 +314,10 @@ function dolifarmBioAddPeriod($db, $user, $plotid, $status, $datestart, $years, 
 		$years = ((int) $years >= 1 && (int) $years <= 3 ? (int) $years : 2);
 	} else {
 		$years = null;
+	}
+
+	if (!dolifarmBioFrozenAllowed($db, $plotid, (int) $datestart, $error)) {
+		return -1;
 	}
 
 	$history = dolifarmBioHistory($db, $plotid);
@@ -358,6 +385,9 @@ function dolifarmBioDeleteLastPeriod($db, $user, $plotid, $periodid, &$error)
 		$error = $langs->trans('ErrorBioPeriodNotLast');
 		return -1;
 	}
+	if (!dolifarmBioFrozenAllowed($db, $plotid, (int) $history[$n - 1]->date_start, $error)) {
+		return -1;
+	}
 	$db->begin();
 	if (!$db->query("DELETE FROM ".$db->prefix()."dolifarm_plot_biostatus WHERE rowid = ".((int) $periodid)." AND fk_plot = ".((int) $plotid))) {
 		$error = $db->lasterror();
@@ -408,6 +438,10 @@ function dolifarmBioClosePeriod($db, $user, $plotid, $dateend, &$error)
 	}
 	if ((int) $dateend < (int) $history[$n - 1]->date_start) {
 		$error = $langs->trans('ErrorBioPeriodEndBeforeStart');
+		return -1;
+	}
+	// The status changes from the day after the end
+	if (!dolifarmBioFrozenAllowed($db, $plotid, (int) dol_time_plus_duree((int) $dateend, 1, 'd'), $error)) {
 		return -1;
 	}
 	$db->begin();

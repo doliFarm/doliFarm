@@ -73,7 +73,7 @@ class DoliFarmEstimateCosts extends CommonObject
 	 * @var int<0,1>|string		Does this object support multicompany module ?
 	 * 							0=No test on entity, 1=Test with field entity in local table, 'field@table'=Test entity into the field@table (example 'fk_soc@societe')
 	 */
-	public $ismultientitymanaged = 0;
+	public $ismultientitymanaged = 1;
 
 
 	const STATUS_DRAFT = 0;
@@ -129,12 +129,17 @@ class DoliFarmEstimateCosts extends CommonObject
 	 * Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields = array(
-		"rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "-1",),
-		"fk_operation_type" => array("type" => "varchar(32)", "label" => "Fkoperationtype", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx",),
-		"fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "ThirdParty", "picto" => "company", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "-1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150",),
-		"duration_min_ha" => array("type" => "int", "label" => "Durationminha", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1",),
-		"cost_std_ha" => array("type" => "double(24,8)", "label" => "Coststdha", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
-		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
+		"rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
+		"entity" => array("type" => "integer", "label" => "Entity", "enabled" => "1", 'position' => 12, 'notnull' => 1, "visible" => "0", "default" => "1", "index" => "1",),
+		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax200", "showoncombobox" => "1",),
+		"fk_operation_type" => array("type" => "sellist:dolifarm_c_operation_type:label:code::active=1", "label" => "OperationType", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax200", "help" => "CostOperationTypeHelp",),
+		"fk_soc" => array("type" => "integer:Societe:societe/class/societe.class.php", "label" => "CostFarm", "picto" => "company", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "1", "css" => "maxwidth500 widthcentpercentminusxx", "csslist" => "tdoverflowmax150", "help" => "CostFarmHelp",),
+		"date_start" => array("type" => "date", "label" => "CostValidFrom", "enabled" => "1", 'position' => 28, 'notnull' => 0, "visible" => "1", "help" => "CostValidFromHelp",),
+		"duration_min_ha" => array("type" => "int", "label" => "CostDurationMinHa", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1", "help" => "CostDurationMinHaHelp",),
+		"cost_manpower_ha" => array("type" => "price", "label" => "CostManpowerHa", "enabled" => "1", 'position' => 32, 'notnull' => 0, "visible" => "1", "isameasure" => "1",),
+		"cost_machine_ha" => array("type" => "price", "label" => "CostMachineHa", "enabled" => "1", 'position' => 33, 'notnull' => 0, "visible" => "1", "isameasure" => "1", "help" => "CostMachineHaHelp",),
+		"cost_service_ha" => array("type" => "price", "label" => "CostServiceHa", "enabled" => "1", 'position' => 34, 'notnull' => 0, "visible" => "1", "isameasure" => "1", "help" => "CostServiceHaHelp",),
+		"cost_std_ha" => array("type" => "price", "label" => "CostTotalHa", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "1", "noteditable" => "1", "isameasure" => "1", "help" => "CostTotalHaHelp",),
 		"note_public" => array("type" => "text", "label" => "NotePublic", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "0", "cssview" => "wordbreak",),
 		"date_creation" => array("type" => "datetime", "label" => "DateCreation", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1",),
 		"tms" => array("type" => "timestamp", "label" => "DateModification", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "-1",),
@@ -143,9 +148,26 @@ class DoliFarmEstimateCosts extends CommonObject
 		"import_key" => array("type" => "varchar(14)", "label" => "ImportId", "enabled" => "1", 'position' => 900, 'notnull' => 0, "visible" => "-2",),
 	);
 	public $rowid;
+	public $entity;
 	public $fk_operation_type;
 	public $fk_soc;
+	/**
+	 * @var int|string|null Date from which the cost applies
+	 */
+	public $date_start;
 	public $duration_min_ha;
+	/**
+	 * @var float|string|null Cost per hectare: labour
+	 */
+	public $cost_manpower_ha;
+	/**
+	 * @var float|string|null Cost per hectare: machines and fuel
+	 */
+	public $cost_machine_ha;
+	/**
+	 * @var float|string|null Cost per hectare: services of third parties (contractors)
+	 */
+	public $cost_service_ha;
 	public $cost_std_ha;
 	public $label;
 	public $note_public;
@@ -208,6 +230,9 @@ class DoliFarmEstimateCosts extends CommonObject
 		
 		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('estimatecosts');
+		// Farm: only the managed farms, fixed in single-farm mode
+		dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+		dolifarmRestrictLinkFields($this, array());
 
 		if (!getDolGlobalInt('MAIN_SHOW_TECHNICAL_ID') && isset($this->fields['rowid']) && !empty($this->fields['ref'])) {
 			$this->fields['rowid']['visible'] = 0;
@@ -250,6 +275,7 @@ class DoliFarmEstimateCosts extends CommonObject
 	 */
 	public function create(User $user, $notrigger = 0)
 	{
+		$this->computeTotal();
 		$result = $this->createCommon($user, $notrigger);
 
 		// uncomment lines below if you want to validate object after creation
@@ -484,7 +510,22 @@ class DoliFarmEstimateCosts extends CommonObject
 	 */
 	public function update(User $user, $notrigger = 0)
 	{
+		$this->computeTotal();
 		return $this->updateCommon($user, $notrigger);
+	}
+
+	/**
+	 * Total cost per hectare: sum of labour, machines and services
+	 *
+	 * @return	void
+	 */
+	public function computeTotal()
+	{
+		$total = 0.0;
+		foreach (array('cost_manpower_ha', 'cost_machine_ha', 'cost_service_ha') as $key) {
+			$total += (float) price2num((string) $this->$key);
+		}
+		$this->cost_std_ha = $total;
 	}
 
 	/**

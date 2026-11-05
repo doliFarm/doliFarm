@@ -5,41 +5,30 @@
 #
 
 # Module label 'ModuleDolifarmName'
-ModuleDolifarmName = Dolifarm
+ModuleDolifarmName = doliFarm
 # Module description 'ModuleDolifarmDesc'
-ModuleDolifarmDesc = Dolifarm description
+ModuleDolifarmDesc = Farm management: dossier, plots, machines, technical inputs, crops and costs
 
 #
 # Admin page
 #
-DolifarmSetup = Dolifarm setup
+DolifarmSetup = doliFarm setup
 Settings = Settings
-DolifarmSetupPage = Dolifarm setup page
-NewSection=New section
-DOLIFARM_MYPARAM1 = My param 1
-DOLIFARM_MYPARAM1Tooltip = My param 1 tooltip
-DOLIFARM_MYPARAM2=My param 2
-DOLIFARM_MYPARAM2Tooltip=My param 2 tooltip
+DolifarmSetupPage = Settings of the doliFarm module
 
 
 #
 # About page
 #
 About = About
-DolifarmAbout = About Dolifarm
-DolifarmAboutPage = Dolifarm about page
 
 #
 # Sample page
 #
-DolifarmArea = Home Dolifarm
-MyPageName = My page name
 
 #
 # Sample widget
 #
-MyWidget = My widget
-MyWidgetDescription = My widget description
 
 #
 # Farm dossier
@@ -278,9 +267,9 @@ FertilizerDensity = Density (kg/l)
 FertilizerDensityHelp = Density of the liquid fertilizer: used to compute the nitrogen applied when the quantity is in litres or m³. Empty for livestock effluents = 1 kg/l
 ErrorFertilizerDensity = The density must be greater than 0 and at most 3 kg/l
 AgroDrugMaxApplications = Max. applications per cycle
-AgroDrugMaxApplicationsHelp = Maximum number of applications a year or for each crop cycle given on the label. The register warns when it is exceeded on the same crop plan
+AgroDrugMaxApplicationsHelp = Maximum number of applications a year or for each crop cycle given on the label. The register warns when it is exceeded on the same production plan
 AgroDrugMoaCodes = Mode of action groups (FRAC/IRAC/HRAC)
-AgroDrugMoaCodesHelp = Groups given on the label, separated by semicolons, for example FRAC 3; FRAC M01 or IRAC 4A. The register warns when the same group is repeated in too many applications in a row on the same crop plan
+AgroDrugMoaCodesHelp = Groups given on the label, separated by semicolons, for example FRAC 3; FRAC M01 or IRAC 4A. The register warns when the same group is repeated in too many applications in a row on the same production plan
 ErrorAgroDrugMaxApplications = The maximum number of applications cannot be negative
 ErrorAgroDrugMoaCodes = "%s" is not a mode of action group: write FRAC, IRAC or HRAC followed by the code (for example FRAC 3)
 DictionaryFertilizerType = Fertilizer types
@@ -295,12 +284,12 @@ DOLIFARM_WAREHOUSE_PRODUCTS = Default products warehouse
 DOLIFARM_WAREHOUSE_PRODUCTSHelp = Used when the farm dossier has no products warehouse (single farm)
 FarmMode = Managed farms
 DOLIFARM_MULTIFARM = Several farms (affiliated)
-DOLIFARM_MULTIFARMHelp = Enables the "Affiliated farm" field on the third parties: an affiliated farm automatically gets a draft dossier and the warehouses AZ-code (inputs and products). Removing the flag closes dossier and warehouses, nothing is deleted.
+DOLIFARM_MULTIFARMHelp = On: the managed farms are the third parties of type "Farm" with the field "Affiliated farm"; each one automatically gets a draft dossier and the warehouses AZ-code (inputs and products). Removing the flag or changing the type closes dossier and warehouses, nothing is deleted. Off: a single farm is managed, the one set below.
 DOLIFARM_FARM_SOCID = Farm (single-farm mode)
-DOLIFARM_FARM_SOCIDHelp = Third party of the managed farm. The new dossiers, plots, machines, buildings, livestock, operators and estimates propose it already filled in, with the current dossier; the modules of the suite use it as default farm (for example for the warehouses).
+DOLIFARM_FARM_SOCIDHelp = Third party of the managed farm. Dossiers, plots, machines, buildings, livestock, operators, estimates, production plans and treatments get it automatically and it cannot be changed; the new objects also propose the current dossier. The modules of the suite use it as default farm (for example for the warehouses).
 DOLIFARM_FARM_SOCIDNotFarm = The third party is not of type "Farm": new farm dossiers will not propose it. Change its type in the third party card.
 DolifarmAffiliated = Affiliated farm
-DolifarmAffiliatedHelp = Farm managed by the organisation: creates the dossier and the warehouses of the farm and opens the registers and the field notebook
+DolifarmAffiliatedHelp = Business managed by the organization. Type "Farm": creates the dossier and the warehouses of the farm and opens registers and field register. Type "Processor": creates the warehouses of raw materials and finished products and opens the organic inspections (no dossier, no land)
 DolifarmAffiliatedWarehouse = Farm warehouse
 DolifarmAffiliatedDossierCreated = Draft farm dossier %s created
 DolifarmAffiliatedDossierReopened = Farm dossier %s set back to draft
@@ -317,7 +306,7 @@ ErrorDolifarmFarmNotAllowed = You cannot use the farm indicated in %s: it is not
 #
 EppoCodes = EPPO Codes
 EppoAttribution = Contains EPPO Codes (www.eppo.int)
-EppoPageHelp = EPPO Codes identify crops and pests in the treatment register (Reg. (EU) 2023/564). Import the "XML full" file downloaded from your account on data.eppo.int: codes and names only, no other data of the Global Database. The data belong to EPPO and are used under the EPPO Open Data Licence.
+EppoPageHelp = EPPO Codes identify crops and pests (Reg. EU 2023/564). doliFarm keeps a local copy: only codes and names, no other data of the Global Database, used under the EPPO Open Data Licence. The copy is created once with the EPPO file (step 1) and kept up to date with the EPPO API (steps 2 and 3).
 EppoData = EPPO data
 EppoSource = Source
 EppoDataDate = Data date (EPPO export)
@@ -362,7 +351,7 @@ EppoApiKeyRemoved = API key removed
 EppoSyncDate = Last update from the API
 EppoNeverSynced = Never: the next update starts from the date of the file
 EppoSyncNow = Update now
-EppoSyncCron = For the automatic update enable the job "Update of the EPPO Codes" in the scheduled jobs (weekly).
+EppoSyncCron = Weekly automatic update: see step 3.
 EppoSyncDone = EPPO Codes updated from the API: %s codes, %s calls
 DolifarmEppoSyncJob = Update of the EPPO Codes
 ErrorEppoSyncNoData = Import the file of the EPPO Codes first
@@ -385,9 +374,7 @@ FertGroupHelp = ORG organic fertilization (AGEA sheet 6), MIN chemical fertiliza
 
 # Keys aligned with it_IT (01/11/2026)
 CHARSET = UTF-8
-Module100000Name = Farm dossiers
 Dolifarm = Farm dossiers
-Module100000Desc = Module to manage farms, farm dossiers, plots and machines.
 DoliFarmArea = Farm management area
 DoliFarmFarmDossier = Farm dossier
 DoliFarmFarmDossiers = Farm dossiers
@@ -397,7 +384,7 @@ DoliFarmMachine = Farm machine
 DoliFarmMachines = Farm machines
 DoliFarmAgroDrug = Plant protection product
 DoliFarmCrops = Crops
-DoliFarmEstimateCosts = Cost estimates
+DoliFarmEstimateCosts = Standard operation costs
 MenuNewFarmDossier = New dossier
 MenuListFarmDossier = List of dossiers
 MenuNewPlot = New plot
@@ -433,7 +420,6 @@ SourceFile = Source file
 Validator = Validating technician
 ValidationStatus = Validation status
 Terreni = Plots
-Macchine = Machines
 NewDoliFarmPlot = New plot
 ListDoliFarmPlot = List of plots
 EditDoliFarmPlot = Edit plot
@@ -674,7 +660,7 @@ PppStatus_other = other
 PppNbAgroDrugs = Agrodrugs linked to the catalogue
 PppSyncNow = Sync now
 PppSyncForce = also when the file is the same
-PppSyncCron = The scheduled job "%s" (disabled at installation) does it every week
+PppSyncCron = The scheduled job "%s" does it every week (enabled at installation; it can be disabled in the Scheduled jobs)
 PppUpload = Manual upload of the file
 PppUploadHelp = For servers without access to internet: download the CSV file from the page of the dataset and upload it here
 PppSyncSummary = Rows read %s, new %s, changed %s; agrodrugs updated %s
@@ -783,7 +769,7 @@ ErrorBioPeriodEndBeforeStart = The end cannot be before the start of the period
 DolifarmBioCert = Organic certificate
 DolifarmBioCertHelp = Number of the organic certificate (or documentary evidence) of the third party, for the traceability of suppliers and customers (Reg. EU 2021/771 art. 1)
 DolifarmBioBody = Organic control body
-DolifarmBioBodyHelp = Control body that issued the certificate (e.g. CCPB, ICEA, Bioagricert, Suolo e Salute) with its code
+DolifarmBioBodyHelp = Body that issued the organic certificate of the third party, from the official list (code IT-BIO-xxx). For a third party of type Control body it is its own code.
 DolifarmBioCertEnd = End of the organic certificate
 DolifarmBioCertEndHelp = End of validity of the certificate: shown in the expiry widget of doliFarm
 DolifarmBioDedicated = Dedicated to (organic)
@@ -831,7 +817,7 @@ StartStepAgrodrugs = Plant protection products
 StartStepAgrodrugsHelp = The products used, with registration number, authorised uses and organic check
 StartStepFertilizers = Fertilisers
 StartStepFertilizersHelp = Fertilisers, soil improvers and manure with N, P and K content and, for organic farms, the allowed category
-StartStepCropPlans = Crop plans
+StartStepCropPlans = Production plans
 StartStepCropPlansHelp = Crop of each plot in the season, with estimated yield: treatments are recorded on validated plans
 StartStepTreatments = First treatment in the register
 StartStepTreatmentsHelp = Record of a plant protection treatment or a fertilisation, then validation
@@ -851,7 +837,7 @@ TourTitle_machine_create = New machine
 TourTitle_operator_create = New operator
 TourTitle_agrodrug_create = New plant protection product
 TourTitle_fert_create = New fertiliser
-TourTitle_cropplan_create = New crop plan
+TourTitle_cropplan_create = New production plan
 TourTitle_treatment_create = New record
 TourTitle_harvest_create = New harvest
 TourTitle_bioregister = Organic registers
@@ -900,7 +886,7 @@ TourTreatment3 = Date and time of start. More than 30 days after the treatment t
 TourTreatment4 = Who applied the treatment: the register checks the licence.
 TourTreatment5 = The machine used: the register checks the functional check of the sprayer.
 TourTreatment6 = For organic farms: the document justifying the plant protection product (technical report, bulletin...).
-TourHarvest1 = The harvested crop plan.
+TourHarvest1 = The harvested production plan.
 TourHarvest2 = The harvested product that goes in stock.
 TourHarvest3 = Quantity and unit.
 TourHarvest4 = The lot. For organic or in conversion products it gets the suffix -BIO or -INCONV at the validation.
@@ -910,3 +896,270 @@ TourBio2Title = Filters
 TourBio2 = Farm, year or period, and for the stock register also warehouse, organic status and product.
 TourBio3Title = Prints
 TourBio3 = PDF and CSV of the register, and the annual organic dossier with all the sections for the control body.
+DolifarmAffiliatedNotFarmType = %s has the flag "Affiliated farm" but is not of type "Farm" or "Processor": it is not managed. Change its type to manage it.
+DolifarmManagedFarms = Managed farms
+DolifarmManagedFarmsHelp = The farm drop-downs offer only the managed farms; lists, registers and field register hide the objects of the other third parties, which cannot be saved.
+DolifarmManagedFarmsCount = Total %s
+DolifarmManagedFarmsNoneMulti = No managed farm: set the type "Farm" and the field "Affiliated farm" on the third parties of the farms
+DolifarmManagedFarmsNoneSingle = No farm set: choose the third party of the farm in the field above
+DolifarmManagedFarmsHidden = %s objects (dossiers, plots, production plans, ...) belong to third parties that are not managed farms: they are hidden
+ErrorDolifarmFarmNotManaged = You cannot use the farm indicated in %s: it is not a managed farm (see the setup of doliFarm)
+PlotCropPlansTab = Production plans history
+PlotCropPlansHelp = The production plans of the plot, season by season: crop and botanical family, organic status at the start of the plan, operations, validated treatments and fertilizations, nitrogen and copper applied, validated harvests and yield. The CSV keeps these data for the analyses of rotations, nitrogen and copper balance and emissions.
+PlotCropPlansArea = Surface used for the yield per hectare: %s ha.
+PlotCropPlansCsv = Export CSV
+PlotCropPlansNew = New production plan
+PlotCropPlansNone = No production plan on this plot
+PlotCropPlansSeason = Season
+PlotCropPlansPlan = Production plan
+PlotCropPlansCrop = Crop
+PlotCropPlansPeriod = Period
+PlotCropPlansBio = Organic status
+PlotCropPlansOperations = Operations
+PlotCropPlansProtections = Treatments
+PlotCropPlansFertilizations = Fertilizations
+PlotCropPlansNitrogen = N (kg/ha)
+PlotCropPlansCopper = Cu (kg/ha)
+PlotCropPlansHarvested = Harvested
+PlotCropPlansYield = Yield per hectare
+PlotCropPlansSameFamily = Same botanical family as the previous plan %s: check the rotation
+PppGroupFarm = Plant protection products of the farm
+PppGroupCatalog = Catalogue of the Ministry of Health (authorised)
+PppSearchPlaceholder = Plant protection product: name, active substance or registration number (also from the catalogue of the Ministry)
+PppSearchPlaceholderFarm = Plant protection product: name, active substance or registration number
+PppAgroDrugCreated = Plant protection product created from the catalogue of the Ministry of Health: complete uses, doses and stock product in its card
+PppAgroDrugCreatedFrom = plant protection product %s (%s) created from the catalogue of the Ministry of Health
+PppFromCatalog = From the catalogue of the Ministry
+PppFromCatalogHelp = Search by name, active substance or registration number among the authorised products: the card is created with name, registration number, holder, substances, formulation, status and expiry. Uses and doses are added afterwards (also from the SIAN).
+PppCreateFromCatalog = Create from the catalogue
+PppOrManual = Or fill in the card by hand:
+ErrorPppNotInCatalog = The registration number %s is not in the catalogue of the Ministry of Health (sync the catalogue or create the plant protection product by hand)
+ErrorPppNotAuthorized = %s is not authorised (status: %s)
+PppProductDescription = Plant protection product, registration no. %s (Italian Ministry of Health)
+DossierPdfModel = Farm dossier: farm, data of the dossier, land consistency and surface summaries, machines, buildings, livestock, production plans of the last season
+DossierPdfTitle = Farm dossier
+DossierPdfGenerated = Generated on %s
+DossierPdfPage = Page %s of %s
+DossierPdfFarm = Farm
+DossierPdfData = Data of the dossier
+DossierPdfPlots = Land consistency
+DossierPdfNoPlots = No plot in the dossier
+DossierPdfTotalPlots = Total (%s plots)
+DossierPdfByTitle = Surfaces by title of conduction
+DossierPdfByBio = Surfaces by organic status
+DossierPdfNotSet = Not set
+DossierPdfMachines = Machines and equipment
+DossierPdfBuildings = Buildings
+DossierPdfLivestock = Livestock
+DossierPdfCropPlans = Production plans %s
+DossierPdfColPlot = Plot
+DossierPdfColComune = Municipality
+DossierPdfColSection = Sect.
+DossierPdfColSheet = Sheet
+DossierPdfColParcel = Parcel
+DossierPdfColSub = Sub
+DossierPdfColTitle = Title of conduction
+DossierPdfColConductionEnd = End of conduction
+DossierPdfColSizeCadastral = Cadastral area (ha)
+DossierPdfColSizeConducted = Conducted area (ha)
+DossierPdfColSau = UAA (ha)
+DossierPdfColBio = Organic status
+DossierPdfColCount = Plots
+DossierPdfColMachine = Machine
+DossierPdfColType = Type
+DossierPdfColPower = kW
+DossierPdfColFuel = Fuel
+DossierPdfColYear = Year
+DossierPdfColRevision = Inspection
+DossierPdfColInsurance = Insurance
+DossierPdfColSprayerCheck = Sprayer check
+DossierPdfColBuilding = Building
+DossierPdfColUse = Use
+DossierPdfColCovered = Covered area (m²)
+DossierPdfColVolume = Volume (m³)
+DossierPdfColLivestock = Livestock
+DossierPdfColBdn = BDN code
+DossierPdfColSpecies = Species
+DossierPdfColHeads = Heads
+DossierPdfColProduction = Production
+DossierPdfColOrganic = Organic
+DossierPdfColCropPlan = Production plan
+DossierPdfColCrop = Crop
+DossierPdfColPeriod = Period
+DictionaryBioControlBody = Organic control bodies
+BioBodyFromList = from the official list, creates the third party
+BioBodySelectHelp = Bodies already present as third parties and bodies of the official list (Dictionaries > Organic control bodies): choosing one of these creates the third party with code, office and contacts
+BioBodyThirdpartyCreated = Third party of the control body created from the official list (type Control body, supplier)
+ErrorBioBodyNotInList = The body %s is not in the official list
+BioBodyCodeHelp = Official code (e.g. IT-BIO-006)
+Acronym = Acronym
+Country_code = Country
+BioBodyAcronymHelp = Short name (e.g. ICEA)
+BioBodySetupTitle = Organic control bodies
+BioBodySetupHelp = Official list: %s active bodies, editable in %s (Organic control bodies). Initial source: list of the Regione Emilia-Romagna updated on 03/10/2024.
+BioBodyUnmatched = %s third parties have as body of the organic certificate a text that is not in the list: correct it in their card.
+
+# Tab "Farm" of the managed farms
+FarmSummaryTab = Managed business
+FarmSummaryNotManaged = This third party is not a managed farm: the summary is for information only.
+FarmSummaryDossierPdf = Dossier document (PDF)
+FarmSummaryNoDossier = No farm dossier.
+FarmSummaryLand = Land
+FarmSummaryNbPlots = Plots
+FarmSummaryNbPlotsShort = Plots
+FarmSummaryCadastral = Cadastral area
+FarmSummaryConducted = Conducted area
+FarmSummarySau = UAA
+FarmSummarySauShort = UAA
+FarmSummaryByTitle = By title of conduction
+FarmSummaryByBio = By organic status
+FarmSummaryMeans = Means and facilities
+FarmSummaryBuildings = Buildings
+FarmSummaryLivestock = Livestock
+FarmSummaryHeads = %s heads
+FarmSummaryOperators = Operators
+FarmSummaryExpiries = Expiries within %s days
+FarmSummaryPlans = Production plans
+FarmSummaryHarvests = Last harvests
+FarmSummaryOperations = Last field operations
+FarmSummaryTreatments = Last treatments and fertilizations
+FarmSummaryInspections = Organic inspections
+FarmSummaryNoTrace = Production plans, harvests, operations and treatments are shown with the doliTrace module.
+
+# Processors (affiliated)
+TE_PROCESSOR = Processor
+DolifarmProcessing = Processes its own products
+DolifarmProcessingHelp = For a farm that also prepares or processes its products (oil, wine, preserves...). A business that processes without farming has the type "Processor".
+WarehouseRawMaterials = Raw materials warehouse
+WarehouseFinishedProducts = Finished products warehouse
+DolifarmProcessorWarehouseHelp = Created by doliFarm when the processor is affiliated; closed (not deleted) when the flag is removed
+DolifarmAffiliatedWarehouseClosed = Warehouse %s closed
+FarmSummaryStock = %s units, value %s
+FarmSummaryBioCert = Organic certification
+
+# Planting density units of the crops
+PlantingUnitHelp = Unit of the planting or sowing density of the crop
+PlantingUnitKgHa = kg of seed per hectare (kg/ha)
+PlantingUnitQHa = quintals per hectare (q/ha, e.g. tubers)
+PlantingUnitSeedsHa = seeds per hectare
+PlantingUnitSeedsM2 = seeds per m²
+PlantingUnitPlantsHa = plants per hectare
+PlantingUnitPlantsM2 = plants per m²
+Plantingunit = Planting unit
+
+# Crops: names
+CropCommonName = Common name
+CropCommonNameHelp = Name of the crop. The crops of the initial data have a code (e.g. CROP_WHEAT_DURUM) that is shown translated in the language of the user
+CropLocalName = Local name
+CropLocalNameHelp = Name by which the crop is known in the area or in dialect; it is also used by the search
+Scientificname = Scientific name
+Variety = Variety
+Croptype = Crop type
+Estimatedyieldstd = Standard estimated yield
+CAT_CEREAL = Cereals
+CAT_LEGUME = Legumes
+CAT_VEG = Vegetables
+CAT_FRUIT = Fruit crops
+CAT_NUT = Nuts
+CAT_FORAGE = Forage crops
+CAT_INDUSTRIAL = Industrial crops
+CAT_HERB = Aromatic and medicinal herbs
+
+# Menu: technical inputs
+MenuTechnicalInputs = Technical inputs
+MenuPlantProtectionProducts = Plant protection products
+MenuQualifiedOperators = Qualified operators
+
+# Selectors: products for organic areas
+PppGroupOrganicYes = Allowed in organic farming
+PppGroupOrganicVerify = To verify for organic farming
+PppGroupOrganicNo = Not allowed in organic farming
+FertilizerSianSearch = Search the SIAN register
+FertilizerSianSearchHelp = Opens in a new tab the consultation of the Italian register of fertilisers on the SIAN (conventional and organic use): search by manufacturer or trade name and copy here the register number and the admission in organic farming. The SIAN asks for a confirmation code.
+
+# Standard costs of the operations
+CostOperationTypeHelp = Type of operation the cost applies to: the same as the operations of the field register
+CostFarm = Farm
+CostFarmHelp = Empty: the cost applies to all farms. With a farm: it applies only to it and takes precedence
+CostValidFrom = Valid from
+CostValidFromHelp = Date from which the cost applies. An operation uses the cost with the latest date not after the date of the operation; empty: always valid
+CostDurationMinHa = Duration (minutes per hectare)
+CostDurationMinHaHelp = Working time per hectare, to estimate the duration of the operation
+CostManpowerHa = Labour €/ha
+CostMachineHa = Machines and fuel €/ha
+CostMachineHaHelp = Depreciation, maintenance and fuel of the farm machines, per hectare
+CostServiceHa = Third-party services €/ha
+CostServiceHaHelp = Contractor or other services paid per hectare
+CostTotalHa = Total €/ha
+CostTotalHaHelp = Sum of labour, machines and services: computed when saving
+
+# EPPO page: steps and disabled codes
+EppoStep = Step
+EppoStepState = State
+EppoStepWhat = What it does
+EppoStep1 = Import of the file
+EppoStep1Done = %s codes, EPPO data of %s
+EppoStep1Help = Done once (or to start again): "XML full" file downloaded from your account on data.eppo.int, uploaded at the bottom of the page.
+EppoStep2 = Update from the API
+EppoStep2Help = Asks EPPO only for the codes created or changed after the last update (the first time after the date of the file) and reads again their status, replacing code and names. Needs the API key.
+EppoStep3 = Automatic update
+EppoStep3Help = The scheduled job "Update of the EPPO Codes" runs step 2 every week. It must be enabled in the scheduled jobs (needs the module Scheduled jobs and its cron on the server).
+EppoCronNotFound = Scheduled job not found: enable the module again
+EppoCronActive = Enabled
+EppoCronInactive = Disabled: the codes are updated only with "Update now"
+EppoCronNextRun = next run
+EppoCronLastRun = Last run
+EppoCronResultOk = successful
+EppoCronResultKo = with error
+EppoCronOpen = open the scheduled job
+EppoInactiveTitle = Disabled codes in use
+EppoInactiveHelp = Crops, uses of the agrodrugs, map of the SIAN codes and dictionary of the pests with a code that EPPO disabled. When EPPO gives the replacing code, it can be replaced. The treatments already recorded keep the code of their date and do not change.
+EppoInactiveNone = No disabled code in use
+EppoInactivePlace = Where
+EppoInactiveCode = Disabled code
+EppoInactiveReplacement = Replaced by
+EppoInactiveNoReplacement = no replacement given by EPPO
+EppoInactiveReplace = Replace
+EppoInactiveReplaceAll = Replace all (%s)
+EppoInactiveReplaced = EPPO codes replaced: %s
+EppoInactiveAlreadyPresent = %s codes not replaced: the new code is already in the dictionary of the pests
+EppoPlaceUseCrop = Uses of agrodrugs: crop
+EppoPlaceUsePest = Uses of agrodrugs: pest
+EppoPlaceSianMap = Map of SIAN codes
+EppoPlaceAdversity = Dictionary of pests
+EppoCronLate = Run late: the cron of the server does not start the scheduled jobs of Dolibarr (scripts/cron/cron_run_jobs.php)
+
+# Labels of generated pages and fields
+BoxTotDossiersDescription = Number of active farm dossiers
+BoxTotPlotsDescription = Summary of the plots
+BoxTotMachinesDescription = Summary of the farm machines
+BoxCropPlansMonitoringDescription = Monitoring of the production plans
+BoxProductsPlanOverview = Products most planned in the production plans
+ClassNotFound = Class not found
+ErrorFileNotSelected = No file selected
+ErrorNumberingModuleNotSetup = Numbering model not set up for %s
+Path = Path
+ShowList = Show list
+ModelPDF = PDF model
+ShapeJson = Shape (GeoJSON)
+DoliFarmAgroDrugs = Plant protection products
+DeleteDoliFarmAgroDrug = Delete plant protection product
+ShowDoliFarmAgroDrug = Show plant protection product
+DeleteDoliFarmCrops = Delete crop
+ShowDoliFarmCrops = Show crop
+DeleteDoliFarmEstimateCosts = Delete standard cost
+ShowDoliFarmEstimateCosts = Show standard cost
+Regdate = Registration date
+Contentpercentage = Active substance content
+Formulation = Formulation
+Hazardclassification = Hazard classification
+Safetydaysdefault = Pre-harvest interval (days)
+Maxdoseha = Maximum dose per hectare
+LinkedCropPlans = Linked production plans
+DossierImportXml = Import of the dossier (XML)
+DossierImportXmlFile = XML file
+DossierImportButton = Import dossier
+DossierImportDone = Dossier imported (id %s)
+DossierImportError = Import error
+DossierImportNameMissing = Company name missing for the new third party
+DossierImportThirdPartyAmbiguous = More third parties match the same CUAA or VAT number: fix them before importing

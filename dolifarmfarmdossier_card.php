@@ -208,6 +208,14 @@ if (empty($reshook)) {
 		$object->note_private = GETPOST('note_private', 'restricthtml');
 	}
 
+	// Organic control body chosen from the official list: its third party, created when needed
+	if (in_array($action, array('add', 'update')) && $permissiontoadd && !$cancel) {
+		dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+		if (dolifarmBioBodyHandlePost($db, $user, 'fk_soc_bio_body') < 0) {
+			$action = ($action == 'add' ? 'create' : 'edit');
+		}
+	}
+
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
@@ -300,6 +308,10 @@ if ($action == 'create') {
 
 	print '<table class="border centpercent tableforfieldcreate">'."\n";
 
+	// Organic control body: third parties of the bodies and official list
+	dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+	dolifarmBioBodyPrepareField($object, 'fk_soc_bio_body');
+
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
@@ -367,6 +379,10 @@ if (($id || $ref) && $action == 'edit') {
 	print dol_get_fiche_head();
 
 	print '<table class="border centpercent tableforfieldedit">'."\n";
+
+	// Organic control body: third parties of the bodies and official list
+	dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
+	dolifarmBioBodyPrepareField($object, 'fk_soc_bio_body');
 
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_edit.tpl.php';
@@ -445,56 +461,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
-
-	$morehtmlref = '<div class="refidno">';
-	/*
-		// Ref customer
-		$morehtmlref .= $form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string', '', 0, 1);
-		$morehtmlref .= $form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, $usercancreate, 'string'.(getDolGlobalInt('THIRDPARTY_REF_INPUT_SIZE') ? ':'.getDolGlobalInt('THIRDPARTY_REF_INPUT_SIZE') : ''), '', null, null, '', 1);
-		// Thirdparty
-		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1, 'customer');
-		if (!getDolGlobalInt('MAIN_DISABLE_OTHER_LINK') && $object->thirdparty->id > 0) {
-			$morehtmlref .= ' (<a href="'.DOL_URL_ROOT.'/commande/list.php?socid='.$object->thirdparty->id.'&search_societe='.urlencode($object->thirdparty->name).'">'.$langs->trans("OtherOrders").'</a>)';
-		}
-		// Project
-		if (isModEnabled('project')) {
-			$langs->load("projects");
-			$morehtmlref .= '<br>';
-			if ($permissiontoadd) {
-				$morehtmlref .= img_picto($langs->trans("Project"), 'project', 'class="pictofixedwidth"');
-				if ($action != 'classify') {
-					$morehtmlref .= '<a class="editfielda" href="'.dolBuildUrl($_SERVER['PHP_SELF'], ['action' => 'classify', 'id' => $object->id], true).'">'.img_edit($langs->transnoentitiesnoconv('SetProject')).'</a> ';
-				}
-				$morehtmlref .= $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id, $object->socid, $object->fk_project, ($action == 'classify' ? 'projectid' : 'none'), 0, 0, 0, 1, '', 'maxwidth300');
-			} else {
-				if (!empty($object->fk_project)) {
-					$proj = new Project($db);
-					$proj->fetch($object->fk_project);
-					$morehtmlref .= $proj->getNomUrl(1);
-					if ($proj->title) {
-						$morehtmlref .= '<span class="opacitymedium"> - '.dol_escape_htmltag($proj->title).'</span>';
-					}
-				}
-			}
-		}
-	*/
-	// Farm and its CUAA (tax code, idprof4 of the third party), the key of the dossier at AGEA
-	if ($object->fk_soc > 0 && $object->fetch_thirdparty() > 0) {
-		$morehtmlref .= $object->thirdparty->getNomUrl(1);
-		if (!empty($object->thirdparty->idprof4)) {
-			$morehtmlref .= ' <span class="opacitymedium">- '.$langs->trans("CUAA").':</span> '.dol_escape_htmltag($object->thirdparty->idprof4);
-		} else {
-			$morehtmlref .= ' '.img_warning($langs->trans("CUAAMissingHelp")).' <span class="opacitymedium">'.$langs->trans("CUAAMissing").'</span>';
-		}
-	}
-	$morehtmlref .= '</div>';
-
-
-	// Overdue and near expiry dates of the object
-	dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
-	$morehtmlref .= dolifarmExpiryObjectWarnings($object);
-	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
+	dolifarmFarmDossierBanner($object);
 
 
 	print '<div class="fichecenter">';

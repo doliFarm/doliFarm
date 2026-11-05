@@ -24,7 +24,12 @@
  * he is sales representative of (also those of his subordinates with MAIN_SEE_SUBORDINATES), an external user
  * only his own third party. Unlike orders or invoices, an object without third party (an operator who is an
  * employee, a machine of the contractor) stays visible to the internal users.
+ *
+ * On top of this, the objects of the suite are limited to the managed farms (lib/dolifarm_farm.lib.php): the
+ * objects of the other third parties are hidden to all the users.
  */
+
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
 
 /**
  * Users whose third parties the user can see, or null when the user is not restricted
@@ -51,20 +56,23 @@ function dolifarmSocRestrictedUsers($user)
  *
  * @param	User		$user		User
  * @param	string		$field		Field of the third party, with the alias of the table (t.fk_soc)
+ * @param	bool		$farmsonly	True when the field is the farm of the object: only the managed farms
+ * @param	bool		$withprocessors	True to accept also the managed processors (with $farmsonly)
  * @return	string					SQL to add to the WHERE (" AND ..."), empty if the user sees all the third parties
  */
-function dolifarmSqlSocFilter($user, $field = 't.fk_soc')
+function dolifarmSqlSocFilter($user, $field = 't.fk_soc', $farmsonly = true, $withprocessors = false)
 {
 	global $db;
 
+	$farm = ($farmsonly ? dolifarmSqlManagedFarmFilter($field, $withprocessors) : '');
 	if (!empty($user->socid)) {
-		return " AND ".$field." = ".((int) $user->socid);
+		return " AND ".$field." = ".((int) $user->socid).$farm;
 	}
 	$users = dolifarmSocRestrictedUsers($user);
 	if ($users === null) {
-		return '';
+		return $farm;
 	}
-	return " AND (".$field." IS NULL OR ".$field." = 0 OR EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = ".$field." AND sc.fk_user IN (".$db->sanitize(implode(',', $users)).")))";
+	return " AND (".$field." IS NULL OR ".$field." = 0 OR EXISTS (SELECT sc.fk_soc FROM ".$db->prefix()."societe_commerciaux as sc WHERE sc.fk_soc = ".$field." AND sc.fk_user IN (".$db->sanitize(implode(',', $users)).")))".$farm;
 }
 
 /**
@@ -105,11 +113,32 @@ function dolifarmSocVisibleIds($user)
 }
 
 /**
+ * Farms whose objects the user can link: the third parties he can see among the managed farms
+ *
+ * @param	User|null	$user			User
+ * @param	bool		$withprocessors	True to add the managed processors
+ * @return	int[]|null					Ids of the third parties, null when there is no restriction
+ */
+function dolifarmAllowedSocIds($user, $withprocessors = false)
+{
+	$visible = ((is_object($user) && !empty($user->id)) ? dolifarmSocVisibleIds($user) : null);
+	$managed = dolifarmManagedFarmIds(false, $withprocessors);
+	if ($visible === null) {
+		return $managed;
+	}
+	if ($managed === null) {
+		return $visible;
+	}
+	return array_values(array_intersect($visible, $managed));
+}
+
+/**
  * Limit the drop-down lists of the link fields of an object (fascicolo, appezzamento, ...) to the farms the user can see
  *
  * The filter goes in the type of the field ('integer:Class:path:addcreate:filter'), so it also works when the list is
  * loaded by ajax/selectobject.php, which builds the object again. The linked object must have a field fk_soc; records
- * without third party stay in the list, as in the lists of the module.
+ * without third party stay in the list, as in the lists of the module. The farm of the object (fk_soc) is limited
+ * to the managed farms, and fixed in single-farm mode (dolifarmRestrictFarmField()).
  *
  * @param	CommonObject	$object			Object whose fields are changed (call it from the constructor)
  * @param	string[]		$fieldnames		Link fields to limit
@@ -119,10 +148,13 @@ function dolifarmRestrictLinkFields($object, $fieldnames)
 {
 	global $user;
 
-	if (!is_object($user) || empty($user->id) || !is_array($object->fields)) {
+	if (!is_array($object->fields)) {
 		return;
 	}
-	$socids = dolifarmSocVisibleIds($user);
+	// Objects whose third party can be a processor too (organic inspections)
+	$withprocessors = dolifarmAcceptsProcessors($object);
+	dolifarmRestrictFarmField($object, 'fk_soc', $withprocessors);
+	$socids = dolifarmAllowedSocIds($user);
 	if ($socids === null) {
 		return;
 	}
@@ -161,15 +193,16 @@ function dolifarmCheckObjectAccess($object, $user)
 	global $db, $langs;
 
 	$external = (is_object($user) && !empty($user->socid));
-	if (!is_object($user) || empty($user->id) || (!$external && dolifarmSocVisibleIds($user) === null)) {
+	if (!is_object($user) || empty($user->id) || (!$external && dolifarmAllowedSocIds($user) === null)) {
 		return '';
 	}
 	$langs->load('dolifarm@dolifarm');
 	if (!empty($object->module) && preg_match('/^[a-z]+$/', $object->module)) {
 		$langs->load($object->module.'@'.$object->module);
 	}
-	if (property_exists($object, 'fk_soc') && (int) $object->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $object->fk_soc)) {
-		return $langs->trans('ErrorDolifarmFarmNotAllowed', $langs->transnoentitiesnoconv('ThirdParty'));
+	$withprocessors = dolifarmAcceptsProcessors($object);
+	if (property_exists($object, 'fk_soc') && (int) $object->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $object->fk_soc, true, $withprocessors)) {
+		return $langs->trans(dolifarmIsManagedFarm((int) $object->fk_soc, $withprocessors) ? 'ErrorDolifarmFarmNotAllowed' : 'ErrorDolifarmFarmNotManaged', $langs->transnoentitiesnoconv('ThirdParty'));
 	}
 	if (!is_array($object->fields)) {
 		return '';
@@ -201,7 +234,7 @@ function dolifarmCheckObjectAccess($object, $user)
 		$obj = $db->fetch_object($resql);
 		$db->free($resql);
 		if ($obj && (int) $obj->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $obj->fk_soc)) {
-			return $langs->trans('ErrorDolifarmFarmNotAllowed', $langs->transnoentitiesnoconv($field['label']));
+			return $langs->trans(dolifarmIsManagedFarm((int) $obj->fk_soc) ? 'ErrorDolifarmFarmNotAllowed' : 'ErrorDolifarmFarmNotManaged', $langs->transnoentitiesnoconv($field['label']));
 		}
 	}
 	return '';
@@ -272,13 +305,18 @@ function dolifarmSaleFilterHtml($sale)
  *
  * @param	User		$user		User
  * @param	int			$socid		Id of the third party (0 = none)
+ * @param	bool		$farmsonly	True when the third party is the farm of an object: only the managed farms
+ * @param	bool		$withprocessors	True to accept also the managed processors (with $farmsonly)
  * @return	bool
  */
-function dolifarmUserCanSeeSoc($user, $socid)
+function dolifarmUserCanSeeSoc($user, $socid, $farmsonly = true, $withprocessors = false)
 {
 	global $db;
 
 	$socid = (int) $socid;
+	if ($farmsonly && $socid > 0 && !dolifarmIsManagedFarm($socid, $withprocessors)) {
+		return false;
+	}
 	if (!empty($user->socid)) {
 		return ($socid == (int) $user->socid);
 	}
@@ -314,7 +352,7 @@ function dolifarmCheckSocAccess($user, $object, $field = 'fk_soc')
 	if (!empty($object->ismultientitymanaged) && isset($object->entity) && !in_array((int) $object->entity, array_map('intval', explode(',', getEntity($object->element, 1))))) {
 		accessforbidden();
 	}
-	if (isset($object->fields[$field]) && !dolifarmUserCanSeeSoc($user, (int) $object->$field)) {
+	if (isset($object->fields[$field]) && !dolifarmUserCanSeeSoc($user, (int) $object->$field, true, ($field == 'fk_soc' && dolifarmAcceptsProcessors($object)))) {
 		accessforbidden();
 	}
 }

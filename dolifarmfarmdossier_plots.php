@@ -78,10 +78,7 @@ if ($id > 0) {
     print dol_get_fiche_head($head, 'plots', $langs->trans("DoliFarmFarmDossier"), -1, $object->picto);
 
     // Link al padre
-    $linkback = '<a href="' . dol_buildpath('/dolifarm/dolifarmfarmdossier_list.php', 1) . '">' . $langs->trans("BackToList") . '</a>';
-    
-    // Banner Principale
-    dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref');
+    dolifarmFarmDossierBanner($object);
 
     print '<div class="fichecenter">';
     print '<div class="underbanner clearboth"></div>';
@@ -111,9 +108,9 @@ if ($id > 0) {
         print '<tr class="liste_titre">';
         print '<td>' . $langs->trans("Ref") . '</td>';
         print '<td>' . $langs->trans("Label") . '</td>';
-        print '<td>' . $langs->trans("Comune") . '</td>';
+        print '<td>' . $langs->trans("Town") . '</td>';
         print '<td>' . $langs->trans("Owner") . '</td>'; // Label corretta (Proprietario)
-        print '<td class="right">' . $langs->trans("SAU (ha)") . '</td>';
+        print '<td class="right">' . $langs->trans("DossierPdfColSau") . '</td>';
         print '<td class="right">' . $langs->trans("Status") . '</td>';
         print '</tr>';
 

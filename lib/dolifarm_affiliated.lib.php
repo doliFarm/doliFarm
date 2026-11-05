@@ -20,13 +20,20 @@
  * \ingroup dolifarm
  * \brief   Affiliated farms (multi-farm mode): dossier and warehouses kept in step with the flag of the third party
  *
- * In multi-farm mode (DOLIFARM_MULTIFARM) a third party with the extrafield dolifarm_affiliated gets a draft
+ * In multi-farm mode (DOLIFARM_MULTIFARM) a third party of type farm (TE_FARM) with the extrafield dolifarm_affiliated
+ * is a managed farm (lib/dolifarm_farm.lib.php). It gets a draft
  * dossier and the warehouses "AZ-<code>" (parent), "AZ-<code>-IN" (inputs) and "AZ-<code>-PROD" (products),
  * linked on the dossier. When the flag is removed nothing is deleted: the warehouses are closed and the
  * dossier is disabled, so that the registers stay readable.
+ *
+ * A third party of type processor (TE_PROCESSOR) with the flag is a managed processor: it has no dossier, its
+ * warehouses "AZ-<code>-IN" (raw materials) and "AZ-<code>-PROD" (finished products) are linked on its extrafields
+ * dolifarm_wh_inputs and dolifarm_wh_products.
  */
 
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+dol_include_once('/dolifarm/lib/dolifarm.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
 
 /**
  * Code used in the refs of the warehouses of a farm: customer or supplier code of the third party, else its id
@@ -66,10 +73,30 @@ function dolifarmSyncAffiliatedFarm($db, $soc, $user, &$messages)
 	if (!isset($soc->array_options['options_dolifarm_affiliated'])) {
 		$soc->fetch_optionals();
 	}
-	$affiliated = !empty($soc->array_options['options_dolifarm_affiliated']);
-	$wasaffiliated = (is_object($soc->oldcopy) && !empty($soc->oldcopy->array_options['options_dolifarm_affiliated']));
+	// Affiliated farm: flag and type farm, both required
+	$farmtypeid = dolifarmGetTypentId($db, 'TE_FARM');
+	$flag = !empty($soc->array_options['options_dolifarm_affiliated']);
+	$affiliated = ($flag && $farmtypeid > 0 && (int) $soc->typent_id == $farmtypeid);
+	$wasaffiliated = (is_object($soc->oldcopy) && !empty($soc->oldcopy->array_options['options_dolifarm_affiliated'])
+		&& $farmtypeid > 0 && (int) $soc->oldcopy->typent_id == $farmtypeid);
+	// Processor: no dossier, only its warehouses
+	$processortypeid = dolifarmGetTypentId($db, 'TE_PROCESSOR');
+	$isprocessor = ($processortypeid > 0 && (int) $soc->typent_id == $processortypeid);
+	$wasprocessor = (is_object($soc->oldcopy) && $processortypeid > 0 && (int) $soc->oldcopy->typent_id == $processortypeid);
+	// The lists of the managed farms and processors change with this third party
+	dolifarmManagedFarmIds(true);
 
 	$langs->load('dolifarm@dolifarm');
+	if ($flag && !$affiliated && !$isprocessor) {
+		setEventMessages($langs->trans('DolifarmAffiliatedNotFarmType', $soc->name), null, 'warnings');
+	}
+	$changedprocessor = 0;
+	if ($isprocessor || $wasprocessor) {
+		$changedprocessor = dolifarmSyncAffiliatedProcessor($db, $soc, $user, ($flag && $isprocessor), $messages);
+		if ($changedprocessor < 0 || $isprocessor) {
+			return $changedprocessor;
+		}
+	}
 	dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
 	if (isModEnabled('stock')) {
 		require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
@@ -195,6 +222,98 @@ function dolifarmSyncAffiliatedFarm($db, $soc, $user, &$messages)
 			}
 			$messages[] = $langs->trans('DolifarmAffiliatedClosed', $dossier->ref);
 			$changed++;
+		}
+	}
+
+	$db->commit();
+	return $changed + $changedprocessor;
+}
+
+/**
+ * Keep the warehouses of a processor in step with its "affiliated" flag: created (or opened again) when affiliated,
+ * closed when not; nothing is deleted
+ *
+ * @param	DoliDB		$db			Database handler
+ * @param	Societe		$soc		Third party (extrafields loaded)
+ * @param	User		$user		User making the change
+ * @param	bool		$affiliated	True when the third party is an affiliated processor
+ * @param	string[]	$messages	Messages for the user (filled)
+ * @return	int						<0 if KO, 0 if nothing done, >0 if something changed
+ */
+function dolifarmSyncAffiliatedProcessor($db, $soc, $user, $affiliated, &$messages)
+{
+	global $langs;
+
+	if (!isModEnabled('stock')) {
+		return 0;
+	}
+	require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+	$fields = array('dolifarm_wh_inputs' => array('-IN', 'WarehouseRawMaterials'), 'dolifarm_wh_products' => array('-PROD', 'WarehouseFinishedProducts'));
+	$changed = 0;
+	$db->begin();
+
+	if ($affiliated) {
+		$prefix = dolifarmAffiliatedWarehousePrefix($soc);
+		$parentid = 0;
+		$update = false;
+		foreach ($fields as $attrname => $def) {
+			$key = 'options_'.$attrname;
+			$warehouse = new Entrepot($db);
+			if (!empty($soc->array_options[$key]) && $warehouse->fetch((int) $soc->array_options[$key]) > 0) {
+				$res = dolifarmAffiliatedOpenWarehouse($db, $warehouse, $user);
+				if ($res < 0) {
+					$messages[] = $warehouse->error;
+				}
+			} else {
+				if (empty($parentid)) {
+					$parentid = dolifarmAffiliatedWarehouse($db, $prefix, 0, $soc, 'DolifarmAffiliatedWarehouse', $user, $messages);
+					if ($parentid < 0) {
+						$db->rollback();
+						return -1;
+					}
+				}
+				$res = dolifarmAffiliatedWarehouse($db, $prefix.$def[0], $parentid, $soc, $def[1], $user, $messages);
+				if ($res > 0) {
+					$soc->array_options[$key] = $res;
+					$update = true;
+				}
+			}
+			if ($res < 0) {
+				$db->rollback();
+				return -1;
+			}
+			$changed += ($res > 0 ? 1 : 0);
+		}
+		if ($update && $soc->insertExtraFields() < 0) {
+			$messages[] = $soc->error;
+			$db->rollback();
+			return -1;
+		}
+	} else {
+		// Flag removed (or type changed): close the "AZ-" warehouses of the processor and their "AZ-" parent
+		foreach (array_keys($fields) as $attrname) {
+			$key = 'options_'.$attrname;
+			$warehouse = new Entrepot($db);
+			if (empty($soc->array_options[$key]) || $warehouse->fetch((int) $soc->array_options[$key]) <= 0 || strpos($warehouse->label, 'AZ-') !== 0) {
+				continue;
+			}
+			$tocloseids = array($warehouse->id);
+			if ($warehouse->fk_parent > 0) {
+				$tocloseids[] = (int) $warehouse->fk_parent;
+			}
+			foreach ($tocloseids as $tocloseid) {
+				$toclose = new Entrepot($db);
+				if ($toclose->fetch($tocloseid) > 0 && strpos($toclose->label, 'AZ-') === 0 && $toclose->statut != Entrepot::STATUS_CLOSED) {
+					$toclose->statut = Entrepot::STATUS_CLOSED;
+					if ($toclose->update($toclose->id, $user) <= 0) {
+						$messages[] = $toclose->error;
+						$db->rollback();
+						return -1;
+					}
+					$messages[] = $langs->trans('DolifarmAffiliatedWarehouseClosed', $toclose->label);
+					$changed++;
+				}
+			}
 		}
 	}
 

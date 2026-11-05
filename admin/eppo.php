@@ -124,6 +124,44 @@ if ($action == 'sync') {
 	header("Location: ".$_SERVER["PHP_SELF"]);
 	exit;
 }
+// EPPO codes no longer active in the master data: replaced with the code that replaces them
+if ($action == 'replaceinactive' || $action == 'replaceallinactive') {
+	dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
+	$todo = array();
+	if ($action == 'replaceinactive') {
+		$todo[] = array('place' => GETPOST('place', 'aZ09'), 'id' => GETPOSTINT('rowid'));
+	} else {
+		foreach (dolifarmEppoInactiveUses($db) as $row) {
+			if ($row['canreplace']) {
+				$todo[] = $row;
+			}
+		}
+	}
+	$nbdone = 0;
+	$nbskipped = 0;
+	$db->begin();
+	foreach ($todo as $row) {
+		$result = dolifarmEppoReplaceInactive($db, $row['place'], (int) $row['id']);
+		if ($result == -1) {
+			$db->rollback();
+			setEventMessages($db->lasterror(), null, 'errors');
+			header("Location: ".$_SERVER["PHP_SELF"]);
+			exit;
+		}
+		if ($result > 0) {
+			$nbdone++;
+		} elseif ($result == -2) {
+			$nbskipped++;
+		}
+	}
+	$db->commit();
+	setEventMessages($langs->trans('EppoInactiveReplaced', $nbdone), null, 'mesgs');
+	if ($nbskipped) {
+		setEventMessages($langs->trans('EppoInactiveAlreadyPresent', $nbskipped), null, 'warnings');
+	}
+	header("Location: ".$_SERVER["PHP_SELF"]."#inactive");
+	exit;
+}
 if ($action == 'fillcrops') {
 	dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
 	$result = dolifarmEppoFillCrops($db);
@@ -165,6 +203,7 @@ $head = dolifarmAdminPrepareHead();
 print dol_get_fiche_head($head, 'eppo', $langs->trans($title), -1, 'dolifarm@dolifarm');
 
 print '<span class="opacitymedium">'.$langs->trans('EppoPageHelp').'</span><br><br>';
+dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
 
 // State of the data, with the attribution required by the EPPO Open Data Licence
 $counts = array();
@@ -180,19 +219,76 @@ if ($resql) {
 } else {
 	setEventMessages($db->lasterror(), null, 'errors');
 }
+$datadate = getDolGlobalString('DOLIFARM_EPPO_DATA_DATE');
+$importdate = getDolGlobalString('DOLIFARM_EPPO_IMPORT_DATE');
+$eppokeyset = (getDolGlobalString('DOLIFARM_EPPO_API_KEY') !== '');
+$syncdate = getDolGlobalString('DOLIFARM_EPPO_SYNC_DATE');
+$cronjob = dolifarmEppoCronJob($db);
+$ok = img_picto('', 'tick', 'class="pictofixedwidth"');
+$todo = img_warning('', '', 'pictofixedwidth');
 
+// The three steps, with their state
 print '<div class="div-table-responsive-no-min">';
 print '<table class="noborder centpercent">';
-print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('EppoData').'</td></tr>';
-print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('EppoSource').'</td><td>'.$langs->trans('EppoAttribution').' - <a href="https://www.eppo.int" target="_blank" rel="noopener noreferrer">www.eppo.int</a></td></tr>';
-$datadate = getDolGlobalString('DOLIFARM_EPPO_DATA_DATE');
-print '<tr class="oddeven"><td>'.$langs->trans('EppoDataDate').'</td><td>'.($datadate ? dol_print_date($db->jdate($datadate), 'day') : '<span class="opacitymedium">'.$langs->trans('EppoNotImported').'</span>').'</td></tr>';
-$importdate = getDolGlobalString('DOLIFARM_EPPO_IMPORT_DATE');
-print '<tr class="oddeven"><td>'.$langs->trans('EppoImportDate').'</td><td>'.($importdate ? dol_print_date((int) $importdate, 'dayhour') : '').'</td></tr>';
-print '<tr class="oddeven"><td>'.$langs->trans('EppoNbCodes').'</td><td>'.price($total, 0, $langs, 0, 0).'</td></tr>';
+print '<tr class="liste_titre"><td>'.$langs->trans('EppoStep').'</td><td>'.$langs->trans('EppoStepState').'</td><td>'.$langs->trans('EppoStepWhat').'</td></tr>';
+
+// 1. Import of the file
+print '<tr class="oddeven"><td class="nowraponall"><b>1. '.$langs->trans('EppoStep1').'</b></td><td>';
+if ($total > 0) {
+	print $ok.$langs->trans('EppoStep1Done', price($total, 0, $langs, 0, 0), dol_print_date($db->jdate($datadate), 'day'));
+	if ($importdate) {
+		print ' <span class="opacitymedium">('.$langs->trans('EppoImportDate').' '.dol_print_date((int) $importdate, 'dayhour').')</span>';
+	}
+} else {
+	print $todo.$langs->trans('EppoNotImported');
+}
+print '</td><td class="small">'.$langs->trans('EppoStep1Help').' <a href="#import">'.$langs->trans('EppoImport').'</a></td></tr>';
+
+// 2. Update from the API
+print '<tr class="oddeven"><td class="nowraponall"><b>2. '.$langs->trans('EppoStep2').'</b></td><td>';
+if (!$eppokeyset) {
+	print $todo.$langs->trans('EppoApiKey').': '.$langs->trans('EppoApiKeyNotSet').' - <a href="'.dol_buildpath('/dolifarm/admin/setup.php', 1).'">'.$langs->trans('EppoApiKeyInSetup').'</a>';
+} else {
+	print $ok.$langs->trans('EppoApiKey').': '.$langs->trans('EppoApiKeySet').'<br>';
+	print $langs->trans('EppoSyncDate').': '.($syncdate ? '<b>'.dol_print_date($db->jdate($syncdate), 'day').'</b>' : '<span class="opacitymedium">'.$langs->trans('EppoNeverSynced').'</span>');
+	if ($total > 0) {
+		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'" class="inline-block marginleftonly">';
+		print '<input type="hidden" name="token" value="'.newToken().'">';
+		print '<input type="hidden" name="action" value="sync">';
+		print '<input type="submit" class="button small reposition" value="'.$langs->trans('EppoSyncNow').'">';
+		print '</form>';
+	}
+}
+print '</td><td class="small">'.$langs->trans('EppoStep2Help').'</td></tr>';
+
+// 3. Weekly scheduled job
+print '<tr class="oddeven"><td class="nowraponall"><b>3. '.$langs->trans('EppoStep3').'</b></td><td>';
+if (!$cronjob) {
+	print $todo.$langs->trans('EppoCronNotFound');
+} else {
+	$cronurl = DOL_URL_ROOT.'/cron/card.php?id='.((int) $cronjob->rowid);
+	if ((int) $cronjob->status == 1) {
+		print $ok.$langs->trans('EppoCronActive');
+		if ($cronjob->datenextrun) {
+			print ' - '.$langs->trans('EppoCronNextRun').' '.dol_print_date($db->jdate($cronjob->datenextrun), 'dayhour');
+			// A run more than a day late: the cron of the server does not start the scheduled jobs
+			if ($db->jdate($cronjob->datenextrun) < dol_now() - 86400) {
+				print '<br>'.img_warning('', '', 'pictofixedwidth').'<span class="warning">'.$langs->trans('EppoCronLate').'</span>';
+			}
+		}
+	} else {
+		print $todo.$langs->trans('EppoCronInactive');
+	}
+	if ($cronjob->datelastrun) {
+		print '<br><span class="opacitymedium">'.$langs->trans('EppoCronLastRun').' '.dol_print_date($db->jdate($cronjob->datelastrun), 'dayhour').' - '.((string) $cronjob->lastresult === '0' ? $langs->trans('EppoCronResultOk') : $langs->trans('EppoCronResultKo')).'</span>';
+	}
+	print ' - <a href="'.$cronurl.'">'.$langs->trans('EppoCronOpen').'</a>';
+}
+print '</td><td class="small">'.$langs->trans('EppoStep3Help').'</td></tr>';
 print '</table>';
 print '</div>';
 
+// Data by type
 if ($counts) {
 	print '<br><div class="div-table-responsive-no-min">';
 	print '<table class="noborder centpercent">';
@@ -202,33 +298,48 @@ if ($counts) {
 		print '<tr class="oddeven"><td>'.dol_escape_htmltag($datatype).' - '.dol_escape_htmltag($label == 'EppoDatatype'.$datatype ? '' : $label).'</td>';
 		print '<td class="right">'.price($obj->nb, 0, $langs, 0, 0).'</td><td class="right">'.price($obj->nbactive, 0, $langs, 0, 0).'</td></tr>';
 	}
+	print '<tr class="liste_total"><td>'.$langs->trans('EppoSource').': '.$langs->trans('EppoAttribution').' - <a href="https://www.eppo.int" target="_blank" rel="noopener noreferrer">www.eppo.int</a></td><td class="right">'.price($total, 0, $langs, 0, 0).'</td><td></td></tr>';
 	print '</table>';
 	print '</div>';
 }
 
-// Update from the EPPO API
-print '<br>';
-print load_fiche_titre($langs->trans('EppoApi'), '', '');
-print '<span class="opacitymedium">'.$langs->trans('EppoApiHelp').'</span><br><br>';
-$eppokeyset = (getDolGlobalString('DOLIFARM_EPPO_API_KEY') !== '');
-print '<div class="div-table-responsive-no-min">';
-print '<table class="noborder centpercent">';
-print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('Parameters').'</td></tr>';
-print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('EppoApiKey').'</td><td>';
-print ($eppokeyset ? img_picto('', 'tick', 'class="pictofixedwidth"').$langs->trans('EppoApiKeySet') : '<span class="opacitymedium">'.$langs->trans('EppoApiKeyNotSet').'</span>');
-print ' - <a href="'.dol_buildpath('/dolifarm/admin/setup.php', 1).'">'.$langs->trans('EppoApiKeyInSetup').'</a>';
-print '</td></tr>';
-$syncdate = getDolGlobalString('DOLIFARM_EPPO_SYNC_DATE');
-print '<tr class="oddeven"><td>'.$langs->trans('EppoSyncDate').'</td><td>'.($syncdate ? dol_print_date($db->jdate($syncdate), 'day') : '<span class="opacitymedium">'.$langs->trans('EppoNeverSynced').'</span>').'</td></tr>';
-print '</table>';
-print '</div>';
-if ($eppokeyset && $total > 0) {
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="sync">';
-	print '<input type="submit" class="button small reposition" value="'.$langs->trans('EppoSyncNow').'">';
-	print ' <span class="opacitymedium">'.$langs->trans('EppoSyncCron').'</span>';
-	print '</form>';
+// Master data with an EPPO code no longer active
+if ($total > 0) {
+	$inactive = dolifarmEppoInactiveUses($db);
+	$places = dolifarmEppoPlaces();
+	print '<br><a id="inactive"></a>';
+	print load_fiche_titre($langs->trans('EppoInactiveTitle'), '', '');
+	print '<span class="opacitymedium">'.$langs->trans('EppoInactiveHelp').'</span><br><br>';
+	if (empty($inactive)) {
+		print $ok.$langs->trans('EppoInactiveNone').'<br>';
+	} else {
+		$nbcanreplace = 0;
+		print '<div class="div-table-responsive-no-min">';
+		print '<table class="noborder centpercent">';
+		print '<tr class="liste_titre"><td>'.$langs->trans('EppoInactivePlace').'</td><td>'.$langs->trans('Label').'</td><td>'.$langs->trans('EppoInactiveCode').'</td><td>'.$langs->trans('EppoInactiveReplacement').'</td><td></td></tr>';
+		foreach ($inactive as $row) {
+			$label = dol_escape_htmltag($row['place'] == 'crop' ? $langs->trans($row['label']) : $row['label']);
+			if ($row['place'] == 'crop') {
+				$label = '<a href="'.dol_buildpath('/dolifarm/dolifarmcrops_card.php', 1).'?id='.$row['id'].'">'.$label.'</a>';
+			} elseif ($row['parent'] > 0) {
+				$label = '<a href="'.dol_buildpath('/dolifarm/dolifarmagrodrug_uses.php', 1).'?id='.$row['parent'].'">'.$label.'</a>';
+			}
+			print '<tr class="oddeven"><td>'.$langs->trans($places[$row['place']]['title']).'</td><td>'.$label.'</td>';
+			print '<td>'.dolifarmEppoShow($db, $row['code']).'</td>';
+			print '<td>'.($row['replacedby'] !== '' ? dolifarmEppoShow($db, $row['replacedby']) : '<span class="opacitymedium">'.$langs->trans('EppoInactiveNoReplacement').'</span>').'</td>';
+			print '<td class="right">';
+			if ($row['canreplace']) {
+				$nbcanreplace++;
+				print '<a class="button small reposition" href="'.$_SERVER['PHP_SELF'].'?action=replaceinactive&place='.urlencode($row['place']).'&rowid='.$row['id'].'&token='.newToken().'">'.$langs->trans('EppoInactiveReplace').'</a>';
+			}
+			print '</td></tr>';
+		}
+		print '</table>';
+		print '</div>';
+		if ($nbcanreplace > 1) {
+			print '<div class="right"><a class="button small reposition" href="'.$_SERVER['PHP_SELF'].'?action=replaceallinactive&token='.newToken().'">'.$langs->trans('EppoInactiveReplaceAll', $nbcanreplace).'</a></div>';
+		}
+	}
 }
 
 // Crops without EPPO code: filled from the scientific name
@@ -253,6 +364,7 @@ if ($total > 0) {
 
 // Import
 print '<br>';
+print '<a id="import"></a>';
 print load_fiche_titre($langs->trans('EppoImport'), '', '');
 print '<span class="opacitymedium">'.$langs->trans('EppoImportHelp', ini_get('upload_max_filesize'), ini_get('post_max_size')).'</span><br><br>';
 

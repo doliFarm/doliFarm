@@ -12,7 +12,7 @@ if (! $res) die("Include of main fails");
 include_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 
 // Caricamento lingue
-$langs->loadLangs(array("dolifarm@dolifarm", "boxes"));
+$langs->loadLangs(array("dolifarm@dolifarm", "boxes", "errors"));
 
 $title = $langs->trans("DoliFarmArea");
 
@@ -89,13 +89,13 @@ foreach ($widgets_to_load as $index => $widget_info) {
                 $box->loadBox(5);
                 $box->showBox();
             } catch (Exception $e) {
-                print '<div class="box-error">Errore nel widget <strong>'.$class_name.'</strong>: '.$e->getMessage().'</div>';
+                print '<div class="box-error">'.$langs->trans('Error').' '.dol_escape_htmltag($class_name).': '.dol_escape_htmltag($e->getMessage()).'</div>';
             }
         } else {
-            print '<div class="box-error">Errore: La classe <strong>'.$class_name.'</strong> non è stata trovata nel file <em>'.$widget_info['file'].'</em>.<br>Apri il file e controlla la riga "class Xyz extends...".</div>';
+            print '<div class="box-error">'.$langs->trans('Error').': '.$langs->trans('ClassNotFound').' '.dol_escape_htmltag($class_name).' ('.dol_escape_htmltag($widget_info['file']).')</div>';
         }
     } else {
-        print '<div class="box-error">Errore: File non trovato: <em>'.$widget_info['file'].'</em></div>';
+        print '<div class="box-error">'.$langs->trans('ErrorFileNotFound', dol_escape_htmltag($widget_info['file'])).'</div>';
     }
 
     print '</div>'; // Fine box-wrapper

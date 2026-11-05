@@ -410,3 +410,121 @@ function dolifarmEppoSelect($db, $htmlname, $value, $use, $morecss = 'minwidth30
 	</script>';
 	return $out;
 }
+
+/**
+ * Places of the master data where an EPPO code is kept and can be replaced: crops, authorised uses of the agrodrugs,
+ * map of the SIAN codes and, with doliTrace, the dictionary of the adversities. The records of the registers
+ * (treatments) keep the code of their date and are not listed.
+ *
+ * @return	array<string,array{table:string,field:string,label:string,title:string,unique:bool,module:string}>
+ */
+function dolifarmEppoPlaces()
+{
+	return array(
+		'crop' => array('table' => 'dolifarm_crops', 'field' => 'eppo_code', 'label' => 'label', 'title' => 'DoliFarmCrops', 'unique' => false, 'module' => 'dolifarm'),
+		'usecrop' => array('table' => 'dolifarm_agrodrug_use', 'field' => 'crop_eppo', 'label' => 'crop_label', 'title' => 'EppoPlaceUseCrop', 'unique' => false, 'module' => 'dolifarm'),
+		'usepest' => array('table' => 'dolifarm_agrodrug_use', 'field' => 'adversity_code', 'label' => 'adversity_label', 'title' => 'EppoPlaceUsePest', 'unique' => false, 'module' => 'dolifarm'),
+		'sianmap' => array('table' => 'dolifarm_sian_map', 'field' => 'eppo_code', 'label' => 'sian_label', 'title' => 'EppoPlaceSianMap', 'unique' => false, 'module' => 'dolifarm'),
+		'adversity' => array('table' => 'dolitrace_c_adversity', 'field' => 'code', 'label' => 'label', 'title' => 'EppoPlaceAdversity', 'unique' => true, 'module' => 'dolitrace'),
+	);
+}
+
+/**
+ * Master data that use an EPPO code no longer active
+ *
+ * @param	DoliDB	$db		Database handler
+ * @return	array<int,array{place:string,id:int,label:string,code:string,replacedby:string,canreplace:bool,parent:int}>
+ */
+function dolifarmEppoInactiveUses($db)
+{
+	$rows = array();
+	if (!dolifarmEppoDataAvailable()) {
+		return $rows;
+	}
+	$prefix = $db->prefix();
+	foreach (dolifarmEppoPlaces() as $place => $def) {
+		if (!isModEnabled($def['module'])) {
+			continue;
+		}
+		$sql = "SELECT t.rowid, t.".$def['label']." as label, t.".$def['field']." as code, e.replacedby,";
+		$sql .= " r.is_active as replacement_active".($place == 'usecrop' || $place == 'usepest' ? ", t.fk_agrodrug as parent" : ", 0 as parent");
+		$sql .= " FROM ".$prefix.$def['table']." as t";
+		$sql .= " INNER JOIN ".$prefix."dolifarm_eppo_code as e ON e.eppocode = t.".$def['field'];
+		$sql .= " LEFT JOIN ".$prefix."dolifarm_eppo_code as r ON r.eppocode = e.replacedby";
+		$sql .= " WHERE e.is_active = 0";
+		if ($place == 'crop') {
+			$sql .= " AND t.entity IN (".getEntity('dolifarmcrops').")";
+		}
+		$sql .= " ORDER BY t.".$def['field'].", t.rowid";
+		$resql = $db->query($sql);
+		if (!$resql) {
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+			continue;
+		}
+		while ($obj = $db->fetch_object($resql)) {
+			$rows[] = array('place' => $place, 'id' => (int) $obj->rowid, 'label' => (string) $obj->label, 'code' => (string) $obj->code,
+				'replacedby' => (string) $obj->replacedby, 'canreplace' => ((string) $obj->replacedby !== '' && !empty($obj->replacement_active)), 'parent' => (int) $obj->parent);
+		}
+		$db->free($resql);
+	}
+	return $rows;
+}
+
+/**
+ * Replace an EPPO code no longer active with the code that replaces it, in one record of the master data
+ *
+ * @param	DoliDB	$db		Database handler
+ * @param	string	$place	Place (see dolifarmEppoPlaces())
+ * @param	int		$id		Id of the record
+ * @return	int				1 if replaced, 0 if nothing to do, <0 if KO (error in $db or code already present)
+ */
+function dolifarmEppoReplaceInactive($db, $place, $id)
+{
+	$places = dolifarmEppoPlaces();
+	if (!isset($places[$place]) || !isModEnabled($places[$place]['module'])) {
+		return 0;
+	}
+	$def = $places[$place];
+	$prefix = $db->prefix();
+	$sql = "SELECT t.".$def['field']." as code, e.replacedby FROM ".$prefix.$def['table']." as t";
+	$sql .= " INNER JOIN ".$prefix."dolifarm_eppo_code as e ON e.eppocode = t.".$def['field'];
+	$sql .= " INNER JOIN ".$prefix."dolifarm_eppo_code as r ON r.eppocode = e.replacedby AND r.is_active = 1";
+	$sql .= " WHERE t.rowid = ".((int) $id)." AND e.is_active = 0";
+	$resql = $db->query($sql);
+	$obj = $resql ? $db->fetch_object($resql) : null;
+	if (!$obj) {
+		return 0;
+	}
+	// A dictionary has one row per code: the replacement must not be there already
+	if ($def['unique']) {
+		$resql = $db->query("SELECT rowid FROM ".$prefix.$def['table']." WHERE ".$def['field']." = '".$db->escape($obj->replacedby)."'");
+		if ($resql && $db->num_rows($resql) > 0) {
+			return -2;
+		}
+	}
+	$sql = "UPDATE ".$prefix.$def['table']." SET ".$def['field']." = '".$db->escape($obj->replacedby)."' WHERE rowid = ".((int) $id);
+	if (!$db->query($sql)) {
+		dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+		return -1;
+	}
+	dol_syslog(__FUNCTION__.' '.$place.' '.$id.': '.$obj->code.' -> '.$obj->replacedby);
+	return 1;
+}
+
+/**
+ * Scheduled job of the update of the EPPO Codes
+ *
+ * @param	DoliDB	$db		Database handler
+ * @return	?stdClass		Job (rowid, status, datenextrun, datelastrun, lastresult), null if not found
+ */
+function dolifarmEppoCronJob($db)
+{
+	global $conf;
+
+	$sql = "SELECT rowid, status, datenextrun, datelastrun, lastresult FROM ".$db->prefix()."cronjob";
+	$sql .= " WHERE classesname = '/dolifarm/class/dolifarmepposync.class.php' AND entity IN (0, ".((int) $conf->entity).")";
+	$sql .= $db->plimit(1);
+	$resql = $db->query($sql);
+	$obj = $resql ? $db->fetch_object($resql) : null;
+	return $obj ?: null;
+}

@@ -74,6 +74,17 @@ class DoliFarmFertilizer extends CommonObject
 	const STATUS_CANCELED = 9;
 
 	/**
+	 * Public consultation of the register of fertilisers (D.Lgs. 75/2010) on the SIAN: search by manufacturer, type
+	 * or trade name, conventional or organic use. It asks for a confirmation code, so it is only opened for the user.
+	 */
+	const SIAN_REGISTER_URL = 'https://www.sian.it/vismiko/jsp/indexConsultazione.do';
+
+	/**
+	 * @var bool Show the link to the register on the SIAN next to the register number (card)
+	 */
+	public $showSianLink = false;
+
+	/**
 	 * @inheritdoc
 	 * Array with all fields and their property (see DoliFarmPlot for the meaning of the keys)
 	 */
@@ -217,6 +228,63 @@ class DoliFarmFertilizer extends CommonObject
 	public function getObjectLabel()
 	{
 		return 'DoliFarmFertilizer';
+	}
+
+	/**
+	 * Link that opens the consultation of the register of fertilisers on the SIAN in a new tab
+	 *
+	 * @return	string		HTML
+	 */
+	public static function sianRegisterLink()
+	{
+		global $langs;
+
+		$langs->load('dolifarm@dolifarm');
+		return '<a class="paddingleft nowraponall" href="'.dol_escape_htmltag(self::SIAN_REGISTER_URL).'" target="_blank" rel="noopener noreferrer" title="'.dol_escape_htmltag($langs->trans('FertilizerSianSearchHelp')).'">'.img_picto('', 'globe', 'class="pictofixedwidth"').$langs->trans('FertilizerSianSearch').'</a>';
+	}
+
+	/**
+	 * Return HTML string to put an input field into a page: the register number has the link to the register on the SIAN
+	 *
+	 * @param	array<string,mixed>	$val			Array of properties for field to show
+	 * @param	string				$key			Key of attribute
+	 * @param	mixed				$value			Preselected value to show
+	 * @param	string				$moreparam		To add more parameters on html input tag
+	 * @param	string				$keysuffix		Prefix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string				$keyprefix		Suffix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string|int			$morecss		Value for css to define style/length of field. May also be a numeric.
+	 * @param	int<0,1>			$nonewbutton	Force to not show the new button on field that are links to object
+	 * @return	string
+	 */
+	public function showInputField($val, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = 0, $nonewbutton = 0)
+	{
+		$out = parent::showInputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss, $nonewbutton);
+		if ($key == 'registration_number') {
+			$out .= self::sianRegisterLink();
+		}
+		return $out;
+	}
+
+	/**
+	 * Return HTML string to show a field into a page: the register number has the link to the register on the SIAN
+	 *
+	 * @param	array<string,mixed>	$val			Array of properties of field to show
+	 * @param	string				$key			Key of attribute
+	 * @param	string				$value			Preselected value to show
+	 * @param	string				$moreparam		To add more parameters on html tag
+	 * @param	string				$keysuffix		Prefix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	string				$keyprefix		Suffix string to add into name and id of field (can be used to avoid duplicate names)
+	 * @param	mixed				$morecss		Value for CSS to use
+	 * @return	string
+	 */
+	public function showOutputField($val, $key, $value, $moreparam = '', $keysuffix = '', $keyprefix = '', $morecss = '')
+	{
+		$out = parent::showOutputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss);
+		// Only where asked (card): the lists keep the plain number
+		if ($key == 'registration_number' && $this->showSianLink) {
+			$out .= self::sianRegisterLink();
+		}
+		return $out;
 	}
 
 	/**

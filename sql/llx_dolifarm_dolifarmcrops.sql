@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS llx_dolifarm_crops(
 	rowid int AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	ref varchar(128) NOT NULL, 
 	label varchar(255) NOT NULL, 
+	local_name varchar(255), 
 	fk_default_product INTEGER DEFAULT NULL,
 	entity INTEGER DEFAULT 1,
 	scientific_name varchar(255), 

@@ -280,6 +280,9 @@ class DoliFarmFarmDossier extends CommonObject
                 $this->fields[$key]['type'] .= str_repeat(':', max(1, 5 - $nbparts)).'(t.fk_typent:=:'.$typentid.')';
             }
         }
+        // Farm: only the managed farms, fixed in single-farm mode
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+        dolifarmRestrictLinkFields($this, array());
 
         // Example to show how to set values of fields definition dynamically
         /*if ($user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read')) {
@@ -1153,6 +1156,33 @@ class DoliFarmFarmDossier extends CommonObject
             $this->lines = $result;
             return $this->lines;
         }
+    }
+
+    /**
+     * Create a document onto disk according to template module
+     *
+     * @param  string      $modele         Force template to use ('' to not force)
+     * @param  Translate   $outputlangs    Object lang to use for translation
+     * @param  int<0,1>    $hidedetails    Hide details of lines
+     * @param  int<0,1>    $hidedesc       Hide description
+     * @param  int<0,1>    $hideref        Hide ref
+     * @param  ?array<string,mixed>  $moreparams     Array to provide more information
+     * @return int                         0 if KO, 1 if OK
+     */
+    public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)
+    {
+        $outputlangs->load("dolifarm@dolifarm");
+
+        if (!dol_strlen($modele)) {
+            $modele = getDolGlobalString('DOLIFARM_DOLIFARMFARMDOSSIER_ADDON_PDF', 'fascicolo_dolifarmfarmdossier');
+            if (!empty($this->model_pdf)) {
+                $modele = $this->model_pdf;
+            }
+        }
+
+        $modelpath = "core/modules/dolifarm/doc/";
+
+        return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref, $moreparams);
     }
 
     /**
