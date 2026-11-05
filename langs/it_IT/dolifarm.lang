@@ -20,7 +20,7 @@ DoliFarmMachine = Macchina Agricola
 DoliFarmMachines = Macchine Agricole
 DoliFarmAgroDrug = Fitosanitario
 DoliFarmCrops = Colture
-DoliFarmEstimateCosts = Stime Costi
+DoliFarmEstimateCosts = Costi standard operazioni
 
 MenuNewFarmDossier = Nuovo Fascicolo
 MenuListFarmDossier = Elenco Fascicoli
@@ -1125,3 +1125,19 @@ PppGroupOrganicVerify = Da verificare per il biologico
 PppGroupOrganicNo = Non ammessi in biologico
 FertilizerSianSearch = Cerca nel registro SIAN
 FertilizerSianSearchHelp = Apre in una nuova scheda la consultazione del registro dei fertilizzanti sul SIAN (uso convenzionale e biologico): cercare per fabbricante o nome commerciale e riportare qui numero di registro e ammissione in biologico. Il SIAN chiede un codice di conferma.
+
+# Standard costs of the operations
+CostOperationTypeHelp = Tipo di operazione a cui si applica il costo: lo stesso delle operazioni del quaderno di campagna
+CostFarm = Azienda
+CostFarmHelp = Vuoto: il costo vale per tutte le aziende. Con un'azienda: vale solo per lei e ha la precedenza
+CostValidFrom = Valido dal
+CostValidFromHelp = Data da cui si applica il costo. Per un'operazione si usa il costo con la data più recente non successiva alla data dell'operazione; vuoto: vale da sempre
+CostDurationMinHa = Durata (minuti per ettaro)
+CostDurationMinHaHelp = Tempo di lavoro per ettaro, per stimare la durata dell'operazione
+CostManpowerHa = Manodopera €/ha
+CostMachineHa = Macchine e carburante €/ha
+CostMachineHaHelp = Quote, manutenzione e carburante delle macchine aziendali, per ettaro
+CostServiceHa = Servizi di terzi €/ha
+CostServiceHaHelp = Contoterzista o altri servizi pagati per ettaro
+CostTotalHa = Totale €/ha
+CostTotalHaHelp = Somma di manodopera, macchine e servizi: calcolata al salvataggio
