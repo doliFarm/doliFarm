@@ -141,9 +141,11 @@ if (empty($action) && empty($id) && empty($ref)) {
 
 // Load object
 include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be 'include', not 'include_once'.
-// A planting unit written before the list stays selectable
-if ((string) $object->planting_unit !== '' && !isset($object->fields['planting_unit']['arrayofkeyval'][$object->planting_unit])) {
-	$object->fields['planting_unit']['arrayofkeyval'][$object->planting_unit] = $object->planting_unit;
+// A planting unit or a crop type written before the lists stays selectable
+foreach (array('planting_unit', 'crop_type') as $listfield) {
+	if ((string) $object->$listfield !== '' && !isset($object->fields[$listfield]['arrayofkeyval'][$object->$listfield])) {
+		$object->fields[$listfield]['arrayofkeyval'][$object->$listfield] = $object->$listfield;
+	}
 }
 
 // Permissions

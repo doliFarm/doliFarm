@@ -163,18 +163,18 @@ foreach ($object->fields as $key => $val) {
 
 // List of fields to search into when doing a "search in all"
 $fieldstosearchall = array();
-// foreach ($object->fields as $key => $val) {
-// 	if (!empty($val['searchall'])) {
-// 		$fieldstosearchall['t.'.$key] = $val['label'];
-// 	}
-// }
-// $parameters = array('fieldstosearchall'=>$fieldstosearchall);
-// $reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
-// if ($reshook > 0) {
-// 	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
-// } elseif ($reshook == 0) {
-// 	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
-// }
+foreach ($object->fields as $key => $val) {
+	if (!empty($val['searchall'])) {
+		$fieldstosearchall['t.'.$key] = $val['label'];
+	}
+}
+$parameters = array('fieldstosearchall'=>$fieldstosearchall);
+$reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
+if ($reshook > 0) {
+	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
+} elseif ($reshook == 0) {
+	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
+}
 
 // Definition of array of fields for columns from ->fields
 $tableprefix = 't';
@@ -376,7 +376,7 @@ foreach ($search as $key => $val) {
 		}
 	}
 }
-if ($search_all) {
+if ($search_all && !empty($fieldstosearchall)) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
 }
 /*
@@ -852,7 +852,7 @@ while ($i < $imaxinloop) {
 			if (!empty($arrayfields['t.'.$key]['checked'])) {
 				print '<td'.($cssforfield ? ' class="'.$cssforfield.((preg_match('/tdoverflow/', $cssforfield) && !in_array($val['type'], array('ip', 'url')) && !is_numeric($object->$key)) ? ' classfortooltip' : '').'"' : '');
 				if (preg_match('/tdoverflow/', $cssforfield) && !in_array($val['type'], array('ip', 'url')) && !is_numeric($object->$key) && !in_array($key, array('ref'))) {
-					print ' title="'.dol_escape_htmltag((string) $object->$key).'"';
+					print ' title="'.dol_escape_htmltag($key == 'label' ? $object->getCommonName() : (string) $object->$key).'"';
 				}
 				print '>';
 				if ($key == 'status') {

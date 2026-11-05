@@ -1036,3 +1036,21 @@ PlantingUnitSeedsM2 = graines par m²
 PlantingUnitPlantsHa = plants par hectare
 PlantingUnitPlantsM2 = plants par m²
 Plantingunit = Unité de plantation
+
+# Crops: names
+CropCommonName = Nom commun
+CropCommonNameHelp = Nom de la culture. Les cultures des données initiales ont un code (ex. CROP_WHEAT_DURUM) affiché traduit dans la langue de l'utilisateur
+CropLocalName = Nom local
+CropLocalNameHelp = Nom sous lequel la culture est connue dans la région ou en patois ; il est aussi utilisé par la recherche
+Scientificname = Nom scientifique
+Variety = Variété
+Croptype = Type de culture
+Estimatedyieldstd = Rendement estimé standard
+CAT_CEREAL = Céréales
+CAT_LEGUME = Légumineuses
+CAT_VEG = Légumes
+CAT_FRUIT = Arboriculture fruitière
+CAT_NUT = Fruits à coque
+CAT_FORAGE = Fourrages
+CAT_INDUSTRIAL = Cultures industrielles
+CAT_HERB = Plantes aromatiques et médicinales

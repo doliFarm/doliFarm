@@ -130,13 +130,15 @@ class DoliFarmCrops extends CommonObject
 	 */
 	public $fields = array(
 		"rowid" => array("type" => "int", "label" => "TechnicalID", "enabled" => "1", 'position' => 10, 'notnull' => 1, "visible" => "0",),
-		"ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
-		"label" => array("type" => "varchar(255)", "label" => "Label", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "alwayseditable" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150",),
+		"ref" => array("type" => "varchar(128)", "label" => "Ref", "enabled" => "1", 'position' => 15, 'notnull' => 0, "visible" => "1", "searchall" => "1", "help" => "RefAutoHelp", "csslist" => "tdoverflowmax150", "showoncombobox" => "1",),
+		"label" => array("type" => "varchar(255)", "label" => "CropCommonName", "enabled" => "1", 'position' => 20, 'notnull' => 1, "visible" => "1", "searchall" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150", "help" => "CropCommonNameHelp",),
+		"local_name" => array("type" => "varchar(255)", "label" => "CropLocalName", "enabled" => "1", 'position' => 22, 'notnull' => 0, "visible" => "1", "searchall" => "1", "css" => "minwidth300", "cssview" => "wordbreak", "csslist" => "tdoverflowmax150", "help" => "CropLocalNameHelp",),
 		"eppo_code" => array("type" => "varchar(10)", "label" => "EppoCode", "enabled" => "1", 'position' => 28, 'notnull' => 0, "visible" => "1", "searchall" => "1", "css" => "maxwidth100", "help" => "EppoCodeCropHelp", "copytoclipboard" => "1",),
 		"scientific_name" => array("type" => "varchar(255)", "label" => "Scientificname", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "-1",),
 		"family" => array("type" => "varchar(128)", "label" => "Family", "enabled" => "1", 'position' => 35, 'notnull' => 0, "visible" => "-1",),
 		"variety" => array("type" => "varchar(128)", "label" => "Variety", "enabled" => "1", 'position' => 40, 'notnull' => 0, "visible" => "-1",),
-		"crop_type" => array("type" => "varchar(32)", "label" => "Croptype", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",),
+		"crop_type" => array("type" => "select", "label" => "Croptype", "enabled" => "1", 'position' => 45, 'notnull' => 0, "visible" => "-1",
+			"arrayofkeyval" => array('CAT_CEREAL' => 'CAT_CEREAL', 'CAT_LEGUME' => 'CAT_LEGUME', 'CAT_VEG' => 'CAT_VEG', 'CAT_FRUIT' => 'CAT_FRUIT', 'CAT_NUT' => 'CAT_NUT', 'CAT_FORAGE' => 'CAT_FORAGE', 'CAT_INDUSTRIAL' => 'CAT_INDUSTRIAL', 'CAT_HERB' => 'CAT_HERB'),),
 		// Unit of the planting density (a rate per surface, not a unit of the dictionary "Units"): the keys are the values saved
 		"planting_unit" => array("type" => "select", "label" => "Plantingunit", "enabled" => "1", 'position' => 50, 'notnull' => 0, "visible" => "-1", "help" => "PlantingUnitHelp",
 			"arrayofkeyval" => array('kg/ha' => 'PlantingUnitKgHa', 'q/ha' => 'PlantingUnitQHa', 'seeds/ha' => 'PlantingUnitSeedsHa', 'seeds/m2' => 'PlantingUnitSeedsM2', 'plants/ha' => 'PlantingUnitPlantsHa', 'plants/m2' => 'PlantingUnitPlantsM2'),),
@@ -153,6 +155,10 @@ class DoliFarmCrops extends CommonObject
 	public $rowid;
 	public $ref;
 	public $label;
+	/**
+	 * @var string|null Local or dialect name of the crop
+	 */
+	public $local_name;
 	public $eppo_code;
 	public $scientific_name;
 	public $family;
@@ -561,6 +567,20 @@ class DoliFarmCrops extends CommonObject
 	}
 
 	/**
+	 * Common name of the crop in the language of the user: the name, or its translation when it is a translation key
+	 *
+	 * @param	?string	$label	Name to show, null for the name of the crop
+	 * @return	string
+	 */
+	public function getCommonName(?string $label = null)
+	{
+		global $langs;
+
+		$label = (string) ($label ?? $this->label);
+		return $label === '' ? '' : $langs->trans($label);
+	}
+
+	/**
 	 * Return HTML string to show a field into a page: the EPPO code is shown with its names
 	 *
 	 * @param	array<string,mixed>	$val			Array of properties of field to show
@@ -577,6 +597,10 @@ class DoliFarmCrops extends CommonObject
 		if ($key == 'eppo_code') {
 			dol_include_once('/dolifarm/lib/dolifarm_eppo.lib.php');
 			return dolifarmEppoShow($this->db, (string) $value);
+		}
+		if ($key == 'label') {
+			// The crops of the initial data have a translation key as name (CROP_WHEAT_DURUM)
+			return dol_escape_htmltag($this->getCommonName((string) $value));
 		}
 		return parent::showOutputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss);
 	}
@@ -845,7 +869,10 @@ class DoliFarmCrops extends CommonObject
 			$datas['ref'] = '<br><b>'.$langs->trans('Ref').':</b> '.$this->ref;
 		}
 		if (property_exists($this, 'label')) {
-			$datas['label'] = '<br>'.$langs->trans('Label').':</b> '.$this->label;
+			$datas['label'] = '<br><b>'.$langs->trans('CropCommonName').':</b> '.dol_escape_htmltag($this->getCommonName((string) $this->label));
+		}
+		if (!empty($this->local_name)) {
+			$datas['local_name'] = '<br><b>'.$langs->trans('CropLocalName').':</b> '.dol_escape_htmltag((string) $this->local_name);
 		}
 
 		return $datas;

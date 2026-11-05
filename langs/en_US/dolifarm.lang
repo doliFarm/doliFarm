@@ -1060,3 +1060,21 @@ PlantingUnitSeedsM2 = seeds per m²
 PlantingUnitPlantsHa = plants per hectare
 PlantingUnitPlantsM2 = plants per m²
 Plantingunit = Planting unit
+
+# Crops: names
+CropCommonName = Common name
+CropCommonNameHelp = Name of the crop. The crops of the initial data have a code (e.g. CROP_WHEAT_DURUM) that is shown translated in the language of the user
+CropLocalName = Local name
+CropLocalNameHelp = Name by which the crop is known in the area or in dialect; it is also used by the search
+Scientificname = Scientific name
+Variety = Variety
+Croptype = Crop type
+Estimatedyieldstd = Standard estimated yield
+CAT_CEREAL = Cereals
+CAT_LEGUME = Legumes
+CAT_VEG = Vegetables
+CAT_FRUIT = Fruit crops
+CAT_NUT = Nuts
+CAT_FORAGE = Forage crops
+CAT_INDUSTRIAL = Industrial crops
+CAT_HERB = Aromatic and medicinal herbs
