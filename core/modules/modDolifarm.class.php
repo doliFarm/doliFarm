@@ -194,6 +194,9 @@ class modDolifarm extends DolibarrModules
 		/* BEGIN MODULEBUILDER TABS */
 		// Don't forget to deactivate/reactivate your module to test your changes
 		$this->tabs = array();
+		// Tab "Farm" on the managed farms: multi-farm mode, type farm with the flag "affiliated farm"; single-farm mode, the farm of the setup.
+		// The condition is evaluated by dol_eval with the third party in $objectoffield: only white-listed functions, no ":" (separator)
+		$this->tabs[] = array('data' => 'thirdparty:+(1)dolifarmfarm:FarmSummaryTab:dolifarm@dolifarm:isModEnabled("dolifarm") && $user->hasRight("dolifarm", "dolifarmfarmdossier", "read") && ((getDolGlobalInt("DOLIFARM_MULTIFARM") && $objectoffield->typent_code == "TE_FARM" && $objectoffield->array_options["options_dolifarm_affiliated"] == 1) || (!getDolGlobalInt("DOLIFARM_MULTIFARM") && $objectoffield->id == getDolGlobalInt("DOLIFARM_FARM_SOCID"))):/dolifarm/dolifarm_farmsummary.php?socid=__ID__');
 		/* END MODULEBUILDER TABS */
 		// Example:
 		// To add a new tab identified by code tabname1
