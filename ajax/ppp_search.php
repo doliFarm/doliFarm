@@ -90,6 +90,8 @@ $catalog = (GETPOSTINT('catalog') && ($user->hasRight('dolifarm', 'dolifarmagrod
 
 $langs->load('dolifarm@dolifarm');
 top_httphead('application/json');
-print json_encode(array('results' => dolifarmAgroDrugSearch($db, $langs, $term, $catalog)));
+// Use on an organic area: date of the use, the products allowed in organic production come first
+$organicdate = (GETPOSTINT('organic') > 0 ? GETPOSTINT('organic') : null);
+print json_encode(array('results' => dolifarmAgroDrugSearch($db, $langs, $term, $catalog, $organicdate)));
 
 $db->close();

@@ -148,13 +148,17 @@ function dolifarmAgroDrugResolve($db, $user, $value, &$error, &$created = false)
  * Search for the selector: agrodrugs of the farm in use, then authorised products of the catalogue that the farm does
  * not have yet (select2 format)
  *
- * @param	DoliDB		$db			Database handler
- * @param	Translate	$langs		Languages
- * @param	string		$term		Text: name, active substance or registration number
- * @param	bool		$catalog	Include the catalogue
+ * For a use on an organic area ($organicdate), the agrodrugs of the farm are grouped by the result of the check for
+ * organic production: allowed first, then to verify, then not allowed. All stay selectable.
+ *
+ * @param	DoliDB		$db				Database handler
+ * @param	Translate	$langs			Languages
+ * @param	string		$term			Text: name, active substance or registration number
+ * @param	bool		$catalog		Include the catalogue
+ * @param	?int		$organicdate	Date of a use on an organic area, null when the area is not organic
  * @return	array<int,array<string,mixed>>	Groups with their children
  */
-function dolifarmAgroDrugSearch($db, $langs, $term, $catalog)
+function dolifarmAgroDrugSearch($db, $langs, $term, $catalog, ?int $organicdate = null)
 {
 	$term = trim((string) $term);
 	$like = $db->escape($db->escapeforlike($term));
@@ -176,7 +180,20 @@ function dolifarmAgroDrugSearch($db, $langs, $term, $catalog)
 		$keys[DoliFarmPppSync::regKey($obj->reg_number)] = 1;
 	}
 	$groups = array();
-	if (count($farm)) {
+	if (count($farm) && $organicdate !== null && dol_include_once('/dolifarm/lib/dolifarm_organic.lib.php')) {
+		$byresult = array('yes' => array(), 'verify' => array(), 'no' => array());
+		foreach ($farm as $option) {
+			$check = dolifarmOrganicAgroDrugCheck($db, (int) $option['id'], $organicdate);
+			$result = isset($byresult[$check['result']]) ? $check['result'] : 'verify';
+			$byresult[$result][] = $option;
+		}
+		$titles = array('yes' => 'PppGroupOrganicYes', 'verify' => 'PppGroupOrganicVerify', 'no' => 'PppGroupOrganicNo');
+		foreach ($byresult as $result => $options) {
+			if (count($options)) {
+				$groups[] = array('text' => $langs->transnoentities($titles[$result]), 'children' => $options);
+			}
+		}
+	} elseif (count($farm)) {
 		$groups[] = array('text' => $langs->transnoentities('PppGroupFarm'), 'children' => $farm);
 	}
 	if ($catalog && dol_strlen($term) >= 2) {
@@ -207,19 +224,22 @@ function dolifarmAgroDrugSearch($db, $langs, $term, $catalog)
  * @param	string	$value		Selected value
  * @param	bool	$catalog	Include the catalogue
  * @param	string	$morecss	CSS
+ * @param	?int	$organicdate	Date of a use on an organic area: the products allowed come first (see dolifarmAgroDrugSearch())
  * @return	string				HTML
  */
-function dolifarmAgroDrugSelect($db, $htmlname, $value, $catalog = true, $morecss = 'minwidth300')
+function dolifarmAgroDrugSelect($db, $htmlname, $value, $catalog = true, $morecss = 'minwidth300', ?int $organicdate = null)
 {
 	global $conf, $langs;
 
 	$langs->load('dolifarm@dolifarm');
 	$out = '<select class="flat '.dol_escape_htmltag($morecss).'" name="'.dol_escape_htmltag($htmlname).'" id="'.dol_escape_htmltag($htmlname).'">';
 	$out .= '<option value=""></option>';
-	foreach (dolifarmAgroDrugSearch($db, $langs, '', false) as $group) {
+	foreach (dolifarmAgroDrugSearch($db, $langs, '', false, $organicdate) as $group) {
+		$out .= '<optgroup label="'.dol_escape_htmltag($group['text']).'">';
 		foreach ($group['children'] as $option) {
 			$out .= '<option value="'.dol_escape_htmltag($option['id']).'"'.((string) $value === $option['id'] ? ' selected' : '').'>'.dol_escape_htmltag($option['text']).'</option>';
 		}
+		$out .= '</optgroup>';
 	}
 	$out .= '</select>';
 	if (empty($conf->use_javascript_ajax)) {
@@ -239,7 +259,7 @@ function dolifarmAgroDrugSelect($db, $htmlname, $value, $catalog = true, $morecs
 				dataType: "json",
 				delay: 300,
 				data: function(params) {
-					return { term: params.term || "", catalog: '.($catalog ? 1 : 0).' };
+					return { term: params.term || "", catalog: '.($catalog ? 1 : 0).($organicdate !== null ? ', organic: '.((int) $organicdate) : '').' };
 				},
 				processResults: function(data) {
 					return { results: data.results || [] };

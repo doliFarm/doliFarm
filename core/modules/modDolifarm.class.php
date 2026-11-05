@@ -849,30 +849,41 @@ class modDolifarm extends DolibarrModules
 			'object' => 'DoliFarmMachine'
 		);
 		 */
-		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMOPERATOR */
+		// Technical inputs: register (organic check), plant protection products, fertilisers, qualified operators
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',
 			'type' => 'left',
-			'titre' => 'DoliFarmOperators',
-			'prefix' => img_picto('', dolifarm_get_fa_icon('operator'), 'class="paddingright pictofixedwidth valignmiddle"'),
+			'titre' => 'MenuTechnicalInputs',
+			'prefix' => img_picto('', 'fa-leaf', 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
-			'leftmenu' => 'dolifarmoperator',
-			'url' => '/dolifarm/dolifarmoperator_list.php',
+			'leftmenu' => 'dolifarminputs',
+			'url' => '/dolifarm/dolifarm_inputs.php',
 			'langs' => 'dolifarm@dolifarm',
 			'position' => 1000 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
-			'perms' => '$user->hasRight("dolifarm", "dolifarmoperator", "read")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read") || $user->hasRight("dolifarm", "dolifarmoperator", "read")',
 			'target' => '',
 			'user' => 2,
-			'object' => 'DoliFarmOperator'
 		);
-		/* END MODULEBUILDER LEFTMENU DOLIFARMOPERATOR */
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarminputs',
+			'type' => 'left',
+			'titre' => 'InputsRegister',
+			'mainmenu' => 'dolifarm',
+			'leftmenu' => 'dolifarminputs_register',
+			'url' => '/dolifarm/dolifarm_inputs.php',
+			'langs' => 'dolifarm@dolifarm',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("dolifarm")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
+			'target' => '',
+			'user' => 2,
+		);
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMAGRODRUG */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarminputs',
 			'type' => 'left',
-			'titre' => 'DoliFarmAgroDrug',
-			'prefix' => img_picto('', dolifarm_get_fa_icon('agrodrug'), 'class="paddingright pictofixedwidth valignmiddle"'),
+			'titre' => 'MenuPlantProtectionProducts',
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => 'dolifarmagrodrug',
 			'url' => '/dolifarm/dolifarmagrodrug_list.php',
@@ -884,44 +895,12 @@ class modDolifarm extends DolibarrModules
 			'user' => 2,
 			'object' => 'DoliFarmAgroDrug'
 		);
-		/*
-		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmagrodrug',
-			'type' => 'left',
-			'titre' => 'List DoliFarmAgroDrug',
-			'mainmenu' => 'dolifarm',
-			'leftmenu' => 'dolifarm_agrodrug_list',
-			'url' => '/dolifarm/dolifarmagrodrug_list.php',
-			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("dolifarm")',
-			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read")',
-			'target' => '',
-			'user' => 2,
-			'object' => 'DoliFarmAgroDrug'
-		);
-		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmagrodrug',
-			'type' => 'left',
-			'titre' => 'New DoliFarmAgroDrug',
-			'mainmenu' => 'dolifarm',
-			'leftmenu' => 'dolifarm_agrodrug_new',
-			'url' => '/dolifarm/dolifarmagrodrug_card.php?action=create',
-			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("dolifarm")',
-			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "write")',
-			'target' => '',
-			'user' => 2,
-			'object' => 'DoliFarmAgroDrug'
-		);
-		*/
+		/* END MODULEBUILDER LEFTMENU DOLIFARMAGRODRUG */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMFERTILIZER */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarminputs',
 			'type' => 'left',
 			'titre' => 'DoliFarmFertilizers',
-			'prefix' => img_picto('', dolifarm_get_fa_icon('fertilizer'), 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => 'dolifarmfertilizer',
 			'url' => '/dolifarm/dolifarmfertilizer_list.php',
@@ -934,22 +913,23 @@ class modDolifarm extends DolibarrModules
 			'object' => 'DoliFarmFertilizer'
 		);
 		/* END MODULEBUILDER LEFTMENU DOLIFARMFERTILIZER */
-		// Register of the technical inputs: plant protection products, fertilisers and corroborants for organic production
+		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMOPERATOR */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarminputs',
 			'type' => 'left',
-			'titre' => 'InputsRegister',
-			'prefix' => img_picto('', 'fa-leaf', 'class="paddingright pictofixedwidth valignmiddle"'),
+			'titre' => 'MenuQualifiedOperators',
 			'mainmenu' => 'dolifarm',
-			'leftmenu' => 'dolifarminputs',
-			'url' => '/dolifarm/dolifarm_inputs.php',
+			'leftmenu' => 'dolifarmoperator',
+			'url' => '/dolifarm/dolifarmoperator_list.php',
 			'langs' => 'dolifarm@dolifarm',
 			'position' => 1000 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
-			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmoperator", "read")',
 			'target' => '',
 			'user' => 2,
+			'object' => 'DoliFarmOperator'
 		);
+		/* END MODULEBUILDER LEFTMENU DOLIFARMOPERATOR */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMCROPS */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',

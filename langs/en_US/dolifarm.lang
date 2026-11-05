@@ -1078,3 +1078,13 @@ CAT_NUT = Nuts
 CAT_FORAGE = Forage crops
 CAT_INDUSTRIAL = Industrial crops
 CAT_HERB = Aromatic and medicinal herbs
+
+# Menu: technical inputs
+MenuTechnicalInputs = Technical inputs
+MenuPlantProtectionProducts = Plant protection products
+MenuQualifiedOperators = Qualified operators
+
+# Selectors: products for organic areas
+PppGroupOrganicYes = Allowed in organic farming
+PppGroupOrganicVerify = To verify for organic farming
+PppGroupOrganicNo = Not allowed in organic farming

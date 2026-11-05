@@ -1113,3 +1113,13 @@ CAT_NUT = Frutta a guscio
 CAT_FORAGE = Foraggere
 CAT_INDUSTRIAL = Industriali
 CAT_HERB = Aromatiche e officinali
+
+# Menu: technical inputs
+MenuTechnicalInputs = Mezzi tecnici
+MenuPlantProtectionProducts = Fitosanitari
+MenuQualifiedOperators = Operatori abilitati
+
+# Selectors: products for organic areas
+PppGroupOrganicYes = Ammessi in biologico
+PppGroupOrganicVerify = Da verificare per il biologico
+PppGroupOrganicNo = Non ammessi in biologico

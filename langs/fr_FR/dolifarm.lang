@@ -1054,3 +1054,13 @@ CAT_NUT = Fruits à coque
 CAT_FORAGE = Fourrages
 CAT_INDUSTRIAL = Cultures industrielles
 CAT_HERB = Plantes aromatiques et médicinales
+
+# Menu: technical inputs
+MenuTechnicalInputs = Intrants
+MenuPlantProtectionProducts = Produits phytosanitaires
+MenuQualifiedOperators = Opérateurs certifiés
+
+# Selectors: products for organic areas
+PppGroupOrganicYes = Autorisés en agriculture biologique
+PppGroupOrganicVerify = À vérifier pour le bio
+PppGroupOrganicNo = Non autorisés en agriculture biologique
