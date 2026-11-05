@@ -1235,6 +1235,12 @@ class modDolifarm extends DolibarrModules
 			"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity, libelle) VALUES('scheda_dolifarmplot', 'dolifarmplot', ".((int) $conf->entity).", 'Scheda')",
 		));
 
+		// Document of the farm dossier (farm, data, plots, surfaces, machines, buildings, livestock, production plans)
+		$sql = array_merge($sql, array(
+			"DELETE FROM ".$this->db->prefix()."document_model WHERE nom = 'fascicolo_dolifarmfarmdossier' AND type = 'dolifarmfarmdossier' AND entity = ".((int) $conf->entity),
+			"INSERT INTO ".$this->db->prefix()."document_model (nom, type, entity, libelle) VALUES('fascicolo_dolifarmfarmdossier', 'dolifarmfarmdossier', ".((int) $conf->entity).", 'Fascicolo')",
+		));
+
 		require_once DOL_DOCUMENT_ROOT . '/user/class/usergroup.class.php';
 
         // Definizione dei gruppi necessari
