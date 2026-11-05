@@ -123,7 +123,7 @@ class dolifarmWidgetTopPlannedProducts extends ModeleBoxes
             if ($num == 0) {
                  $this->info_box_contents[$i][] = array(
                     'td' => 'class="center opacitymedium"',
-                    'text' => $langs->trans("NoData"),
+                    'text' => $langs->trans("NoRecordFound"),
                 );
             }
         } else {

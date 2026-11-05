@@ -66,7 +66,7 @@ dolifarmCheckSocAccess($user, $object);
  * View
  */
 $form = new Form($db);
-$title = $object->ref . " - " . $langs->trans('Macchine');
+$title = $object->ref . " - " . $langs->trans('DoliFarmMachines');
 $help_url = '';
 
 llxHeader('', $title, $help_url);

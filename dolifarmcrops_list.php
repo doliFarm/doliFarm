@@ -287,7 +287,7 @@ $form = new Form($db);
 
 $now = dol_now();
 
-$title = $langs->trans("DoliFarmCropss");
+$title = $langs->trans("DoliFarmCrops");
 //$help_url = "EN:Module_DoliFarmCrops|FR:Module_DoliFarmCrops_FR|ES:Módulo_DoliFarmCrops";
 $help_url = '';
 $morejs = array();

@@ -714,7 +714,7 @@ if (empty($setupnotempty)) {
 dol_include_once('/dolifarm/lib/dolifarm_biobody.lib.php');
 print '<br>';
 print load_fiche_titre($langs->trans('BioBodySetupTitle'), '', '');
-print '<div class="opacitymedium">'.$langs->trans('BioBodySetupHelp', count(dolifarmBioBodyList($db)), '<a href="'.DOL_URL_ROOT.'/admin/dict.php?mainmenu=home">'.$langs->trans('Dictionaries').'</a>').'</div>';
+print '<div class="opacitymedium">'.$langs->trans('BioBodySetupHelp', count(dolifarmBioBodyList($db)), '<a href="'.DOL_URL_ROOT.'/admin/dict.php?mainmenu=home">'.$langs->trans('DictionarySetup').'</a>').'</div>';
 $unmatched = dolifarmBioBodyUnmatched($db);
 if (count($unmatched)) {
 	$links = array();

@@ -4,9 +4,7 @@ CHARSET=UTF-8
 # ==============================================================================
 # MODULE IDENTITY
 # ==============================================================================
-Module100000Name = Fascicoli
 Dolifarm = Fascicoli
-Module100000Desc = Modulo per la gestione di Aziende Agricole, Fascicoli, Appezzamenti e Macchinari.
 
 # ==============================================================================
 # MENUS
@@ -189,7 +187,6 @@ TypeContact_dolifarmfarmdossier_external_CAAOPERATOR = Operatore CAA
 
 # Tabs Custom
 Terreni = Appezzamenti
-Macchine = Macchine
 
 # ==============================================================================
 # Appezzamenti (PLOTS)
@@ -1177,3 +1174,42 @@ EppoPlaceUsePest = Impieghi agrofarmaci: avversità
 EppoPlaceSianMap = Mappa codici SIAN
 EppoPlaceAdversity = Dizionario avversità
 EppoCronLate = Esecuzione in ritardo: il cron del server non avvia i lavori pianificati di Dolibarr (scripts/cron/cron_run_jobs.php)
+
+# Labels of generated pages and fields
+ModuleDolifarmName = doliFarm
+ModuleDolifarmDesc = Gestione dell'azienda agricola: fascicolo, appezzamenti, macchine, mezzi tecnici, colture e costi
+DolifarmSetup = Configurazione di doliFarm
+DolifarmSetupPage = Impostazioni del modulo doliFarm
+BoxTotDossiersDescription = Numero di fascicoli aziendali attivi
+BoxTotPlotsDescription = Riepilogo degli appezzamenti
+BoxTotMachinesDescription = Riepilogo delle macchine agricole
+BoxCropPlansMonitoringDescription = Andamento dei piani di produzione
+BoxProductsPlanOverview = Prodotti più previsti nei piani di produzione
+ClassNotFound = Classe non trovata
+ErrorFileNotSelected = Nessun file selezionato
+ErrorNumberingModuleNotSetup = Modello di numerazione non configurato per %s
+Path = Percorso
+ShowList = Mostra elenco
+ModelPDF = Modello PDF
+ShapeJson = Forma (GeoJSON)
+DoliFarmAgroDrugs = Fitosanitari
+DeleteDoliFarmAgroDrug = Elimina fitosanitario
+ShowDoliFarmAgroDrug = Mostra fitosanitario
+DeleteDoliFarmCrops = Elimina coltura
+ShowDoliFarmCrops = Mostra coltura
+DeleteDoliFarmEstimateCosts = Elimina costo standard
+ShowDoliFarmEstimateCosts = Mostra costo standard
+Regdate = Data di registrazione
+Contentpercentage = Contenuto di sostanza attiva
+Formulation = Formulazione
+Hazardclassification = Classificazione di pericolo
+Safetydaysdefault = Intervallo di sicurezza (giorni)
+Maxdoseha = Dose massima per ettaro
+LinkedCropPlans = Piani di produzione collegati
+DossierImportXml = Importazione del fascicolo (XML)
+DossierImportXmlFile = File XML
+DossierImportButton = Importa fascicolo
+DossierImportDone = Fascicolo importato (id %s)
+DossierImportError = Errore di importazione
+DossierImportNameMissing = Ragione sociale mancante per il nuovo soggetto terzo
+DossierImportThirdPartyAmbiguous = Più soggetti terzi corrispondono allo stesso CUAA o partita IVA: correggere l'anagrafica prima di importare

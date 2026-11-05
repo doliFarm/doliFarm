@@ -108,9 +108,9 @@ if ($id > 0) {
         print '<tr class="liste_titre">';
         print '<td>' . $langs->trans("Ref") . '</td>';
         print '<td>' . $langs->trans("Label") . '</td>';
-        print '<td>' . $langs->trans("Comune") . '</td>';
+        print '<td>' . $langs->trans("Town") . '</td>';
         print '<td>' . $langs->trans("Owner") . '</td>'; // Label corretta (Proprietario)
-        print '<td class="right">' . $langs->trans("SAU (ha)") . '</td>';
+        print '<td class="right">' . $langs->trans("DossierPdfColSau") . '</td>';
         print '<td class="right">' . $langs->trans("Status") . '</td>';
         print '</tr>';
 

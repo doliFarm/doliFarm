@@ -5,41 +5,30 @@
 #
 
 # Module label 'ModuleDolifarmName'
-ModuleDolifarmName = Dolifarm
+ModuleDolifarmName = doliFarm
 # Module description 'ModuleDolifarmDesc'
-ModuleDolifarmDesc = Dolifarm description
+ModuleDolifarmDesc = Farm management: dossier, plots, machines, technical inputs, crops and costs
 
 #
 # Admin page
 #
-DolifarmSetup = Dolifarm setup
+DolifarmSetup = doliFarm setup
 Settings = Settings
-DolifarmSetupPage = Dolifarm setup page
-NewSection=New section
-DOLIFARM_MYPARAM1 = My param 1
-DOLIFARM_MYPARAM1Tooltip = My param 1 tooltip
-DOLIFARM_MYPARAM2=My param 2
-DOLIFARM_MYPARAM2Tooltip=My param 2 tooltip
+DolifarmSetupPage = Settings of the doliFarm module
 
 
 #
 # About page
 #
 About = About
-DolifarmAbout = About Dolifarm
-DolifarmAboutPage = Dolifarm about page
 
 #
 # Sample page
 #
-DolifarmArea = Home Dolifarm
-MyPageName = My page name
 
 #
 # Sample widget
 #
-MyWidget = My widget
-MyWidgetDescription = My widget description
 
 #
 # Farm dossier
@@ -385,9 +374,7 @@ FertGroupHelp = ORG organic fertilization (AGEA sheet 6), MIN chemical fertiliza
 
 # Keys aligned with it_IT (01/11/2026)
 CHARSET = UTF-8
-Module100000Name = Farm dossiers
 Dolifarm = Farm dossiers
-Module100000Desc = Module to manage farms, farm dossiers, plots and machines.
 DoliFarmArea = Farm management area
 DoliFarmFarmDossier = Farm dossier
 DoliFarmFarmDossiers = Farm dossiers
@@ -433,7 +420,6 @@ SourceFile = Source file
 Validator = Validating technician
 ValidationStatus = Validation status
 Terreni = Plots
-Macchine = Machines
 NewDoliFarmPlot = New plot
 ListDoliFarmPlot = List of plots
 EditDoliFarmPlot = Edit plot
@@ -1142,3 +1128,38 @@ EppoPlaceUsePest = Uses of agrodrugs: pest
 EppoPlaceSianMap = Map of SIAN codes
 EppoPlaceAdversity = Dictionary of pests
 EppoCronLate = Run late: the cron of the server does not start the scheduled jobs of Dolibarr (scripts/cron/cron_run_jobs.php)
+
+# Labels of generated pages and fields
+BoxTotDossiersDescription = Number of active farm dossiers
+BoxTotPlotsDescription = Summary of the plots
+BoxTotMachinesDescription = Summary of the farm machines
+BoxCropPlansMonitoringDescription = Monitoring of the production plans
+BoxProductsPlanOverview = Products most planned in the production plans
+ClassNotFound = Class not found
+ErrorFileNotSelected = No file selected
+ErrorNumberingModuleNotSetup = Numbering model not set up for %s
+Path = Path
+ShowList = Show list
+ModelPDF = PDF model
+ShapeJson = Shape (GeoJSON)
+DoliFarmAgroDrugs = Plant protection products
+DeleteDoliFarmAgroDrug = Delete plant protection product
+ShowDoliFarmAgroDrug = Show plant protection product
+DeleteDoliFarmCrops = Delete crop
+ShowDoliFarmCrops = Show crop
+DeleteDoliFarmEstimateCosts = Delete standard cost
+ShowDoliFarmEstimateCosts = Show standard cost
+Regdate = Registration date
+Contentpercentage = Active substance content
+Formulation = Formulation
+Hazardclassification = Hazard classification
+Safetydaysdefault = Pre-harvest interval (days)
+Maxdoseha = Maximum dose per hectare
+LinkedCropPlans = Linked production plans
+DossierImportXml = Import of the dossier (XML)
+DossierImportXmlFile = XML file
+DossierImportButton = Import dossier
+DossierImportDone = Dossier imported (id %s)
+DossierImportError = Import error
+DossierImportNameMissing = Company name missing for the new third party
+DossierImportThirdPartyAmbiguous = More third parties match the same CUAA or VAT number: fix them before importing

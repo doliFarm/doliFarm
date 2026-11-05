@@ -287,7 +287,7 @@ $form = new Form($db);
 
 $now = dol_now();
 
-$title = $langs->trans("DoliFarmEstimateCostss");
+$title = $langs->trans("DoliFarmEstimateCosts");
 //$help_url = "EN:Module_DoliFarmEstimateCosts|FR:Module_DoliFarmEstimateCosts_FR|ES:Módulo_DoliFarmEstimateCosts";
 $help_url = '';
 $morejs = array();

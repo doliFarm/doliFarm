@@ -112,7 +112,7 @@ class dolifarm_TotDossiers extends ModeleBoxes
         // Titolo: "Fascicoli Aziendali (12)"
         // Se non hai la traduzione 'FarmDossiers', userà la stringa di fallback
         $label = $langs->trans("FarmDossiersActive");
-        if ($label == "FarmDossiers") $label = "Fascicoli Aziendali"; // Fallback manuale se manca traduzione
+        
         
         $title_text = $label . " (" . $total_active . ")";
 

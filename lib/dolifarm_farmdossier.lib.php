@@ -99,7 +99,7 @@ function dolifarmfarmdossierPrepareHead($object)
     }
 
     $head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmfarmdossier_machines.php", 1), ['id' => $object->id]);
-    $head[$h][1] = $langs->trans("Macchine");
+    $head[$h][1] = $langs->trans("DoliFarmMachines");
     if ($nbMach > 0) {
         $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbMach.'</span>';
     }

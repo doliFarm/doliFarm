@@ -32,8 +32,9 @@ class DoliFarmImporter
     {
         global $conf, $langs;
 
+        $langs->loadLangs(array("errors", "dolifarm@dolifarm"));
         if (!file_exists($filepath)) {
-            $this->error = "File non trovato: " . $filepath;
+            $this->error = $langs->transnoentitiesnoconv("ErrorFileNotFound", basename($filepath));
             dol_syslog("DoliFarmImporter::importFromXML Error: " . $this->error, LOG_ERR);
             return -1;
         }
@@ -105,6 +106,8 @@ class DoliFarmImporter
      */
     private function findOrCreateThirdparty($node)
     {
+        global $langs;
+
         $cuaa = self::normalizeCuaa((string) $node->CUAA);
         if ($cuaa === '') {
             $cuaa = self::normalizeCuaa((string) $node->CodiceFiscale);
@@ -150,7 +153,7 @@ class DoliFarmImporter
         }
 
         if ($name === '') {
-            $this->error = "Ragione sociale mancante per il nuovo soggetto terzo";
+            $this->error = $langs->transnoentitiesnoconv("DossierImportNameMissing");
             return -1;
         }
 
@@ -188,6 +191,8 @@ class DoliFarmImporter
      */
     private function findThirdpartyBy($where)
     {
+        global $langs;
+
         $sql = "SELECT s.rowid FROM ".MAIN_DB_PREFIX."societe as s";
         $sql .= " WHERE ".$where." AND s.entity IN (".getEntity('societe').")";
         $resql = $this->db->query($sql);
@@ -197,7 +202,7 @@ class DoliFarmImporter
         }
         $num = $this->db->num_rows($resql);
         if ($num > 1) {
-            $this->error = "Più soggetti terzi corrispondono allo stesso CUAA o partita IVA: correggere l'anagrafica prima di importare";
+            $this->error = $langs->transnoentitiesnoconv("DossierImportThirdPartyAmbiguous");
             return -1;
         }
         if ($num == 1) {

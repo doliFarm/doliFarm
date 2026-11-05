@@ -76,8 +76,8 @@ class dolifarm_TotMachines extends ModeleBoxes
 
         // 2. CONFIGURAZIONE HEADER
         // Titolo: "Machines (10)" o "Macchine (10)"
-        $label = $langs->trans("Machines");
-        if ($label == "Machines") $label = "Macchine"; // Fallback se manca traduzione
+        $label = $langs->trans("DoliFarmMachines");
+        
         
         $title_text = $label . " (" . $total_active . ")";
 
