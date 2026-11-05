@@ -75,6 +75,9 @@ class dolifarmWidgetTopPlannedProducts extends ModeleBoxes
         $sql .= " WHERE cp.entity = " . $conf->entity;
         $sql .= " AND cp.status = 1"; 
         $sql .= " AND cp.fk_output_product > 0";
+        // Only the farms the user can see among the managed farms
+        dol_include_once('/dolifarm/lib/dolifarm_access.lib.php');
+        $sql .= dolifarmSqlSocFilter($user, 'cp.fk_soc');
         // Ordiniamo per quantità decrescente
         $sql .= " ORDER BY total_qty DESC";
         $sql .= " LIMIT " . $max;
