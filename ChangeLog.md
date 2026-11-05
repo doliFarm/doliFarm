@@ -1,5 +1,11 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.1
+
+Correzione della gestione di una o più aziende. Dopo l'aggiornamento non serve riattivare il modulo (nessuna modifica al database); con più aziende controllare in Configurazione la riga "Aziende gestite".
+
+- Modalità azienda singola: l'azienda (obbligatoria, scelta tra le aziende agricole) è sempre e solo quella in tutte le schermate, anche nei filtri di export, import, registri bio e ispezioni; senza azienda configurata nessun oggetto è gestito e le pagine lo segnalano. Il cambio di modalità ricarica la configurazione; con più aziende, pulsante per creare fascicolo e magazzini delle aziende affiliate prima del cambio. Primi passi, widget e home di doliTrace contano solo le aziende gestite.
+
 ## 1.5.0
 
 Aziende gestite, catalogo dei fitosanitari nei trattamenti, costi standard delle operazioni, organismi di controllo bio e traduzioni complete. È la versione richiesta da doliTrace 1.3.0: aggiornare doliFarm prima di doliTrace. Dopo l'aggiornamento disattivare e riattivare il modulo: all'attivazione si aggiungono colonne (nome locale delle colture, tariffe dei costi standard), dizionari (organismi di controllo bio) e tipi di soggetto terzo (Trasformatore), e cambiano i menu. Requisito minimo PHP 8.2 e Dolibarr 23; provato su PHP 8.4, MySQL 8.4 e Dolibarr 24.0.2.
@@ -8,7 +14,6 @@ Aziende gestite, catalogo dei fitosanitari nei trattamenti, costi standard delle
 - Multi-azienda: sono gestiti i soggetti terzi di tipo "Azienda agricola" o "Trasformatore" con il flag "Azienda affiliata"; azienda singola: quella della configurazione, fissa in tutte le schede. Gli oggetti di altri soggetti terzi sono nascosti in elenchi, registri e widget e non si salvano; la configurazione mostra le aziende gestite e gli oggetti nascosti.
 - Tab "Azienda agricola" sul soggetto terzo: fascicolo corrente, terreni con riepiloghi per titolo di conduzione e stato bio, macchine, fabbricati, allevamenti, scadenze; con doliTrace piani, raccolte, operazioni, trattamenti e ispezioni.
 - Tipo "Trasformatore": soggetto gestito senza fascicolo, con magazzini propri e certificazione bio; flag "Trasforma i propri prodotti" per le aziende agricole.
-- Modalità azienda singola: l'azienda (obbligatoria, scelta tra le aziende agricole) è sempre e solo quella in tutte le schermate, anche nei filtri di export, import, registri bio e ispezioni; senza azienda configurata nessun oggetto è gestito e le pagine lo segnalano. Il cambio di modalità ricarica la configurazione; con più aziende, pulsante per creare fascicolo e magazzini delle aziende affiliate prima del cambio. Primi passi, widget e home di doliTrace contano solo le aziende gestite.
 
 ### Fascicolo e appezzamenti
 - Documento PDF del fascicolo (modello "Fascicolo"): azienda, dati del fascicolo, terreni con totali e riepiloghi, macchine, fabbricati, allevamenti, piani di produzione.
