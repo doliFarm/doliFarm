@@ -61,6 +61,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/mouvementstock.class.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 
 /**
  * Demo data builder
@@ -451,32 +452,103 @@ class DoliFarmDemo
 	}
 
 	/**
-	 * Purchase of an input: stock received in the inputs warehouse of the farm (once by label)
+	 * Purchase of an input from a supplier: supplier order validated, approved and sent at the date, then received in the
+	 * inputs warehouse of the farm with the lot (stock movement of the order, dated at the delivery). Once by supplier ref.
 	 *
-	 * @param int    $socid     Farm
-	 * @param int    $productid Product
-	 * @param float  $qty       Quantity
-	 * @param float  $price     Unit price
-	 * @param string $date      Date
-	 * @param string $batch     Lot ('' if the product has no lot)
-	 * @param string $label     Label of the movement
+	 * @param int    $socid      Farm
+	 * @param int    $supplierid Supplier
+	 * @param int    $productid  Product
+	 * @param float  $qty        Quantity
+	 * @param float  $price      Unit price
+	 * @param float  $vat        VAT rate
+	 * @param string $date       Date of the order
+	 * @param string $batch      Lot ('' if the product has no lot)
+	 * @param string $label      Supplier ref of the order
 	 * @return void
 	 */
-	public function purchase($socid, $productid, $qty, $price, $date, $batch, $label)
+	public function purchase($socid, $supplierid, $productid, $qty, $price, $vat, $date, $batch, $label)
 	{
-		$warehouse = dolifarmGetFarmWarehouse($this->db, $socid, 'inputs');
-		if (!$warehouse || !($productid > 0)) {
-			$this->fail('purchase '.$label, 'no inputs warehouse for the farm '.$socid);
+		global $conf;
+
+		$db = $this->db;
+		$warehouse = dolifarmGetFarmWarehouse($db, $socid, 'inputs');
+		if (!$warehouse || !($productid > 0) || !($supplierid > 0)) {
+			$this->fail('purchase '.$label, 'no inputs warehouse for the farm '.$socid.' or no supplier');
 			return;
 		}
-		if ((int) $this->value("SELECT COUNT(*) FROM ".$this->db->prefix()."stock_mouvement WHERE fk_product = ".((int) $productid)." AND label = '".$this->db->escape($label)."'") > 0) {
+		if ((int) $this->value("SELECT COUNT(*) FROM ".$db->prefix()."commande_fournisseur WHERE fk_soc = ".((int) $supplierid)." AND ref_supplier = '".$db->escape($label)."'") > 0) {
 			return;
 		}
-		$movement = new MouvementStock($this->db);
-		$movement->setOrigin('', 0);
-		$eatby = ($batch !== '' ? dol_time_plus_duree($this->ts($date), 3, 'y') : '');
-		if ($movement->reception($this->user, $productid, (int) $warehouse, $qty, $price, $label, $eatby, '', $batch, $this->ts($date.' 09:00')) < 0) {
-			$this->fail('purchase '.$label, $movement);
+		$ordered = $this->ts($date.' 09:00');
+		$delivered = dol_time_plus_duree($ordered, 3, 'd');
+		$farm = new Societe($db);
+		$farm->fetch($socid);
+
+		$order = new CommandeFournisseur($db);
+		$order->socid = $supplierid;
+		$order->ref_supplier = $label;
+		$order->date_commande = $ordered;
+		$order->delivery_date = $delivered;
+		$order->note_public = 'Consegna: '.$farm->name.', magazzino mezzi tecnici';
+		if ($order->create($this->user) <= 0) {
+			$this->fail('order '.$label, $order);
+			return;
+		}
+		$lineid = $order->addline('', $price, $qty, $vat, 0, 0, $productid);
+		if ($lineid <= 0 || $order->fetch($order->id) <= 0 || $order->valid($this->user) < 0 || $order->approve($this->user) < 0) {
+			$this->fail('order '.$label, $order);
+			return;
+		}
+		$method = (int) $this->value("SELECT rowid FROM ".$db->prefix()."c_input_method WHERE code = 'OrderByWWW'");
+		if ($order->commande($this->user, $ordered, $method) < 0) {
+			$this->fail('order '.$label, $order);
+			return;
+		}
+		// Line received with the lot; the stock movement is made below, at the date of the delivery (the core dates it today)
+		$eatby = ($batch !== '' ? dol_time_plus_duree($ordered, 3, 'y') : '');
+		$saved = $conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER ?? null;
+		$conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER = 0;
+		$result = $order->dispatchProduct($this->user, $productid, $qty, (int) $warehouse, $price, $label, $eatby, '', $batch, $lineid, 1);
+		if ($saved === null) {
+			unset($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER);
+		} else {
+			$conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER = $saved;
+		}
+		if ($result < 0) {
+			$this->fail('reception '.$label, $order);
+			return;
+		}
+		$movement = new MouvementStock($db);
+		$movement->origin = $order;
+		$movement->setOrigin($order->element, $order->id);
+		if ($movement->reception($this->user, $productid, (int) $warehouse, $qty, $price, $order->ref.' '.$label, $eatby, '', $batch, $delivered) < 0) {
+			$this->fail('reception '.$label, $movement);
+			return;
+		}
+		if ($order->Livraison($this->user, $delivered, 'tot', '') < 0) {
+			$this->fail('reception '.$label, $order);
+		}
+		// Dates of the order steps at the date of the order (the core writes today): only the order, not the stock
+		$db->query("UPDATE ".$db->prefix()."commande_fournisseur SET date_creation = '".$db->idate($ordered)."', date_valid = '".$db->idate($ordered)."', date_approve = '".$db->idate($ordered)."' WHERE rowid = ".((int) $order->id));
+		$db->query("UPDATE ".$db->prefix()."receptiondet_batch SET datec = '".$db->idate($delivered)."' WHERE fk_element = ".((int) $order->id));
+	}
+
+	/**
+	 * Organic status of the reproductive material on the product (extrafield of doliFarm), read by sowings and plantings
+	 *
+	 * @param int    $productid Product
+	 * @param string $status    BIO, INCONV or NONBIO
+	 * @return void
+	 */
+	public function seedStatus($productid, $status)
+	{
+		$product = new Product($this->db);
+		if ($productid <= 0 || $product->fetch($productid) <= 0) {
+			return;
+		}
+		$product->array_options['options_dolifarm_seed_status'] = $status;
+		if ($product->insertExtraFields() < 0) {
+			$this->fail('seed status '.$product->ref, $product);
 		}
 	}
 
@@ -515,6 +587,16 @@ class DoliFarmDemo
 			'address' => 'Via dell\'Olio 3', 'zip' => '91028', 'town' => 'Partanna', 'province' => 'TP', 'supplier' => 1,
 			'phone' => '+39 0924 000 003', 'email' => 'demo-frantoio@example.com', 'vat' => 'IT00000000003',
 			'extrafields' => array('options_dolifarm_affiliated' => 1),
+		));
+		// Suppliers: organic seeds (certified), technical inputs
+		$this->ids['seedsupplier'] = $this->thirdparty('seedsupplier', array(
+			'code' => 'DEMO-SEMENTI', 'type' => 'TE_SMALL', 'name' => 'Sementi Biologiche di Sicilia (demo)', 'client' => 0, 'supplier' => 1,
+			'address' => 'Zona Industriale, Blocco 7', 'zip' => '95121', 'town' => 'Catania', 'province' => 'CT', 'vat' => 'IT00000000005',
+			'extrafields' => array('options_dolifarm_bio_body' => 'IT-BIO-006', 'options_dolifarm_bio_cert' => 'DEMO-ICEA-2026-0907', 'options_dolifarm_bio_cert_end' => $this->ts('2027-06-30')),
+		));
+		$this->ids['inputsupplier'] = $this->thirdparty('inputsupplier', array(
+			'code' => 'DEMO-AGROFORN', 'type' => 'TE_SMALL', 'name' => 'Agroforniture del Sud (demo)', 'client' => 0, 'supplier' => 1,
+			'address' => 'Via Palermo 88', 'zip' => '91022', 'town' => 'Castelvetrano', 'province' => 'TP', 'vat' => 'IT00000000006',
 		));
 		// Contractor for the harvest of the wheat, technical advisor
 		$this->ids['contractor'] = $this->thirdparty('contractor', array(
@@ -699,6 +781,10 @@ class DoliFarmDemo
 		$this->ids['SEED-WHEAT-BIO'] = $this->product('SEME-GRANO-CAPPELLI-BIO', 'Grano duro Senatore Cappelli - seme biologico', array('status_batch' => 1));
 		$this->ids['SEED-FAVA'] = $this->product('SEME-FAVA-BIO', 'Fava da granella - seme biologico', array('status_batch' => 1));
 		$this->ids['SEED-CHICKPEA'] = $this->product('SEME-CECE', 'Cece Pascià - seme certificato', array('status_batch' => 1));
+		$this->seedStatus($this->ids['SEED-WHEAT'], 'NONBIO');
+		$this->seedStatus($this->ids['SEED-WHEAT-BIO'], 'BIO');
+		$this->seedStatus($this->ids['SEED-FAVA'], 'BIO');
+		$this->seedStatus($this->ids['SEED-CHICKPEA'], 'NONBIO');
 		// Harvested products, with lots
 		$outputs = array('OUT-ARANCIA-TAROCCO' => 'Arance Tarocco', 'OUT-ARANCIA-MORO' => 'Arance Moro', 'OUT-OLIVE-ETNEA' => 'Olive Nocellara etnea da olio',
 			'OUT-OLIVE-BELICE' => 'Olive Nocellara del Belice da olio', 'OUT-UVA-GRILLO' => 'Uva Grillo', 'OUT-UVA-NERODAVOLA' => 'Uva Nero d\'Avola',
@@ -722,22 +808,25 @@ class DoliFarmDemo
 			array('belice', 'AGRO-IT-001', 100, '2026-03-02', 'L-PO2603'), array('belice', 'AGRO-IT-002', 200, '2026-03-02', 'L-TJ2601'), array('belice', 'AGRO-IT-006', 3, '2026-04-13', 'L-LS2604'),
 			array('belice', 'AGRO-IT-005', 40, '2026-06-08', 'L-SF2606'),
 		);
+		// Supplier orders: seeds from the organic seed supplier (conventional seeds from the input supplier), the rest from the input supplier
+		$inputs = $this->ids['inputsupplier'];
+		$seeds = $this->ids['seedsupplier'];
 		foreach ($buys as $b) {
-			$this->purchase($this->ids[$b[0]], $this->ids[$b[1]], $b[2], $prices[$b[1]], $b[3], $b[4], 'Acquisto demo '.$b[1].' '.$b[4]);
+			$this->purchase($this->ids[$b[0]], $inputs, $this->ids[$b[1]], $b[2], $prices[$b[1]], 22, $b[3], $b[4], 'Acquisto demo '.$b[1].' '.$b[4]);
 		}
 		foreach (array(2024, 2025, 2026) as $year) {
-			$this->purchase($etna, $this->ids['PROD-FERT-01'], 9000, $this->ids['price_FERT-01'], $year.'-01-20', '', 'Acquisto demo pollina '.$year);
-			$this->purchase($etna, $this->ids['PROD-FERT-02'], 30000, $this->ids['price_FERT-02'], ($year - 1).'-11-05', '', 'Acquisto demo letame '.$year);
-			$this->purchase($belice, $this->ids['PROD-FERT-03'], 3000, $this->ids['price_FERT-03'], $year.'-01-25', '', 'Acquisto demo urea '.$year);
-			$this->purchase($belice, $this->ids['PROD-FERT-04'], 5000, $this->ids['price_FERT-04'], ($year - 1).'-10-25', '', 'Acquisto demo NPK '.$year);
-			$this->purchase($belice, $this->ids['PROD-FERT-05'], 2500, $this->ids['price_FERT-05'], $year.'-02-15', '', 'Acquisto demo solfato potassico '.$year);
+			$this->purchase($etna, $inputs, $this->ids['PROD-FERT-01'], 9000, $this->ids['price_FERT-01'], 4, $year.'-01-20', '', 'Acquisto demo pollina '.$year);
+			$this->purchase($etna, $inputs, $this->ids['PROD-FERT-02'], 30000, $this->ids['price_FERT-02'], 4, ($year - 1).'-11-05', '', 'Acquisto demo letame '.$year);
+			$this->purchase($belice, $inputs, $this->ids['PROD-FERT-03'], 3000, $this->ids['price_FERT-03'], 4, $year.'-01-25', '', 'Acquisto demo urea '.$year);
+			$this->purchase($belice, $inputs, $this->ids['PROD-FERT-04'], 5000, $this->ids['price_FERT-04'], 4, ($year - 1).'-10-25', '', 'Acquisto demo NPK '.$year);
+			$this->purchase($belice, $inputs, $this->ids['PROD-FERT-05'], 2500, $this->ids['price_FERT-05'], 4, $year.'-02-15', '', 'Acquisto demo solfato potassico '.$year);
 		}
-		$this->purchase($etna, $this->ids['SEED-WHEAT-BIO'], 1300, 1.10, '2023-11-02', 'L-SC2311', 'Acquisto demo seme Cappelli 2023');
-		$this->purchase($etna, $this->ids['SEED-FAVA'], 1100, 1.60, '2024-11-04', 'L-SFV2411', 'Acquisto demo seme fava 2024');
-		$this->purchase($etna, $this->ids['SEED-WHEAT-BIO'], 1300, 1.15, '2025-11-03', 'L-SC2511', 'Acquisto demo seme Cappelli 2025');
-		$this->purchase($belice, $this->ids['SEED-WHEAT'], 2300, 0.95, '2023-11-06', 'L-SS2311', 'Acquisto demo seme Simeto 2023');
-		$this->purchase($belice, $this->ids['SEED-CHICKPEA'], 1300, 1.40, '2025-01-20', 'L-SCC2501', 'Acquisto demo seme cece 2025');
-		$this->purchase($belice, $this->ids['SEED-WHEAT'], 2300, 0.98, '2025-11-04', 'L-SS2511', 'Acquisto demo seme Simeto 2025');
+		$this->purchase($etna, $seeds, $this->ids['SEED-WHEAT-BIO'], 1300, 1.10, 4, '2023-11-02', 'L-SC2311', 'Acquisto demo seme Cappelli 2023');
+		$this->purchase($etna, $seeds, $this->ids['SEED-FAVA'], 1100, 1.60, 4, '2024-11-04', 'L-SFV2411', 'Acquisto demo seme fava 2024');
+		$this->purchase($etna, $seeds, $this->ids['SEED-WHEAT-BIO'], 1300, 1.15, 4, '2025-11-03', 'L-SC2511', 'Acquisto demo seme Cappelli 2025');
+		$this->purchase($belice, $inputs, $this->ids['SEED-WHEAT'], 2300, 0.95, 4, '2023-11-06', 'L-SS2311', 'Acquisto demo seme Simeto 2023');
+		$this->purchase($belice, $inputs, $this->ids['SEED-CHICKPEA'], 1300, 1.40, 4, '2025-01-20', 'L-SCC2501', 'Acquisto demo seme cece 2025');
+		$this->purchase($belice, $inputs, $this->ids['SEED-WHEAT'], 2300, 0.98, 4, '2025-11-04', 'L-SS2511', 'Acquisto demo seme Simeto 2025');
 
 		$this->out('Standard costs');
 		$costs = array(

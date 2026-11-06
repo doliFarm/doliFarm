@@ -3,6 +3,7 @@
 ## 1.5.5 (in sviluppo)
 
 - Dati demo della suite: `scripts/demo_data.php` crea due aziende siciliane (agrumi e olivo bio sull'Etna, olivo, vite e seminativi nel Belice), un frantoio e tre annate (2024-2026) con le classi dei moduli: fascicoli, appezzamenti con periodi bio, mezzi, operatori, fitosanitari e concimi con acquisti e lotti, piani di produzione, operazioni, trattamenti importati e convalidati (magazzino e registro), raccolte con lotti, conferimento al frantoio e olio, ispezioni bio, costi standard, punti meteo di doliField. Solo per un'istanza demo (`php scripts/demo_data.php <login admin> --demo`), si può rilanciare senza doppioni.
+- Acquisti della demo come ordini fornitore (fornitore di sementi bio certificato e fornitore di mezzi tecnici) ricevuti con il lotto alla data di consegna; le semine scaricano il seme (doliTrace 1.3.2), quindi acquisto, carico e scarico del seme compaiono nei registri bio.
 
 ## 1.5.4
 
