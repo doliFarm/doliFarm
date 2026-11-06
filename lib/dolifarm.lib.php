@@ -76,6 +76,14 @@ function dolifarmAdminPrepareHead()
 	$head[$h][2] = 'ppp';
 	$h++;
 
+	// Demo data: only on a demo instance (constant DOLIFARM_DEMO_TOOLS)
+	if (getDolGlobalInt('DOLIFARM_DEMO_TOOLS') > 0) {
+		$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/demo.php", 1));
+		$head[$h][1] = $langs->trans("DemoData");
+		$head[$h][2] = 'demo';
+		$h++;
+	}
+
 	$head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/admin/about.php", 1));
 	$head[$h][1] = $langs->trans("About");
 	$head[$h][2] = 'about';

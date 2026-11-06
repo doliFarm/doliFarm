@@ -1151,3 +1151,15 @@ DolifarmAffiliatedSyncError = Erreur lors de la création des dossiers ou entrep
 # Menu titles with one farm
 DolifarmSingle = Dossier d'exploitation
 DoliFarmFarmDossierMenu = Dossier d'exploitation
+
+# Demo data (setup)
+DemoData = Données de démo
+DemoDataHelp = Crée les données d'une démo complète de la suite : deux exploitations en Sicile (agrumes et oliviers bio sur l'Etna, oliviers, vignes et grandes cultures dans la vallée du Belice), un moulin à huile, trois campagnes avec plans, opérations, achats, traitements, récoltes, lots et inspections bio. Mêmes données que le script scripts/demo_data.php. Peut être relancé : ce qui existe déjà n'est pas dupliqué.
+DemoDataDisabled = Outils de démo désactivés. Seulement sur une instance de démo, jamais en production : mettre la constante %s à 1 dans Configuration > Divers.
+DemoDataWarning = Seulement pour une instance de démo, jamais en production. Le chargement modifie l'instance : nom, pays (Italie) et langue (italien) de la société s'ils ne sont pas définis, active les modules nécessaires (tiers, fournisseurs, produits, stock, lots, projets, travaux planifiés, doliFarm, doliTrace, doliField) et le mode multi-exploitations. Il dure environ une minute.
+DemoDataInstance = Instance actuelle
+DemoDataLoad = Charger les données de démo
+DemoDataConfirm = Charger les données de démo dans l'instance « %s » ? Seulement pour une instance de démo : les données ne se suppriment pas en un clic.
+DemoDataDone = Données de démo chargées
+DemoDataErrors = Données de démo chargées avec %s erreurs : voir le journal
+DemoDataLog = Journal du chargement
