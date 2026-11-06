@@ -1,5 +1,13 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.4
+
+Primi passi come guida. Dopo l'aggiornamento riattivare il modulo (menu e hook) e ricaricare la pagina con Ctrl+F5 (foglio di stile).
+
+- Menu "Primi passi" in fondo al menu a sinistra, dopo un separatore, con l'icona dell'aiuto.
+- La pagina Primi passi si apre dopo ogni accesso per gli utenti interni che vedono i fascicoli; con la casella "Apri questa pagina a ogni accesso" ogni utente può spegnerla (si riapre dal menu) e riaccenderla.
+- Tolti i metodi di esempio di ModuleBuilder dalla classe degli hook.
+
 ## 1.5.3
 
 Menu al singolare con una sola azienda. Dopo l'aggiornamento aprire una volta Configurazione di doliFarm (o riattivare il modulo) per aggiornare i titoli del menu.

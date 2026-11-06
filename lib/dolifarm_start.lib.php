@@ -248,3 +248,21 @@ function dolifarmTourDefinitions(Translate $langs)
 	}
 	return $result;
 }
+
+/**
+ * Tell if the page "Getting started" opens after the login of a user
+ *
+ * It opens for the internal users who can read the farm dossiers, unless they turned it off on the page itself
+ * (user parameter DOLIFARM_START_NOT_AT_LOGIN = 1).
+ *
+ * @param	User	$user		User
+ * @param	bool	$checkright	False when the rights of the user are not loaded yet (hook afterLogin)
+ * @return	bool				True if the page opens after the login
+ */
+function dolifarmStartAtLogin(User $user, bool $checkright = true): bool
+{
+	if (!isModEnabled('dolifarm') || $user->socid > 0 || ($checkright && !$user->hasRight('dolifarm', 'dolifarmfarmdossier', 'read'))) {
+		return false;
+	}
+	return !getDolUserInt('DOLIFARM_START_NOT_AT_LOGIN', 0, $user);
+}
