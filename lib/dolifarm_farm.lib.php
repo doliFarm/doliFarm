@@ -192,7 +192,7 @@ function dolifarmCountHiddenObjects($db)
 	}
 	$tables = array('dolifarm_farmdossier' => 'dolifarmfarmdossier', 'dolifarm_plot' => 'dolifarmplot', 'dolifarm_machine' => 'dolifarmmachine',
 		'dolifarm_building' => 'dolifarmbuilding', 'dolifarm_livestock' => 'dolifarmlivestock', 'dolifarm_operator' => 'dolifarmoperator',
-		'dolifarm_estimatecosts' => 'dolifarmestimatecosts');
+		'dolifarm_dolifarmestimatecosts' => 'dolifarmestimatecosts');
 	if (isModEnabled('dolitrace')) {
 		$tables['dolitrace_cropplan'] = 'dolitracecropplan';
 		$tables['dolitrace_treatment'] = 'dolitracetreatment';

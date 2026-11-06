@@ -147,7 +147,7 @@ class mod_dolifarmestimatecosts_advanced extends ModeleNumRefDoliFarmEstimateCos
 		// Objects whose creation date is in "datec" have no date_creation: the date of today
 		$date = (empty($object->date_creation) ? dol_now() : $object->date_creation);
 
-		$numFinal = get_next_value($db, $mask, 'dolifarm_estimatecosts', 'ref', '', '', $date);
+		$numFinal = get_next_value($db, $mask, 'dolifarm_dolifarmestimatecosts', 'ref', '', '', $date);
 
 		return  $numFinal;
 	}
