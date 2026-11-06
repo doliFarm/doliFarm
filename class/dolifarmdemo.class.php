@@ -1210,6 +1210,9 @@ class DoliFarmDemo
 				));
 				$this->harvests($plan, 'OUT-CECI', array(array('2025-07-08', 10 * 1500, 'Trebbiatura ceci 2025 - Timpone')));
 			}
+			// Olives of the season to the mill the day after the harvest: the warehouse of the farm never holds lots of two seasons
+			// with a different organic status (first year of conversion, then in conversion)
+			$this->buildMill();
 		}
 		// Next season, planned: faba bean after wheat on ETNA-04, wheat again on BEL-04 (the rotation warning shows)
 		$this->plan('etna4', 2027, 'CROP_FAVA_BEAN', 'OUT-FAVA', 'Fava da granella 2027 - ETNA-04', '2026-11-10', '2027-07-10', 6 * 2000, 0);

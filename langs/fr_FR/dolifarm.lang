@@ -1163,3 +1163,4 @@ DemoDataConfirm = Charger les données de démo dans l'instance « %s » ? Seule
 DemoDataDone = Données de démo chargées
 DemoDataErrors = Données de démo chargées avec %s erreurs : voir le journal
 DemoDataLog = Journal du chargement
+DemoDataErrorLines = Erreurs (%s)

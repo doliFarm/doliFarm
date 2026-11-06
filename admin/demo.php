@@ -147,6 +147,20 @@ if (!$enabled) {
 }
 
 if (count($demolog)) {
+	// Errors first, with the section of the log they belong to
+	$errorlines = array();
+	$section = '';
+	foreach ($demolog as $line) {
+		if (!str_starts_with($line, ' ')) {
+			$section = $line;
+		} elseif (str_starts_with(ltrim($line), 'ERROR ')) {
+			$errorlines[] = $section.': '.trim($line);
+		}
+	}
+	if (count($errorlines)) {
+		print load_fiche_titre($langs->trans('DemoDataErrorLines', count($errorlines)), '', '');
+		print '<pre class="small error" style="max-height: 400px; overflow: auto;">'.dol_escape_htmltag(implode("\n", $errorlines)).'</pre>';
+	}
 	print load_fiche_titre($langs->trans('DemoDataLog'), '', '');
 	print '<pre class="small" style="max-height: 600px; overflow: auto;">'.dol_escape_htmltag(implode("\n", $demolog)).'</pre>';
 }
