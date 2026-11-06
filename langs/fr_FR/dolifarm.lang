@@ -1145,3 +1145,7 @@ DolifarmAffiliatedNoDossier = %s exploitations affiliées sans dossier (affilié
 DolifarmAffiliatedSync = Créer dossiers et entrepôts
 DolifarmAffiliatedSyncDone = Dossiers et entrepôts des exploitations affiliées mis à jour
 DolifarmAffiliatedSyncError = Erreur lors de la création des dossiers ou entrepôts des exploitations affiliées
+
+# Menu titles with one farm
+DolifarmSingle = Dossier d'exploitation
+DoliFarmFarmDossierMenu = Dossier d'exploitation

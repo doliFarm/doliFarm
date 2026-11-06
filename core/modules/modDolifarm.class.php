@@ -77,7 +77,7 @@ class modDolifarm extends DolibarrModules
 		$this->editor_squarred_logo = '';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@dolifarm'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.5.2';
+		$this->version = '1.5.3';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -635,7 +635,7 @@ class modDolifarm extends DolibarrModules
 		$this->menu[$r++] = array(
 			'fk_menu' => '', // Will be stored into mainmenu + leftmenu. Use '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type' => 'top', // This is a Top menu entry
-			'titre' => 'Dolifarm',
+			'titre' => (getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'Dolifarm' : 'DolifarmSingle'),	// Singular with one farm (dolifarmMenuTitles())
 			'prefix' => img_picto('', dolifarm_get_fa_icon('dolifarm'), 'class="pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => '',
@@ -669,7 +669,7 @@ class modDolifarm extends DolibarrModules
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',
 			'type' => 'left',
-			'titre' => 'DoliFarmFarmDossiers',
+			'titre' => (getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DoliFarmFarmDossiers' : 'DoliFarmFarmDossierMenu'),
 			'prefix' => img_picto('', dolifarm_get_fa_icon('farmdossier'), 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => 'dolifarmfarmdossier',
