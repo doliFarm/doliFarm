@@ -719,9 +719,14 @@ class DoliFarmDemo
 			$liquid = in_array($a[6], array('SC', 'SL', 'EC', 'CB'));
 			$productid = $this->product($a[0], $a[1], array('status_batch' => 1, 'fk_unit' => (int) $this->value("SELECT rowid FROM ".$db->prefix()."c_units WHERE code = '".($liquid ? 'L' : 'KG')."'")));
 			$this->ids[$a[0]] = $productid;
-			$id = $this->idByRef('dolifarm_agrodrug', $a[0]);
-			if (!$id && $productid) {
-				$id = $this->object('DoliFarmAgroDrug', 'dolifarm_agrodrug', array('ref' => $a[0], 'label' => $a[1], 'fk_product' => $productid, 'reg_number' => $a[2],
+			// The import of the treatments finds the agrodrug by registration number among the active ones: an agrodrug
+			// with the same ref but another number, or not active, is left as it is and the demo makes its own
+			$id = (int) $this->value("SELECT rowid FROM ".$db->prefix()."dolifarm_agrodrug WHERE reg_number = '".$db->escape($a[2])."' AND status = 1 AND entity IN (".getEntity('dolifarmagrodrug').") ORDER BY rowid LIMIT 1");
+			$ref = ($this->idByRef('dolifarm_agrodrug', $a[0]) > 0 ? 'DEMO-'.$a[0] : $a[0]);
+			if (!$id && $productid && $this->idByRef('dolifarm_agrodrug', $ref) > 0) {
+				$this->fail('agrodrug '.$a[1], $ref.' exists but is not active with the registration number '.$a[2]);
+			} elseif (!$id && $productid) {
+				$id = $this->object('DoliFarmAgroDrug', 'dolifarm_agrodrug', array('ref' => $ref, 'label' => $a[1], 'fk_product' => $productid, 'reg_number' => $a[2],
 					'manufacturer' => $a[3], 'active_substance' => $a[4], 'content_percentage' => $a[5], 'formulation' => $a[6], 'hazard_classification' => $a[7],
 					'safety_days_default' => $a[8], 'max_dose_ha' => $a[9], 'cu_content' => ($a[10] ?: null), 'status' => 1));
 				foreach ($a[11] as $use) {
@@ -1000,6 +1005,7 @@ class DoliFarmDemo
 			}
 		}
 		if (count($todo)) {
+			$this->reopenInspections($socid, count($todo).' lines of treatments');
 			$out = fopen('php://temp', 'r+');
 			fputcsv($out, DoliTraceTreatmentExport::$csvColumns, ';', '"', '\\');
 			foreach ($todo as $line) {
@@ -1210,6 +1216,9 @@ class DoliFarmDemo
 				));
 				$this->harvests($plan, 'OUT-CECI', array(array('2025-07-08', 10 * 1500, 'Trebbiatura ceci 2025 - Timpone')));
 			}
+			// Olives of the season to the mill the day after the harvest: the warehouse of the farm never holds lots of two seasons
+			// with a different organic status (first year of conversion, then in conversion)
+			$this->buildMill();
 		}
 		// Next season, planned: faba bean after wheat on ETNA-04, wheat again on BEL-04 (the rotation warning shows)
 		$this->plan('etna4', 2027, 'CROP_FAVA_BEAN', 'OUT-FAVA', 'Fava da granella 2027 - ETNA-04', '2026-11-10', '2027-07-10', 6 * 2000, 0);
@@ -1317,11 +1326,21 @@ class DoliFarmDemo
 			array('ISP-ETNA-2026', '2026-09-24', 'ANNUAL', 0, 'PENDING', '', false),
 		);
 		foreach ($list as $i) {
-			if ($this->idByRef('dolitrace_bioinspection', $i[0]) > 0) {
+			// The ref is given by the class (ISP-year-nnn): an inspection of the demo is found again by farm and day
+			$id = $this->inspectionId($this->ids['etna'], $i[1]);
+			if ($id > 0) {
+				$insp = new DoliTraceBioInspection($db);
+				if ($i[6] && $insp->fetch($id) > 0 && (int) $insp->status != DoliTraceBioInspection::STATUS_CLOSED) {
+					// Reopened by this run to complete the data: closed again
+					if ($insp->close($this->user, $langs) < 0) {
+						$this->fail('closing of the inspection '.$insp->ref, $insp);
+					} else {
+						$this->out('  inspection '.$insp->ref.' closed again');
+					}
+				}
 				continue;
 			}
 			$insp = new DoliTraceBioInspection($db);
-			$insp->ref = $i[0];
 			$insp->fk_soc = $this->ids['etna'];
 			$insp->fk_soc_body = $bodyid;
 			$insp->date_inspection = $this->ts($i[1]);
@@ -1341,7 +1360,47 @@ class DoliFarmDemo
 					$this->fail('closing of the inspection '.$i[0], $insp);
 				}
 			}
-			$this->out('  inspection '.$i[0]);
+			$this->out('  inspection '.$insp->ref.' ('.$i[0].')');
+		}
+	}
+
+	/**
+	 * Inspection of a farm on a day
+	 *
+	 * @param int    $socid Farm
+	 * @param string $day   Day (Y-m-d)
+	 * @return int          Id, 0 if none
+	 */
+	public function inspectionId($socid, $day)
+	{
+		$db = $this->db;
+		return (int) $this->value("SELECT rowid FROM ".$db->prefix()."dolitrace_bioinspection WHERE fk_soc = ".((int) $socid)
+			." AND date_inspection BETWEEN '".$db->idate($this->ts($day))."' AND '".$db->idate($this->ts($day.' 23:59:59'))."' ORDER BY rowid LIMIT 1");
+	}
+
+	/**
+	 * Closed organic inspections of a farm reopened, with the reason: records of a run that stopped before (e.g. without
+	 * the agrodrugs) can be made after the inspection of the demo was closed. buildInspections() closes it again.
+	 *
+	 * @param int    $socid Farm
+	 * @param string $what  What is missing
+	 * @return void
+	 */
+	public function reopenInspections($socid, $what)
+	{
+		$db = $this->db;
+		$resql = $db->query("SELECT rowid FROM ".$db->prefix()."dolitrace_bioinspection WHERE fk_soc = ".((int) $socid)." AND status = ".DoliTraceBioInspection::STATUS_CLOSED);
+		$ids = array();
+		while ($resql && ($obj = $db->fetch_object($resql))) {
+			$ids[] = (int) $obj->rowid;
+		}
+		foreach ($ids as $id) {
+			$insp = new DoliTraceBioInspection($db);
+			if ($insp->fetch($id) > 0 && $insp->reopenWithReason($this->user, 'Caricamento dei dati demo: '.$what) > 0) {
+				$this->out('  inspection '.$insp->ref.' reopened to add '.$what);
+			} else {
+				$this->fail('reopening of the inspection '.$id, $insp);
+			}
 		}
 	}
 

@@ -1187,3 +1187,4 @@ DemoDataConfirm = Load the demo data into the instance "%s"? Only for a demo ins
 DemoDataDone = Demo data loaded
 DemoDataErrors = Demo data loaded with %s errors: see the log
 DemoDataLog = Log of the loading
+DemoDataErrorLines = Errors (%s)

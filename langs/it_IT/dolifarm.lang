@@ -1237,3 +1237,4 @@ DemoDataConfirm = Caricare i dati demo nell'istanza "%s"? Solo per un'istanza de
 DemoDataDone = Dati demo caricati
 DemoDataErrors = Dati demo caricati con %s errori: vedere il registro
 DemoDataLog = Registro del caricamento
+DemoDataErrorLines = Errori (%s)
