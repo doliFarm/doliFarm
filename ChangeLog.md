@@ -1,5 +1,12 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.2
+
+Correzione. Non serve riattivare il modulo.
+
+- Configurazione, riga "Aziende gestite": il conteggio degli oggetti nascosti cercava i costi standard in una tabella inesistente (errore nel log a ogni apertura della pagina).
+- Modello di numerazione avanzato dei costi standard: usava la stessa tabella inesistente.
+
 ## 1.5.1
 
 Correzione della gestione di una o più aziende. Dopo l'aggiornamento non serve riattivare il modulo (nessuna modifica al database); con più aziende controllare in Configurazione la riga "Aziende gestite".
