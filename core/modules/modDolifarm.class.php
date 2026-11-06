@@ -77,7 +77,7 @@ class modDolifarm extends DolibarrModules
 		$this->editor_squarred_logo = '';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@dolifarm'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.5.3';
+		$this->version = '1.5.4';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -122,7 +122,8 @@ class modDolifarm extends DolibarrModules
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
 			'hooks' => array(
 				   'data' => array(
-				       'afterlogin',
+				       'login',	// After the login: flag to open the page "Getting started"
+				       'main',	// First page after the login: open the page "Getting started"
 				       'index',	// Home page: farm group of the dashboard of open elements
 				   ),
 				   'entity' => '0',
@@ -653,12 +654,12 @@ class modDolifarm extends DolibarrModules
 			'fk_menu' => 'fk_mainmenu=dolifarm',
 			'type' => 'left',
 			'titre' => 'StartTitle',
-			'prefix' => img_picto('', 'fa-flag-checkered', 'class="paddingright pictofixedwidth valignmiddle"'),
+			'prefix' => img_picto('', 'fa-question-circle', 'class="paddingright pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => 'dolifarm_start',
 			'url' => '/dolifarm/dolifarm_start.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 9000,	// Last entry of the left menu, after a separator (css/dolifarm.css)
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '1',
 			'target' => '',

@@ -54,6 +54,7 @@ if (!$res) {
 	die("Include of main fails");
 }
 
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 dol_include_once('/dolifarm/lib/dolifarm_start.lib.php');
 
 $langs->loadLangs(array('dolifarm@dolifarm', 'admin', 'companies'));
@@ -61,6 +62,24 @@ $langs->loadLangs(array('dolifarm@dolifarm', 'admin', 'companies'));
 // Security check: internal users of the module
 if (!isModEnabled('dolifarm') || $user->socid > 0) {
 	accessforbidden();
+}
+
+$action = GETPOST('action', 'aZ09');
+
+/*
+ * Actions
+ */
+
+// Open this page after each login, or only from the menu (user parameter, on by default)
+if ($action == 'setstartatlogin') {
+	$tmparray = array('DOLIFARM_START_NOT_AT_LOGIN' => (GETPOSTINT('startatlogin') ? '' : '1'));
+	if (dol_set_user_param($db, $conf, $user, $tmparray) > 0) {
+		setEventMessages($langs->trans('SetupSaved'), null, 'mesgs');
+	} else {
+		setEventMessages($langs->trans('Error'), null, 'errors');
+	}
+	header('Location: '.$_SERVER['PHP_SELF']);
+	exit;
 }
 
 $steps = dolifarmStartSteps($db, $user);
@@ -82,9 +101,18 @@ $title = $langs->trans('StartTitle');
 llxHeader('', $title, '', '', 0, 0, '', '', '', 'mod-dolifarm page-start');
 
 $morehtmlright = '<a class="butAction" href="'.dol_escape_htmltag($_SERVER['PHP_SELF'].'?dolifarmtour=1').'"><span class="fa fa-question-circle paddingright"></span>'.$langs->trans('StartTourAll').'</a>';
-print load_fiche_titre($title, $morehtmlright, 'fa-flag-checkered');
+print load_fiche_titre($title, $morehtmlright, 'fa-question-circle');
 
 print '<p class="opacitymedium">'.$langs->trans('StartHelp').'</p>';
+
+// Open this page after each login
+print '<form method="POST" action="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'" id="dolifarm-start-atlogin" class="marginbottomonly">';
+print '<input type="hidden" name="token" value="'.newToken().'">';
+print '<input type="hidden" name="action" value="setstartatlogin">';
+print '<input type="checkbox" id="startatlogin" name="startatlogin" value="1"'.(getDolUserInt('DOLIFARM_START_NOT_AT_LOGIN') ? '' : ' checked').' onchange="this.form.submit()">';
+print ' <label for="startatlogin">'.$langs->trans('StartAtLogin').'</label>';
+print ' <span class="opacitymedium small">'.$langs->trans('StartAtLoginHelp').'</span>';
+print '</form>';
 print '<div id="dolifarm-start-progress"><div class="dolifarm-start-progress"><span style="width: '.$percent.'%"></span></div>';
 print '<div class="small marginbottomonly">'.$langs->trans('StartProgress', $requireddone, $required, $percent).'</div></div>';
 

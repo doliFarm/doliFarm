@@ -104,3 +104,10 @@
 	height: 100%;
 	background: #2e7d32;
 }
+
+/* Left menu: "Getting started" is the last entry, after a separator */
+.blockvmenu:has(a.vmenu[href*="/dolifarm/dolifarm_start.php"]) {
+	margin-top: 12px;
+	border-top: 1px solid rgba(128, 128, 128, 0.5) !important;
+	padding-top: 8px;
+}

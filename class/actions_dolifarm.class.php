@@ -75,284 +75,6 @@ class ActionsDolifarm extends CommonHookActions
 
 
 	/**
-	 * Execute action
-	 *
-	 * @param	array<string,mixed>	$parameters	Array of parameters
-	 * @param	CommonObject		$object		The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	string				$action		'add', 'update', 'view'
-	 * @return	int								Return integer <0 if KO,
-	 *                           				=0 if OK but we want to process standard actions too,
-	 *											>0 if OK and we want to replace standard actions.
-	 */
-	public function getNomUrl($parameters, &$object, &$action)
-	{
-		global $db, $langs, $conf, $user;
-		$this->resprints = '';
-		return 0;
-	}
-
-	/**
-	 * Overload the doActions function : replacing the parent's function with the one below
-	 *
-	 * @param	array<string,mixed>	$parameters		Hook metadata (context, etc...)
-	 * @param	CommonObject		$object			The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	?string				$action			Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer < 0 on error, 0 on success, 1 to replace standard code
-	 */
-	public function doActions($parameters, &$object, &$action, $hookmanager)
-	{
-		$error = 0; // Error counter
-        dol_syslog("ACTIVATED HOOK", LOG_INFO);
-		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {	    // do something only for the context 'somecontext1' or 'somecontext2'
-			// Do what you want here...
-			// You can for example load and use call global vars like $fieldstosearchall to overwrite them, or update the database depending on $action and GETPOST values.
-
-			if (!$error) {
-				$this->results = array('myreturn' => 999);
-				$this->resprints = 'A text to show';
-				return 0; // or return 1 to replace standard code
-			} else {
-				$this->errors[] = 'Error message';
-				return -1;
-			}
-		}
-
-		return 0;
-	}
-
-
-	/**
-	 * Overload the doMassActions function : replacing the parent's function with the one below
-	 *
-	 * @param	array<string,mixed>	$parameters		Hook metadata (context, etc...)
-	 * @param	CommonObject		$object			The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	?string				$action			Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer < 0 on error, 0 on success, 1 to replace standard code
-	 */
-	public function doMassActions($parameters, &$object, &$action, $hookmanager)
-	{
-		global $conf, $user, $langs;
-
-		$error = 0; // Error counter
-
-		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {		// do something only for the context 'somecontext1' or 'somecontext2'
-			// @phan-suppress-next-line PhanPluginEmptyStatementForeachLoop
-			foreach ($parameters['toselect'] as $objectid) {
-				// Do action on each object id
-			}
-
-			if (!$error) {
-				$this->results = array('myreturn' => 999);
-				$this->resprints = 'A text to show';
-				return 0; // or return 1 to replace standard code
-			} else {
-				$this->errors[] = 'Error message';
-				return -1;
-			}
-		}
-
-		return 0;
-	}
-
-
-	/**
-	 * Overload the addMoreMassActions function : replacing the parent's function with the one below
-	 *
-	 * @param	array<string,mixed>	$parameters     Hook metadata (context, etc...)
-	 * @param	CommonObject		$object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	?string				$action			Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer < 0 on error, 0 on success, 1 to replace standard code
-	 */
-	public function addMoreMassActions($parameters, &$object, &$action, $hookmanager)
-	{
-		global $langs;
-
-		$error = 0; // Error counter
-		$disabled = 1;
-
-		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {		// do something only for the context 'somecontext1' or 'somecontext2'
-			$this->resprints = '<option value="0"'.($disabled ? ' disabled="disabled"' : '').'>'.$langs->trans("DolifarmMassAction").'</option>';
-		}
-
-		if (!$error) {
-			return 0; // or return 1 to replace standard code
-		} else {
-			$this->errors[] = 'Error message';
-			return -1;
-		}
-	}
-
-
-
-	/**
-	 * Execute action before PDF (document) creation
-	 *
-	 * @param	array<string,mixed>	$parameters	Array of parameters
-	 * @param	CommonObject		$object		Object output on PDF
-	 * @param	string				$action		'add', 'update', 'view'
-	 * @return	int								Return integer <0 if KO,
-	 *											=0 if OK but we want to process standard actions too,
-	 *											>0 if OK and we want to replace standard actions.
-	 */
-	public function beforePDFCreation($parameters, &$object, &$action)
-	{
-		global $conf, $user, $langs;
-		global $hookmanager;
-
-		$outputlangs = $langs;
-
-		$ret = 0;
-		$deltemp = array();
-		dol_syslog(get_class($this).'::executeHooks action='.$action);
-
-		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		// @phan-suppress-next-line PhanPluginEmptyStatementIf
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {
-			// do something only for the context 'somecontext1' or 'somecontext2'
-		}
-
-		return $ret;
-	}
-
-	/**
-	 * Execute action after PDF (document) creation
-	 *
-	 * @param	array<string,mixed>	$parameters	Array of parameters
-	 * @param	CommonDocGenerator	$pdfhandler	PDF builder handler
-	 * @param	string				$action		'add', 'update', 'view'
-	 * @return	int								Return integer <0 if KO,
-	 * 											=0 if OK but we want to process standard actions too,
-	 *											>0 if OK and we want to replace standard actions.
-	 */
-	public function afterPDFCreation($parameters, &$pdfhandler, &$action)
-	{
-		global $conf, $user, $langs;
-		global $hookmanager;
-
-		$outputlangs = $langs;
-
-		$ret = 0;
-		$deltemp = array();
-		dol_syslog(get_class($this).'::executeHooks action='.$action);
-
-		/* print_r($parameters); print_r($object); echo "action: " . $action; */
-		// @phan-suppress-next-line PhanPluginEmptyStatementIf
-		if (in_array($parameters['currentcontext'], array('somecontext1', 'somecontext2'))) {
-			// do something only for the context 'somecontext1' or 'somecontext2'
-		}
-
-		return $ret;
-	}
-
-
-
-	/**
-	 * Overload the loadDataForCustomReports function : returns data to complete the customreport tool
-	 *
-	 * @param	array<string,mixed>	$parameters		Hook metadata (context, etc...)
-	 * @param	?string				$action 		Current action (if set). Generally create or edit or null
-	 * @param	HookManager			$hookmanager    Hook manager propagated to allow calling another hook
-	 * @return	int									Return integer < 0 on error, 0 on success, 1 to replace standard code
-	 */
-	public function loadDataForCustomReports($parameters, &$action, $hookmanager)
-	{
-		global $langs;
-
-		$langs->load("dolifarm@dolifarm");
-
-		$this->results = array();
-
-		$head = array();
-		$h = 0;
-
-		if ($parameters['tabfamily'] == 'dolifarm') {
-			$head[$h][0] = dol_buildpath('/module/index.php', 1);
-			$head[$h][1] = $langs->trans("Home");
-			$head[$h][2] = 'home';
-			$h++;
-
-			$this->results['title'] = $langs->trans("Dolifarm");
-			$this->results['picto'] = 'dolifarm@dolifarm';
-		}
-
-		$head[$h][0] = 'customreports.php?objecttype='.$parameters['objecttype'].(empty($parameters['tabfamily']) ? '' : '&tabfamily='.$parameters['tabfamily']);
-		$head[$h][1] = $langs->trans("CustomReports");
-		$head[$h][2] = 'customreports';
-
-		$this->results['head'] = $head;
-
-		$arrayoftypes = array();
-		//$arrayoftypes['dolifarm_myobject'] = array('label' => 'MyObject', 'picto'=>'myobject@dolifarm', 'ObjectClassName' => 'MyObject', 'enabled' => isModEnabled('dolifarm'), 'ClassPath' => "/dolifarm/class/myobject.class.php", 'langs'=>'dolifarm@dolifarm')
-
-		$this->results['arrayoftype'] = $arrayoftypes;
-
-		return 0;
-	}
-
-
-
-	/**
-	 * Execute action completeTabsHead
-	 *
-	 * @param	array<string,mixed>	$parameters		Array of parameters
-	 * @param	CommonObject		$object			The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param	string				$action			'add', 'update', 'view'
-	 * @param	HookManager			$hookmanager	Hookmanager
-	 * @return	int									Return integer <0 if KO,
-	 *												=0 if OK but we want to process standard actions too,
-	 *												>0 if OK and we want to replace standard actions.
-	 */
-	public function completeTabsHead(&$parameters, &$object, &$action, $hookmanager)
-	{
-		global $langs, $conf, $user;
-
-		if (!isset($parameters['object']->element)) {
-			return 0;
-		}
-		if ($parameters['mode'] == 'remove') {
-			// used to make some tabs removed
-			return 0;
-		} elseif ($parameters['mode'] == 'add') {
-			$langs->load('dolifarm@dolifarm');
-			// used when we want to add some tabs
-			$counter = count($parameters['head']);
-			$element = $parameters['object']->element;
-			$id = $parameters['object']->id;
-			// verifier le type d'onglet comme member_stats où ça ne doit pas apparaitre
-			// if (in_array($element, ['societe', 'member', 'contrat', 'fichinter', 'project', 'propal', 'commande', 'facture', 'order_supplier', 'invoice_supplier'])) {
-			if (in_array($element, ['context1', 'context2'])) {
-				$datacount = 0;
-
-				$parameters['head'][$counter][0] = dol_buildpath('/dolifarm/dolifarm_tab.php', 1) . '?id=' . $id . '&amp;module='.$element;
-				$parameters['head'][$counter][1] = $langs->trans('DolifarmTab');
-				if ($datacount > 0) {
-					$parameters['head'][$counter][1] .= '<span class="badge marginleftonlyshort">' . $datacount . '</span>';
-				}
-				$parameters['head'][$counter][2] = 'dolifarmemails';
-				$counter++;
-			}
-			if ($counter > 0 && (int) DOL_VERSION < 14) {  // @phpstan-ignore-line
-				$this->results = $parameters['head'];
-				// return 1 to replace standard code
-				return 1;
-			} else {
-				// From V14 onwards, $parameters['head'] is modifiable by reference
-				return 0;
-			}
-		} else {
-			// Bad value for $parameters['mode']
-			return -1;
-		}
-	}
-
-
-	/**
 	 * Home page of Dolibarr: line of the expiries (licences, checks of the sprayers, authorisations...) in the dashboard
 	 *
 	 * @param	array<string,mixed>	$parameters	Parameters
@@ -413,5 +135,58 @@ class ActionsDolifarm extends CommonHookActions
 			),
 		);
 		return 0;
+	}
+
+	/**
+	 * After a successful login: the page "Getting started" opens at the first page shown, unless the user turned it off
+	 *
+	 * The redirect is not done here, because the login transaction is committed after this hook.
+	 *
+	 * @param	array<string,mixed>	$parameters	Hook metadatas (context, etc...)
+	 * @param	User				$object		The user who logged in
+	 * @param	?string				$action		Current action
+	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
+	 * @return	int									0
+	 */
+	public function afterLogin($parameters, &$object, &$action, $hookmanager)
+	{
+		dol_include_once('/dolifarm/lib/dolifarm_start.lib.php');
+		if ($object instanceof User && dolifarmStartAtLogin($object, false)) {
+			$_SESSION['dolifarm_start_pending'] = 1;
+		}
+		return 0;
+	}
+
+	/**
+	 * Before the header of the first page after the login: open the page "Getting started"
+	 *
+	 * @param	array<string,mixed>	$parameters	Hook metadatas (context, etc...)
+	 * @param	?CommonObject		$object		Not used
+	 * @param	?string				$action		Current action
+	 * @param	HookManager			$hookmanager	Hook manager propagated to allow calling another hook
+	 * @return	int									0
+	 */
+	public function llxHeader($parameters, &$object, &$action, $hookmanager)
+	{
+		global $user;
+
+		if (empty($_SESSION['dolifarm_start_pending'])) {
+			return 0;
+		}
+		dol_include_once('/dolifarm/lib/dolifarm_start.lib.php');
+
+		$startpage = dol_buildpath('/dolifarm/dolifarm_start.php', 1);
+		if (!($user instanceof User) || !dolifarmStartAtLogin($user) || (isset($_SERVER['PHP_SELF']) && $_SERVER['PHP_SELF'] === $startpage)) {
+			unset($_SESSION['dolifarm_start_pending']);
+			return 0;
+		}
+		// Not on a form submission (except the login form itself), a popup or a page without header: wait for the next page
+		$islogin = (GETPOST('actionlogin', 'aZ09') === 'login');
+		if (($_SERVER['REQUEST_METHOD'] !== 'GET' && !$islogin) || headers_sent() || GETPOST('dol_openinpopup', 'aZ09') || !empty($parameters['disablehead'])) {
+			return 0;
+		}
+		unset($_SESSION['dolifarm_start_pending']);
+		header('Location: '.$startpage);
+		exit;
 	}
 }
