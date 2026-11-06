@@ -1,5 +1,9 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.5 (in sviluppo)
+
+- Dati demo della suite: `scripts/demo_data.php` crea due aziende siciliane (agrumi e olivo bio sull'Etna, olivo, vite e seminativi nel Belice), un frantoio e tre annate (2024-2026) con le classi dei moduli: fascicoli, appezzamenti con periodi bio, mezzi, operatori, fitosanitari e concimi con acquisti e lotti, piani di produzione, operazioni, trattamenti importati e convalidati (magazzino e registro), raccolte con lotti, conferimento al frantoio e olio, ispezioni bio, costi standard, punti meteo di doliField. Solo per un'istanza demo (`php scripts/demo_data.php <login admin> --demo`), si può rilanciare senza doppioni.
+
 ## 1.5.4
 
 Primi passi come guida. Dopo l'aggiornamento riattivare il modulo (menu e hook) e ricaricare la pagina con Ctrl+F5 (foglio di stile).
