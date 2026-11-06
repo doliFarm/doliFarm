@@ -1,5 +1,15 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.6 (2026-11-06)
+
+Correzioni dei dati demo su un'istanza che ha già dei dati. Dopo l'aggiornamento non serve riattivare il modulo.
+
+- Fitosanitari: se c'è già un agrofarmaco con lo stesso riferimento ma un altro numero di registrazione, o non attivo, la demo crea il suo (DEMO-AGRO-IT-...) invece di riusarlo; prima l'import dei trattamenti cercava il numero nel catalogo del Ministero e dava errore se il catalogo non era sincronizzato.
+- Ispezioni bio: ritrovate per azienda e giorno (il riferimento ISP-anno-nnn lo dà la classe), quindi un rilancio non le duplica più.
+- Rilancio dopo un caricamento interrotto: se mancano trattamenti, l'ispezione chiusa dell'azienda viene riaperta con il motivo e richiusa alla fine, invece degli errori "dati congelati".
+- Olive al frantoio alla fine di ogni annata: niente più avvisi di lotti con stato bio diverso nel magazzino dei prodotti.
+- Pagina Dati demo: gli errori elencati a parte sopra il registro.
+
 ## 1.5.5 (2026-11-06)
 
 Dati demo della suite, anche dal setup. Dopo l'aggiornamento non serve riattivare il modulo. Con doliTrace 1.3.2.
