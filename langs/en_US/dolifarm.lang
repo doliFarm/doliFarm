@@ -1175,3 +1175,15 @@ DolifarmAffiliatedSyncError = Error creating the dossiers or warehouses of the a
 # Menu titles with one farm
 DolifarmSingle = Farm dossier
 DoliFarmFarmDossierMenu = Farm dossier
+
+# Demo data (setup)
+DemoData = Demo data
+DemoDataHelp = Creates the data of a full demo of the suite: two farms in Sicily (organic citrus and olives on Etna, olives, vineyards and arable land in the Belice valley), an olive mill, three seasons with plans, operations, purchases, treatments, harvests, lots and organic inspections. Same data as the script scripts/demo_data.php. It can be run again: what is already there is not duplicated.
+DemoDataDisabled = Demo tools disabled. Only on a demo instance, never in production: set the constant %s to 1 in Setup > Other setup.
+DemoDataWarning = Only for a demo instance, never in production. Loading changes the instance: name, country (Italy) and language (Italian) of the company when not set, enables the needed modules (third parties, suppliers, products, stock, lots, projects, scheduled jobs, doliFarm, doliTrace, doliField) and the multi-farm mode. It takes about a minute.
+DemoDataInstance = Current instance
+DemoDataLoad = Load the demo data
+DemoDataConfirm = Load the demo data into the instance "%s"? Only for a demo instance: the data are not removed with a click.
+DemoDataDone = Demo data loaded
+DemoDataErrors = Demo data loaded with %s errors: see the log
+DemoDataLog = Log of the loading

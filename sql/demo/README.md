@@ -6,6 +6,8 @@
 
     php custom/dolifarm/scripts/demo_data.php <login admin> --demo
 
+Oppure dal setup: impostare la costante `DOLIFARM_DEMO_TOOLS` a 1 (Configurazione > Altre impostazioni), poi Configurazione di doliFarm > Dati demo > "Carica i dati demo" (solo amministratori, circa un minuto). Senza la costante la scheda non c'è.
+
 Lo script:
 
 - imposta società, paese (Italia), lingua e attiva i moduli necessari (terzi, prodotti, magazzino, lotti, progetti, lavori pianificati, doliFarm, doliTrace, doliField) e la modalità con più aziende;

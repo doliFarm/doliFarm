@@ -1,9 +1,12 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## 1.5.5 (in sviluppo)
+## 1.5.5 (2026-11-06)
+
+Dati demo della suite, anche dal setup. Dopo l'aggiornamento non serve riattivare il modulo. Con doliTrace 1.3.2.
 
 - Dati demo della suite: `scripts/demo_data.php` crea due aziende siciliane (agrumi e olivo bio sull'Etna, olivo, vite e seminativi nel Belice), un frantoio e tre annate (2024-2026) con le classi dei moduli: fascicoli, appezzamenti con periodi bio, mezzi, operatori, fitosanitari e concimi con acquisti e lotti, piani di produzione, operazioni, trattamenti importati e convalidati (magazzino e registro), raccolte con lotti, conferimento al frantoio e olio, ispezioni bio, costi standard, punti meteo di doliField. Solo per un'istanza demo (`php scripts/demo_data.php <login admin> --demo`), si può rilanciare senza doppioni.
 - Acquisti della demo come ordini fornitore (fornitore di sementi bio certificato e fornitore di mezzi tecnici) ricevuti con il lotto alla data di consegna; le semine scaricano il seme (doliTrace 1.3.2), quindi acquisto, carico e scarico del seme compaiono nei registri bio.
+- Scheda "Dati demo" nel setup di doliFarm, solo per gli amministratori e solo con la costante `DOLIFARM_DEMO_TOOLS` a 1 (istanza demo): mostra cosa c'è nell'istanza, chiede conferma e carica gli stessi dati dello script, con il registro del caricamento. La classe `DoliFarmDemo` (`class/dolifarmdemo.class.php`) è usata da entrambi.
 
 ## 1.5.4
 

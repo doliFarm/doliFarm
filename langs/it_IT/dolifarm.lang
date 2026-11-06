@@ -1225,3 +1225,15 @@ DolifarmAffiliatedSyncError = Errore nella creazione di fascicoli o magazzini de
 # Menu titles with one farm
 DolifarmSingle = Fascicolo
 DoliFarmFarmDossierMenu = Fascicolo aziendale
+
+# Demo data (setup)
+DemoData = Dati demo
+DemoDataHelp = Crea i dati di una demo completa della suite: due aziende siciliane (agrumi e olivo bio sull'Etna, olivo, vite e seminativi nel Belice), un frantoio, tre annate con piani, operazioni, acquisti, trattamenti, raccolte, lotti e ispezioni bio. Sono gli stessi dati dello script scripts/demo_data.php. Si può rilanciare: ciò che c'è già non viene duplicato.
+DemoDataDisabled = Strumenti demo disattivati. Solo su un'istanza demo, mai sulla produzione: impostare la costante %s a 1 in Configurazione > Altre impostazioni.
+DemoDataWarning = Solo per un'istanza demo, mai sulla produzione. Il caricamento cambia l'istanza: nome, paese (Italia) e lingua (italiano) della società se non impostati, attiva i moduli necessari (terzi, fornitori, prodotti, magazzino, lotti, progetti, lavori pianificati, doliFarm, doliTrace, doliField) e la modalità con più aziende. Dura circa un minuto.
+DemoDataInstance = Istanza attuale
+DemoDataLoad = Carica i dati demo
+DemoDataConfirm = Caricare i dati demo nell'istanza "%s"? Solo per un'istanza demo: i dati non si tolgono con un clic.
+DemoDataDone = Dati demo caricati
+DemoDataErrors = Dati demo caricati con %s errori: vedere il registro
+DemoDataLog = Registro del caricamento
