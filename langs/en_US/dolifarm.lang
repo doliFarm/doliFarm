@@ -1169,3 +1169,7 @@ DolifarmAffiliatedNoDossier = %s affiliated farms without dossier (affiliated be
 DolifarmAffiliatedSync = Create dossiers and warehouses
 DolifarmAffiliatedSyncDone = Dossiers and warehouses of the affiliated farms updated
 DolifarmAffiliatedSyncError = Error creating the dossiers or warehouses of the affiliated farms
+
+# Menu titles with one farm
+DolifarmSingle = Farm dossier
+DoliFarmFarmDossierMenu = Farm dossier

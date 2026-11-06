@@ -11,7 +11,7 @@ Dolifarm = Fascicoli
 # ==============================================================================
 DoliFarmArea = Area Gestione Agricola
 DoliFarmFarmDossier = Fascicolo Aziendale
-DoliFarmFarmDossiers = Fascicoli Aziendali
+DoliFarmFarmDossiers = Fascicoli aziendali
 DoliFarmPlot = Appezzamento
 DoliFarmPlots = Appezzamenti
 DoliFarmMachine = Macchina Agricola
@@ -1219,3 +1219,7 @@ DolifarmAffiliatedNoDossier = %s aziende affiliate senza fascicolo (affiliate pr
 DolifarmAffiliatedSync = Crea fascicoli e magazzini
 DolifarmAffiliatedSyncDone = Fascicoli e magazzini delle aziende affiliate aggiornati
 DolifarmAffiliatedSyncError = Errore nella creazione di fascicoli o magazzini delle aziende affiliate
+
+# Menu titles with one farm
+DolifarmSingle = Fascicolo
+DoliFarmFarmDossierMenu = Fascicolo aziendale

@@ -1,5 +1,11 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.3
+
+Menu al singolare con una sola azienda. Dopo l'aggiornamento aprire una volta Configurazione di doliFarm (o riattivare il modulo) per aggiornare i titoli del menu.
+
+- Gestione di una sola azienda: menu in alto "Fascicolo" e voce "Fascicolo aziendale"; con più aziende "Fascicoli" e "Fascicoli aziendali". I titoli si aggiornano al cambio di modalità.
+
 ## 1.5.2
 
 Correzione. Non serve riattivare il modulo.

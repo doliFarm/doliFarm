@@ -264,6 +264,46 @@ function dolifarmSingleFarmSocid()
 }
 
 /**
+ * Titles of the menu entries that change with the mode: singular for one farm, plural for the affiliated farms
+ *
+ * @param	bool	$multifarm	True for the multi-farm mode
+ * @return	array<string,string>	Keys 'top' (top menu) and 'dossier' (left menu of the dossiers)
+ */
+function dolifarmMenuTitles(bool $multifarm): array
+{
+	return $multifarm ? array('top' => 'Dolifarm', 'dossier' => 'DoliFarmFarmDossiers') : array('top' => 'DolifarmSingle', 'dossier' => 'DoliFarmFarmDossierMenu');
+}
+
+/**
+ * Put the titles of the menu entries in step with the mode (the menus are stored in the database at the activation)
+ *
+ * @param	DoliDB	$db		Database handler
+ * @return	int				Number of entries changed, <0 if error
+ */
+function dolifarmSyncMenuTitles($db): int
+{
+	global $conf;
+
+	$titles = dolifarmMenuTitles((bool) getDolGlobalInt('DOLIFARM_MULTIFARM'));
+	$nb = 0;
+	$where = array(
+		'top' => "type = 'top' AND mainmenu = 'dolifarm' AND titre IN ('Dolifarm', 'DolifarmSingle')",
+		'dossier' => "type = 'left' AND mainmenu = 'dolifarm' AND leftmenu = 'dolifarmfarmdossier' AND titre IN ('DoliFarmFarmDossiers', 'DoliFarmFarmDossierMenu')",
+	);
+	foreach ($where as $key => $cond) {
+		$sql = "UPDATE ".$db->prefix()."menu SET titre = '".$db->escape($titles[$key])."'";
+		$sql .= " WHERE module = 'dolifarm' AND entity = ".((int) $conf->entity)." AND ".$cond." AND titre <> '".$db->escape($titles[$key])."'";
+		$resql = $db->query($sql);
+		if (!$resql) {
+			dol_syslog(__FUNCTION__.' '.$db->lasterror(), LOG_ERR);
+			return -1;
+		}
+		$nb += $db->affected_rows($resql);
+	}
+	return $nb;
+}
+
+/**
  * Farm of a page filter: in single-farm mode always the farm of the installation
  *
  * @param	int		$socid	Farm asked by the page (0 = all the managed farms)

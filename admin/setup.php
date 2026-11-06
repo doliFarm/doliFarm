@@ -269,6 +269,8 @@ if (isset($farmsocitem)) {
 
 // Managed farms: which ones, warnings when none, objects hidden because on other third parties
 dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
+// Menu titles in the singular or in the plural according to the mode (the switch reloads this page)
+dolifarmSyncMenuTitles($db);
 // Multi-farm mode: dossier and warehouses of the affiliated farms and processors that do not have them yet
 // (they are created when the third party is saved, so the farms affiliated before the switch of the mode lack them)
 if ($action == 'syncaffiliated' && getDolGlobalInt('DOLIFARM_MULTIFARM')) {
