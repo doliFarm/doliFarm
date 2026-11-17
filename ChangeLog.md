@@ -1,6 +1,8 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## Non rilasciato
+## 1.5.7 (2026-11-17)
+
+Correzioni trovate nei test di accettazione sul Docker. Dopo l'aggiornamento non serve riattivare il modulo.
 
 - Elenco degli appezzamenti: la ricerca "in tutti i campi" cerca anche in riferimento e titolo (prima solo nella particella SIGC).
 - Visibilità per commerciale: nei moduli di creazione e modifica (fascicolo, appezzamento, macchina, fabbricato, allevamento, operatore, stima, registrazione, ispezione) il menu dell'azienda e il filtro delle liste propongono solo le aziende gestite che l'utente vede; prima comparivano tutte le aziende gestite, anche se il salvataggio veniva poi rifiutato.
