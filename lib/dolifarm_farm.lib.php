@@ -217,7 +217,7 @@ function dolifarmCountHiddenObjects($db)
 }
 
 /**
- * Farm field of an object:the drop-down offers only the managed farms; in single-farm mode the farm is fixed
+ * Farm field of an object: the drop-down offers only the managed farms that the user can see; in single-farm mode the farm is fixed
  *
  * @param	CommonObject	$object		Object with a field linked to a third party
  * @param	string			$field			Name of the field
@@ -229,7 +229,14 @@ function dolifarmRestrictFarmField($object, $field = 'fk_soc', $withprocessors =
 	if (empty($object->fields[$field]['type']) || strpos($object->fields[$field]['type'], 'integer:Societe:') !== 0) {
 		return;
 	}
-	$ids = dolifarmManagedFarmIds(false, $withprocessors);
+	global $user;
+
+	// Managed farms the user can see (sales representative, external user), see dolifarm_access.lib.php
+	if (is_object($user) && !empty($user->id) && function_exists('dolifarmAllowedSocIds')) {
+		$ids = dolifarmAllowedSocIds($user, $withprocessors);
+	} else {
+		$ids = dolifarmManagedFarmIds(false, $withprocessors);
+	}
 	if ($ids === null) {
 		return;
 	}
