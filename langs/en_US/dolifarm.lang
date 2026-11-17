@@ -1188,3 +1188,23 @@ DemoDataDone = Demo data loaded
 DemoDataErrors = Demo data loaded with %s errors: see the log
 DemoDataLog = Log of the loading
 DemoDataErrorLines = Errors (%s)
+
+# QR signs of the plots
+PlotSign = QR sign
+PlotSignMass = Print the QR signs
+PlotSignTitle = QR signs of the plots
+PlotSignHelp = PDF to print and put in the field (laminated or on a rigid board). The QR code holds the address of the card of the plot with its reference: read with the camera it opens the card in Dolibarr after the login, read by the field app it opens the plot. It is not a public page.
+PlotSignQrContent = Content of the QR code
+PlotSignFormat = Format
+PlotSignFormatA5 = A5 sign (one per page)
+PlotSignFormatA4 = A4 sign (one per page)
+PlotSignFormatA4_2x4 = A4 labels, 2 x 4 of 105 x 74 mm
+PlotSignFormatA4_2x5 = A4 labels, 2 x 5 of 105 x 57 mm
+PlotSignFormatA4_3x8 = A4 labels, 3 x 8 of 70 x 37 mm
+PlotSignCopies = Copies of each plot
+PlotSignSkip = Labels already used on the first sheet
+PlotSignPrint = Create the PDF
+PlotSignCrop = Crop: %s
+PlotSignSheet = Sheet %s
+PlotSignParcel = Parcel %s
+PlotSignScan = Scan the QR code to open the card of the plot

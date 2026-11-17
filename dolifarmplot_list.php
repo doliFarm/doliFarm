@@ -240,6 +240,11 @@ if (GETPOST('cancel', 'alpha')) {
 if (!GETPOST('confirmmassaction', 'alpha') && $massaction != 'presend' && $massaction != 'confirm_presend') {
 	$massaction = '';
 }
+// QR signs of the selected plots: the page of the signs checks the access to each plot
+if ($massaction == 'qrsign' && !empty($toselect)) {
+	header('Location: '.dol_buildpath('/dolifarm/dolifarmplot_qrsign.php', 1).'?ids='.implode(',', array_map('intval', $toselect)));
+	exit;
+}
 
 $parameters = array('arrayfields' => &$arrayfields);
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
@@ -547,6 +552,9 @@ $arrayofmassactions = array(
 	//'builddoc'=>img_picto('', 'pdf', 'class="pictofixedwidth"').$langs->trans("PDFMerge"),
 	//'presend'=>img_picto('', 'email', 'class="pictofixedwidth"').$langs->trans("SendByMail"),
 );
+if ($user->hasRight('dolifarm', 'dolifarmplot', 'read')) {
+	$arrayofmassactions['qrsign'] = img_picto('', 'fa-qrcode', 'class="pictofixedwidth"').$langs->trans('PlotSignMass');
+}
 if (!empty($permissiontodelete)) {
 	$arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"').$langs->trans("Delete");
 }

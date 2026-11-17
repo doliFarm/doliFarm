@@ -580,6 +580,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
                 }
             }
 
+            // QR sign to put in the field
+            print dolGetButtonAction('', $langs->trans('PlotSign'), 'default', dol_buildpath('/dolifarm/dolifarmplot_qrsign.php', 1).'?id='.$object->id, '', $user->hasRight('dolifarm', 'dolifarmplot', 'read'));
+
             // Clone
             if ($permissiontoadd) {
                 print dolGetButtonAction('', $langs->trans('ToClone'), 'default', $_SERVER['PHP_SELF'].'?id='.$object->id.(!empty($object->socid) ? '&socid='.$object->socid : '').'&action=clone&token='.newToken(), '', $permissiontoadd);

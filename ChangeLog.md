@@ -1,5 +1,9 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## Non rilasciato
+
+- Cartelli QR degli appezzamenti (punto 22, prima parte della PWA di campo): pulsante "Cartello QR" nella scheda dell'appezzamento e azione di massa "Stampa i cartelli QR" nella lista. Formati: cartello A5 o A4 (uno per pagina) ed etichette A4 (2 x 4, 2 x 5, 3 x 8), con copie per appezzamento ed etichette già usate. Sul cartello: nome, riferimento, comune con foglio e particella, superficie, azienda, coltura in corso (piano di produzione di doliTrace) e il QR con l'indirizzo della scheda dell'appezzamento, che non è pubblico.
+
 ## 1.5.7 (2026-11-17)
 
 Correzioni trovate nei test di accettazione sul Docker. Dopo l'aggiornamento non serve riattivare il modulo.
