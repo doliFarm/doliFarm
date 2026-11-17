@@ -1,5 +1,9 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## Non rilasciato
+
+- Visibilità per commerciale: nei moduli di creazione e modifica (fascicolo, appezzamento, macchina, fabbricato, allevamento, operatore, stima, registrazione, ispezione) il menu dell'azienda e il filtro delle liste propongono solo le aziende gestite che l'utente vede; prima comparivano tutte le aziende gestite, anche se il salvataggio veniva poi rifiutato.
+
 ## 1.5.6 (2026-11-06)
 
 Correzioni dei dati demo su un'istanza che ha già dei dati. Dopo l'aggiornamento non serve riattivare il modulo.
