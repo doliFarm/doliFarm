@@ -842,7 +842,11 @@ class pdf_fascicolo_dolifarmfarmdossier extends ModelePDFDoliFarmFarmDossier
 			return price($value, 0, $outputlangs, 0, -1, -1, 'auto');
 		}
 		if (!empty($val['arrayofkeyval'])) {
-			return isset($val['arrayofkeyval'][$value]) ? $outputlangs->transnoentities($val['arrayofkeyval'][$value]) : (string) $value;
+			if (isset($val['arrayofkeyval'][$value])) {
+				return $outputlangs->transnoentities($val['arrayofkeyval'][$value]);
+			}
+			// 0 is the empty choice of a list stored as an integer
+			return ((string) $value === '0' ? '' : (string) $value);
 		}
 		$text = $object->showOutputField($val, $key, $value, '', '', '', 0);
 		return trim(dol_string_nohtmltag($text, 1));

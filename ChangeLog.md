@@ -2,7 +2,9 @@
 
 ## Non rilasciato
 
+- Elenco degli appezzamenti: la ricerca "in tutti i campi" cerca anche in riferimento e titolo (prima solo nella particella SIGC).
 - Visibilità per commerciale: nei moduli di creazione e modifica (fascicolo, appezzamento, macchina, fabbricato, allevamento, operatore, stima, registrazione, ispezione) il menu dell'azienda e il filtro delle liste propongono solo le aziende gestite che l'utente vede; prima comparivano tutte le aziende gestite, anche se il salvataggio veniva poi rifiutato.
+- Documento del fascicolo (PDF): un campo a elenco non compilato (es. "Tipo di atto") non compare più con il valore 0.
 
 ## 1.5.6 (2026-11-06)
 
