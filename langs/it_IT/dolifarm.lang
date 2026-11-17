@@ -1238,3 +1238,23 @@ DemoDataDone = Dati demo caricati
 DemoDataErrors = Dati demo caricati con %s errori: vedere il registro
 DemoDataLog = Registro del caricamento
 DemoDataErrorLines = Errori (%s)
+
+# QR signs of the plots
+PlotSign = Cartello QR
+PlotSignMass = Stampa i cartelli QR
+PlotSignTitle = Cartelli QR degli appezzamenti
+PlotSignHelp = PDF da stampare e mettere in campo (plastificato o su supporto rigido). Il QR contiene l'indirizzo della scheda dell'appezzamento con il riferimento: letto con la fotocamera apre la scheda in Dolibarr dopo il login, letto dall'app di campo apre l'appezzamento. Non è una pagina pubblica.
+PlotSignQrContent = Contenuto del QR
+PlotSignFormat = Formato
+PlotSignFormatA5 = Cartello A5 (uno per pagina)
+PlotSignFormatA4 = Cartello A4 (uno per pagina)
+PlotSignFormatA4_2x4 = Etichette A4, 2 x 4 da 105 x 74 mm
+PlotSignFormatA4_2x5 = Etichette A4, 2 x 5 da 105 x 57 mm
+PlotSignFormatA4_3x8 = Etichette A4, 3 x 8 da 70 x 37 mm
+PlotSignCopies = Copie di ogni appezzamento
+PlotSignSkip = Etichette già usate sul primo foglio
+PlotSignPrint = Crea il PDF
+PlotSignCrop = Coltura: %s
+PlotSignSheet = Fg. %s
+PlotSignParcel = Part. %s
+PlotSignScan = Inquadra il QR per aprire la scheda dell'appezzamento

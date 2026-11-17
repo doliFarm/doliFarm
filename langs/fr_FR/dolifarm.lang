@@ -1164,3 +1164,23 @@ DemoDataDone = Données de démo chargées
 DemoDataErrors = Données de démo chargées avec %s erreurs : voir le journal
 DemoDataLog = Journal du chargement
 DemoDataErrorLines = Erreurs (%s)
+
+# QR signs of the plots
+PlotSign = Panneau QR
+PlotSignMass = Imprimer les panneaux QR
+PlotSignTitle = Panneaux QR des parcelles
+PlotSignHelp = PDF à imprimer et à placer au champ (plastifié ou sur un support rigide). Le QR code contient l'adresse de la fiche de la parcelle avec sa référence : lu avec l'appareil photo, il ouvre la fiche dans Dolibarr après la connexion ; lu par l'application de terrain, il ouvre la parcelle. Ce n'est pas une page publique.
+PlotSignQrContent = Contenu du QR code
+PlotSignFormat = Format
+PlotSignFormatA5 = Panneau A5 (un par page)
+PlotSignFormatA4 = Panneau A4 (un par page)
+PlotSignFormatA4_2x4 = Étiquettes A4, 2 x 4 de 105 x 74 mm
+PlotSignFormatA4_2x5 = Étiquettes A4, 2 x 5 de 105 x 57 mm
+PlotSignFormatA4_3x8 = Étiquettes A4, 3 x 8 de 70 x 37 mm
+PlotSignCopies = Copies de chaque parcelle
+PlotSignSkip = Étiquettes déjà utilisées sur la première feuille
+PlotSignPrint = Créer le PDF
+PlotSignCrop = Culture : %s
+PlotSignSheet = Feuille %s
+PlotSignParcel = Parcelle %s
+PlotSignScan = Scannez le QR code pour ouvrir la fiche de la parcelle
