@@ -27,6 +27,7 @@
  */
 
 dol_include_once('/dolifarm/class/dolifarmpppsync.class.php');
+dol_include_once('/dolifarm/lib/dolifarm_help.lib.php');
 
 /**
  * Agrodrug of the farm with a registration number (any format)
@@ -77,7 +78,7 @@ function dolifarmAgroDrugFromCatalog($db, $user, $regnumber, &$error, &$created 
 	}
 	$row = DoliFarmPppSync::fetchCatalog($db, $regnumber);
 	if (!$row) {
-		$error = $langs->trans('ErrorPppNotInCatalog', $regnumber);
+		$error = $langs->trans(dolifarmHelpKey('ErrorPppNotInCatalog'), $regnumber);
 		return -1;
 	}
 	if (DoliFarmPppSync::statusClass($row->admin_status) != 'authorized') {

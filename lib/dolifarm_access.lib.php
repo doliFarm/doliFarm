@@ -202,7 +202,7 @@ function dolifarmCheckObjectAccess($object, $user)
 	}
 	$withprocessors = dolifarmAcceptsProcessors($object);
 	if (property_exists($object, 'fk_soc') && (int) $object->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $object->fk_soc, true, $withprocessors)) {
-		return $langs->trans(dolifarmIsManagedFarm((int) $object->fk_soc, $withprocessors) ? 'ErrorDolifarmFarmNotAllowed' : 'ErrorDolifarmFarmNotManaged', $langs->transnoentitiesnoconv('ThirdParty'));
+		return $langs->trans(dolifarmIsManagedFarm((int) $object->fk_soc, $withprocessors) ? 'ErrorDolifarmFarmNotAllowed' : dolifarmHelpKey('ErrorDolifarmFarmNotManaged'), $langs->transnoentitiesnoconv('ThirdParty'));
 	}
 	if (!is_array($object->fields)) {
 		return '';
@@ -234,7 +234,7 @@ function dolifarmCheckObjectAccess($object, $user)
 		$obj = $db->fetch_object($resql);
 		$db->free($resql);
 		if ($obj && (int) $obj->fk_soc > 0 && !dolifarmUserCanSeeSoc($user, (int) $obj->fk_soc)) {
-			return $langs->trans(dolifarmIsManagedFarm((int) $obj->fk_soc) ? 'ErrorDolifarmFarmNotAllowed' : 'ErrorDolifarmFarmNotManaged', $langs->transnoentitiesnoconv($field['label']));
+			return $langs->trans(dolifarmIsManagedFarm((int) $obj->fk_soc) ? 'ErrorDolifarmFarmNotAllowed' : dolifarmHelpKey('ErrorDolifarmFarmNotManaged'), $langs->transnoentitiesnoconv($field['label']));
 		}
 	}
 	return '';

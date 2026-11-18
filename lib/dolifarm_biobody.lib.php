@@ -27,6 +27,7 @@
  */
 
 dol_include_once('/dolifarm/lib/dolifarm.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_help.lib.php');
 
 /**
  * Entries of the official list, active ones, by code
@@ -268,7 +269,7 @@ function dolifarmBioBodyPrepareField($object, $key)
 	}
 	$object->fields[$key]['type'] = 'select';
 	$object->fields[$key]['arrayofkeyval'] = dolifarmBioBodyOptions($object->db);
-	$object->fields[$key]['help'] = 'BioBodySelectHelp';
+	$object->fields[$key]['help'] = dolifarmHelpKey('BioBodySelectHelp');
 	unset($object->fields[$key]['picto']);
 }
 
