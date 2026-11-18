@@ -1,5 +1,11 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.11 (2026-11-18)
+
+Menu della suite. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu) e ricaricare la pagina con Ctrl+F5 (foglio di stile).
+
+- "Aiutami" e "App di campo" sono una sola sezione in fondo al menu a sinistra di doliFarm, doliTrace e doliField, dopo un separatore: "App di campo" è sotto "Aiutami". Gli utenti esterni non vedono più "App di campo" nel menu (la pagina Aiutami è solo per gli utenti interni).
+
 ## 1.5.10 (2026-11-18)
 
 Menu della suite. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu) e ricaricare la pagina con Ctrl+F5 (foglio di stile).
