@@ -283,19 +283,22 @@ function dolifarmPrintFieldsCss()
 /**
  * Print the script that keeps in a select of the form only the records of the selected third party (#fk_soc).
  * Used for the dossier (and the plot) of the objects of the farm dossier; the class checks it again on save.
+ * With $parentid and $parentfield the parent is another select: e.g. the plots of the chosen dossier.
  *
  * @param	string	$selectid		Id of the select to filter (fk_dossier, fk_plot)
- * @param	string	$table			Table of the records, without prefix, with columns rowid, fk_soc, entity
+ * @param	string	$table			Table of the records, without prefix, with columns rowid, entity and $parentfield
  * @param	string	$element		Element of the records, for getEntity()
  * @param	bool	$autoselect		Select the record when the third party has only one
+ * @param	string	$parentid		Id of the parent select
+ * @param	string	$parentfield	Column of the records with the id of the parent
  * @return	void
  */
-function dolifarmPrintThirdpartyFilter($selectid, $table, $element, $autoselect = true)
+function dolifarmPrintThirdpartyFilter($selectid, $table, $element, $autoselect = true, $parentid = 'fk_soc', $parentfield = 'fk_soc')
 {
 	global $db;
 
 	$recordsoc = array();
-	$sql = "SELECT rowid, fk_soc FROM ".$db->prefix().$db->sanitize($table);
+	$sql = "SELECT rowid, ".$db->sanitize($parentfield)." as fk_soc FROM ".$db->prefix().$db->sanitize($table);
 	$sql .= " WHERE entity IN (".getEntity($element).")";
 	$resql = $db->query($sql);
 	if ($resql) {
@@ -313,7 +316,7 @@ function dolifarmPrintThirdpartyFilter($selectid, $table, $element, $autoselect 
 		}
 		var allOptions = $select.find("option").clone();
 		function filterRecords() {
-			var soc = parseInt($("#fk_soc").val(), 10) || 0;
+			var soc = parseInt($('.json_encode('#'.$parentid).').val(), 10) || 0;
 			var current = $select.val();
 			$select.empty();
 			allOptions.each(function() {
@@ -330,7 +333,7 @@ function dolifarmPrintThirdpartyFilter($selectid, $table, $element, $autoselect 
 			}
 			$select.trigger("change");
 		}
-		$("#fk_soc").on("change", filterRecords);
+		$('.json_encode('#'.$parentid).').on("change", filterRecords);
 		filterRecords();
 	});
 	</script>'."\n";
