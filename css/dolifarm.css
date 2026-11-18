@@ -105,8 +105,10 @@
 	background: #2e7d32;
 }
 
-/* Left menu: "Getting started" is the last entry, after a separator */
-.blockvmenu:has(a.vmenu[href*="/dolifarm/dolifarm_start.php"]) {
+/* Left menu of doliFarm, doliTrace and doliField: "Field app" and "Help me" are the last entries, after a separator
+   (on "Field app", or on "Help me" when "Field app" is not shown) */
+.blockvmenu:has(a.vmenu[href*="/dolitrace/dolitrace_pwa.php"]),
+.blockvmenu:has(a.vmenu[href*="/dolifarm/dolifarm_start.php"]):not(.blockvmenu:has(a.vmenu[href*="/dolitrace/dolitrace_pwa.php"]) ~ .blockvmenu) {
 	margin-top: 12px;
 	border-top: 1px solid rgba(128, 128, 128, 0.5) !important;
 	padding-top: 8px;
