@@ -33,6 +33,8 @@
  * with $withprocessors = true.
  */
 
+dol_include_once('/dolifarm/lib/dolifarm_help.lib.php');
+
 /**
  * Codes of the types of third party that can be affiliated: farm and processor
  *
@@ -332,7 +334,7 @@ function dolifarmNoManagedFarmWarning(): string
 	global $langs;
 
 	$langs->load('dolifarm@dolifarm');
-	$text = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');
+	$text = $langs->trans(dolifarmHelpKey(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle'));
 	return img_warning($text).' <span class="warning">'.$text.'</span>';
 }
 

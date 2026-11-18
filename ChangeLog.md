@@ -1,5 +1,12 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.9 (in sviluppo)
+
+Help per ruolo. Dopo l'aggiornamento non serve riattivare il modulo.
+
+- Help in linea separato per ruolo: chi non è amministratore non vede le indicazioni di amministrazione (setup, dizionari, lavori pianificati); dove non può risolvere da solo il testo dice di chiedere all'amministratore. Nuova funzione `dolifarmHelpKey()` (`lib/dolifarm_help.lib.php`) usata da tutta la suite: chiave `<testo>` per gli utenti, `<testo>Admin` per gli amministratori.
+- Testi separati: organismo di controllo bio, nessuna azienda configurata o gestita, azienda non gestita, agrofarmaco non nel catalogo; il riferimento automatico non cita più il setup.
+
 ## 1.5.8 (2026-11-18)
 
 Cartelli QR degli appezzamenti. Dopo l'aggiornamento non serve riattivare il modulo.

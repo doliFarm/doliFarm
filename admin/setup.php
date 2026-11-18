@@ -289,7 +289,7 @@ if ($action == 'syncaffiliated' && getDolGlobalInt('DOLIFARM_MULTIFARM')) {
 $managedids = dolifarmManagedFarmIds(true, true);	// Farms and processors
 $managedhtml = '';
 if (empty($managedids)) {
-	$managedwarning = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMulti' : 'DolifarmManagedFarmsNoneSingle');
+	$managedwarning = $langs->trans(getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'DolifarmManagedFarmsNoneMultiAdmin' : 'DolifarmManagedFarmsNoneSingleAdmin');
 	$managedhtml = img_warning($managedwarning).' <span class="warning">'.$managedwarning.'</span>';
 } else {
 	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
