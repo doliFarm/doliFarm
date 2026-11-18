@@ -1,6 +1,6 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## 1.5.9 (in sviluppo)
+## 1.5.9 (2026-11-18)
 
 Help per ruolo. Dopo l'aggiornamento non serve riattivare il modulo.
 
