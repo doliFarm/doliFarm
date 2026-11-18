@@ -35,4 +35,4 @@ Se il database usa un prefisso diverso da `llx_`, sostituirlo prima dell'import 
 
 ## Guida
 
-Ogni pagina principale ha il pulsante **Guida** in basso a destra; "Guida completa" in Primi passi percorre tutte le pagine nell'ordine.
+Ogni pagina principale ha il pulsante **Guida** in basso a destra; "Guida completa" in Aiutami percorre tutte le pagine nell'ordine.
