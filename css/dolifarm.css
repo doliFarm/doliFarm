@@ -111,3 +111,15 @@
 	border-top: 1px solid rgba(128, 128, 128, 0.5) !important;
 	padding-top: 8px;
 }
+/* "Field app" under "Help me": the menu of Dolibarr shows the icon (prefix) only for the main entries, so it is added here (fa-mobile-alt) */
+a.vsmenu[href*="/dolitrace/dolitrace_pwa.php"]::before {
+	content: "\f3cd";
+	display: inline-block;
+	width: 1.25em;
+	margin-right: 4px;
+	text-align: center;
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	font-style: normal;
+	-webkit-font-smoothing: antialiased;
+}

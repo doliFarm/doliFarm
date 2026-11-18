@@ -1,5 +1,11 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 1.5.13 (2026-11-18)
+
+Icona del menu. Dopo l'aggiornamento non serve riattivare il modulo: ricaricare la pagina con Ctrl+F5 (foglio di stile).
+
+- Correzione: "App di campo", sotto "Aiutami" nel menu a sinistra, ha di nuovo l'icona del telefono (Dolibarr mostra l'icona solo per le voci principali: ora la aggiunge il foglio di stile).
+
 ## 1.5.12 (2026-11-18)
 
 Menu. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu).
