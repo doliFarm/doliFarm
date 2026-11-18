@@ -1,6 +1,6 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## 1.5.14 (in sviluppo)
+## 1.5.14 (2026-11-18)
 
 - Filtro dei campi collegati all'azienda (`dolifarmPrintThirdpartyFilter`) anche su un campo padre diverso dall'azienda (es. appezzamenti del fascicolo scelto), usato da doliTrace 1.5.9.
 
