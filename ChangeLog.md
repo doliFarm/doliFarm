@@ -1,6 +1,6 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## Non rilasciato
+## 1.6.1 (2026-11-24)
 
 Menu della suite. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu, hook e JavaScript del modulo).
 
