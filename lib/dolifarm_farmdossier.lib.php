@@ -126,6 +126,22 @@ function dolifarmfarmdossierPrepareHead($object)
         $h++;
     }
 
+    // Data read from the SIAN: graphic cultivation plan and documents of the paper dossier
+    $nbSian = 0;
+    foreach (array('dolifarm_dossierpcg', 'dolifarm_dossierdoc') as $siantable) {
+        $resql = $db->query("SELECT COUNT(rowid) as nb FROM ".MAIN_DB_PREFIX.$siantable." WHERE fk_dossier = ".((int) $object->id));
+        if ($resql && $obj = $db->fetch_object($resql)) {
+            $nbSian += (int) $obj->nb;
+        }
+    }
+    $head[$h][0] = dolBuildUrl(dol_buildpath("/dolifarm/dolifarmfarmdossier_sian.php", 1), ['id' => $object->id]);
+    $head[$h][1] = $langs->trans("DossierSianTab");
+    if ($nbSian > 0) {
+        $head[$h][1] .= ' <span class="badge marginleftonlyshort">'.$nbSian.'</span>';
+    }
+    $head[$h][2] = 'sian';
+    $h++;
+
     // ----------------------------------------------------------------------
     // TAB 4: CONTATTI (Contacts)
     // ----------------------------------------------------------------------

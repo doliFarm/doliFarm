@@ -47,6 +47,8 @@ function dolifarmExpiryDefinitions()
 		'machine_insurance' => array('element' => 'dolifarmmachine', 'class' => 'DoliFarmMachine', 'table' => 'dolifarm_machine', 'field' => 'date_insurance_end', 'label' => 'ExpiryMachineInsurance', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
 		'operator_license' => array('element' => 'dolifarmoperator', 'class' => 'DoliFarmOperator', 'table' => 'dolifarm_operator', 'field' => 'license_end', 'label' => 'ExpiryOperatorLicense', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
 		'machine_sprayer' => array('element' => 'dolifarmmachine', 'class' => 'DoliFarmMachine', 'table' => 'dolifarm_machine', 'field' => 'date_sprayer_check_end', 'label' => 'ExpiryMachineSprayerCheck', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0),
+		// Documents of the paper dossier read from the SIAN: no right of their own, those of the dossier
+		'dossier_document' => array('element' => 'dolifarmdossierdoc', 'class' => 'DoliFarmDossierDoc', 'table' => 'dolifarm_dossierdoc', 'field' => 'date_end', 'label' => 'ExpiryDossierDocument', 'labelfield' => 'label', 'socfield' => 'fk_soc', 'milestone' => 0, 'right' => 'dolifarmfarmdossier'),
 	);
 }
 
@@ -160,7 +162,7 @@ function dolifarmExpiryList($db, $user, $limit = 0, $filters = array())
 	$today = dol_get_first_hour(dol_now());
 
 	foreach (dolifarmExpiryDefinitions() as $key => $def) {
-		if (!$user->hasRight('dolifarm', $def['element'], 'read')) {
+		if (!$user->hasRight('dolifarm', empty($def['right']) ? $def['element'] : $def['right'], 'read')) {
 			continue;
 		}
 		if ((!empty($filters['fk_soc']) && !$def['socfield']) || (!empty($filters['fk_dossier']) && $def['element'] == 'dolifarmagrodrug')) {
