@@ -1,5 +1,13 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## Non rilasciato
+
+Importazione del fascicolo aziendale. Nessuna riattivazione necessaria.
+
+- Nuovo formato XML del fascicolo (`schema/fascicolo-1.0.xsd`, namespace `urn:dolifarm:fascicolo:1`) basato sulla scheda di validazione AGEA (IO 122/2025) e sull'allegato 3 della circolare 2024; esempio con dati inventati in `schema/esempio_fascicolo.xml`. Il vecchio formato (Soggetto/DatiFascicolo/Terreni) non è più letto.
+- Importatore riscritto: file validato contro lo schema, controllo di CUAA e partita IVA, anteprima senza salvataggio e poi conferma. Importa azienda (nuova azienda affiliata), rappresentante legale, CAA e operatore, organismo bio, fascicolo, particelle (titolo di conduzione AGEA, superfici, ZVN e Natura 2000, SAU dal piano di coltivazione), fabbricati, allevamenti, macchine, conto bancario.
+- Reimportare lo stesso fascicolo o quello dell'anno dopo aggiorna i dati senza duplicarli; gli appezzamenti assenti dal fascicolo non vengono cancellati ma segnalati.
+
 ## 1.5.14 (2026-11-18)
 
 - Filtro dei campi collegati all'azienda (`dolifarmPrintThirdpartyFilter`) anche su un campo padre diverso dall'azienda (es. appezzamenti del fascicolo scelto), usato da doliTrace 1.5.9.

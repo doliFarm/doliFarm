@@ -243,52 +243,66 @@ if (!$permissiontoread) {
 // -------------------------------------------------------------------------
 // ACTION: IMPORTAZIONE XML
 // -------------------------------------------------------------------------
+// 1) import_xml: the file is kept in the temp dir and imported in dry run (preview, nothing saved)
+// 2) confirm_import_xml: the same file is imported for real
+$importpreview = null;
+$importdir = $conf->dolifarm->dir_temp;
+$importprefix = 'fascicolo_import_'.((int) $user->id).'_';
+if (($action == 'import_xml' || $action == 'confirm_import_xml') && $permissiontoadd) {
+	dol_include_once('/dolifarm/class/dolifarmimporter.class.php');
+	if (!file_exists($importdir)) {
+		dol_mkdir($importdir);
+	}
+}
 if ($action == 'import_xml' && $permissiontoadd) {
-    $error = 0;
-    
-    // 1. Verifica caricamento file
-    if (empty($_FILES['file_import']['name'])) {
-        setEventMessages($langs->trans("ErrorFileNotSelected"), null, 'errors');
-        $error++;
-    }
-
-    if (!$error) {
-        // 2. Preparazione Cartella Temporanea
-        $upload_dir = $conf->dolifarm->dir_temp;
-        if (!file_exists($upload_dir)) {
-            dol_mkdir($upload_dir);
-        }
-
-        $file_name = $_FILES['file_import']['name'];
-        $file_tmp  = $_FILES['file_import']['tmp_name'];
-        $dest_file = $upload_dir . '/' . dol_sanitizeFileName($file_name);
-
-        // 3. Spostamento sicuro del file (Funzione Core Dolibarr)
-        if (dol_move_uploaded_file($file_tmp, $dest_file, 1)) {
-            
-            // 4. ESECUZIONE IMPORTER
-            dol_include_once('/dolifarm/class/dolifarmimporter.class.php');
-            
-            if (class_exists('DoliFarmImporter')) {
-                $importer = new DoliFarmImporter($db, $user);
-                $res = $importer->importFromXML($dest_file);
-
-                if ($res > 0) {
-                    setEventMessages($langs->trans("DossierImportDone", $res), null, 'mesgs');
-                } else {
-                    setEventMessages($langs->trans("DossierImportError").': '.$importer->error, $importer->errors, 'errors');
-                }
-                
-                // Pulizia file temp
-                @unlink($dest_file);
-            } else {
-                setEventMessages($langs->trans("ClassNotFound").': DoliFarmImporter', null, 'errors');
-            }
-
-        } else {
-            setEventMessages($langs->trans("ErrorFailedToSaveFile"), null, 'errors');
-        }
-    }
+	if (empty($_FILES['file_import']['name']) || !empty($_FILES['file_import']['error'])) {
+		setEventMessages($langs->trans("ErrorFileNotUploaded"), null, 'errors');
+	} else {
+		// Only one pending preview per user
+		foreach (dol_dir_list($importdir, 'files', 0, '^'.preg_quote($importprefix, '/')) as $old) {
+			dol_delete_file($old['fullname'], 0, 0, 0, null, false, 0);
+		}
+		$importkey = bin2hex(random_bytes(8));
+		$importfile = $importdir.'/'.$importprefix.$importkey.'.xml';
+		$resmove = dol_move_uploaded_file($_FILES['file_import']['tmp_name'], $importfile, 1, 0, $_FILES['file_import']['error']);
+		if (is_numeric($resmove) && $resmove > 0) {
+			$importer = new DoliFarmImporter($db, $user);
+			$importname = dol_sanitizeFileName($_FILES['file_import']['name']);
+			if ($importer->importFromXML($importfile, true, $importname) < 0) {
+				setEventMessages($langs->trans("DossierImportError").': '.$importer->error, $importer->errors, 'errors');
+				dol_delete_file($importfile, 0, 0, 0, null, false, 0);
+			} else {
+				$importpreview = array('key' => $importkey, 'name' => $importname, 'importer' => $importer);
+			}
+		} else {
+			setEventMessages($langs->trans("ErrorFailedToSaveFile"), null, 'errors');
+		}
+	}
+	$action = 'list';
+}
+if ($action == 'confirm_import_xml' && $permissiontoadd) {
+	$importkey = GETPOST('importkey', 'aZ09');
+	$importfile = $importdir.'/'.$importprefix.$importkey.'.xml';
+	if (!preg_match('/^[0-9a-f]{16}$/', $importkey) || !is_file($importfile)) {
+		setEventMessages($langs->trans("DossierImportFileExpired"), null, 'errors');
+	} else {
+		$importer = new DoliFarmImporter($db, $user);
+		$res = $importer->importFromXML($importfile, false, dol_sanitizeFileName(GETPOST('importname', 'alphanohtml')));
+		dol_delete_file($importfile, 0, 0, 0, null, false, 0);
+		if ($res > 0) {
+			setEventMessages($langs->trans("DossierImportDone", $res), $importer->warnings, $importer->warnings ? 'warnings' : 'mesgs');
+			header('Location: '.dol_buildpath('/dolifarm/dolifarmfarmdossier_card.php', 1).'?id='.((int) $res));
+			exit;
+		}
+		setEventMessages($langs->trans("DossierImportError").': '.$importer->error, $importer->errors, 'errors');
+	}
+	$action = 'list';
+}
+if ($action == 'cancel_import_xml' && $permissiontoadd) {
+	foreach (dol_dir_list($importdir, 'files', 0, '^'.preg_quote($importprefix, '/')) as $old) {
+		dol_delete_file($old['fullname'], 0, 0, 0, null, false, 0);
+	}
+	$action = 'list';
 }
 
 // -------------------------------------------------------------------------
@@ -563,27 +577,58 @@ llxHeader('', $title, $help_url, '', 0, 0, $morejs, $morecss, '', 'mod-dolifarm 
 // -------------------------------------------------------------------------
 // BOX IMPORTAZIONE (Visibile solo se si hanno permessi di scrittura)
 // -------------------------------------------------------------------------
-if ($permissiontoadd) {
-    print '<div class="box">';
-    print '<form enctype="multipart/form-data" action="'.$_SERVER["PHP_SELF"].'" method="post">';
-    print '<input type="hidden" name="token" value="'.newToken().'">';
-    print '<input type="hidden" name="action" value="import_xml">';
-    
-    print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre"><td colspan="3">'.$langs->trans('DossierImportXml').'</td></tr>';
-    
-    print '<tr class="oddeven">';
-    print '<td width="150">'.$langs->trans('DossierImportXmlFile').'</td>';
-    print '<td><input type="file" name="file_import" accept=".xml"></td>';
-    print '<td align="right">';
-    print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('DossierImportButton')).'">';
-    print '</td>';
-    print '</tr>';
-    
-    print '</table>';
-    print '</form>';
-    print '</div>';
-    print '<br>';
+if ($permissiontoadd && $importpreview !== null) {
+	// Preview of the import: summary, warnings, details, confirmation
+	$importer = $importpreview['importer'];
+	print '<div class="box">';
+	print '<table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('DossierImportPreview').' - '.dol_escape_htmltag($importpreview['name']).'</td></tr>';
+	print '<tr class="oddeven"><td colspan="2"><span class="opacitymedium">'.$langs->trans('DossierImportPreviewHelp').'</span></td></tr>';
+	foreach ($importer->stats as $kind => $n) {
+		print '<tr class="oddeven"><td class="titlefield">'.$langs->trans('DossierImportKind_'.$kind).'</td>';
+		print '<td>'.$langs->trans('DossierImportCreatedUpdated', $n['created'], $n['updated']).'</td></tr>';
+	}
+	if ($importer->warnings) {
+		print '<tr class="liste_titre"><td colspan="2">'.img_warning().' '.$langs->trans('DossierImportWarnings').'</td></tr>';
+		foreach ($importer->warnings as $msg) {
+			print '<tr class="oddeven"><td colspan="2">'.dol_escape_htmltag($msg).'</td></tr>';
+		}
+	}
+	print '<tr class="liste_titre"><td colspan="2">'.$langs->trans('DossierImportLog').'</td></tr>';
+	foreach ($importer->output_log as $msg) {
+		print '<tr class="oddeven"><td colspan="2">'.dol_escape_htmltag($msg).'</td></tr>';
+	}
+	print '</table>';
+	print '<form action="'.$_SERVER["PHP_SELF"].'" method="post" class="center margintoponly">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="importkey" value="'.dol_escape_htmltag($importpreview['key']).'">';
+	print '<input type="hidden" name="importname" value="'.dol_escape_htmltag($importpreview['name']).'">';
+	print '<button type="submit" class="button button-save" name="action" value="confirm_import_xml">'.$langs->trans('DossierImportConfirm').'</button> ';
+	print '<button type="submit" class="button button-cancel" name="action" value="cancel_import_xml">'.$langs->trans('Cancel').'</button>';
+	print '</form>';
+	print '</div>';
+	print '<br>';
+} elseif ($permissiontoadd) {
+	print '<div class="box">';
+	print '<form enctype="multipart/form-data" action="'.$_SERVER["PHP_SELF"].'" method="post">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="import_xml">';
+
+	print '<table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans('DossierImportXml').'</td></tr>';
+
+	print '<tr class="oddeven">';
+	print '<td class="titlefield">'.$form->textwithpicto($langs->trans('DossierImportXmlFile'), $langs->trans('DossierImportFormatHelp')).'</td>';
+	print '<td><input type="file" name="file_import" accept=".xml,text/xml,application/xml"></td>';
+	print '<td class="right">';
+	print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('DossierImportButton')).'">';
+	print '</td>';
+	print '</tr>';
+
+	print '</table>';
+	print '</form>';
+	print '</div>';
+	print '<br>';
 }
 // -------------------------------------------------------------------------
 // BOX IMPORTAZIONE (Visibile solo se si hanno permessi di scrittura)  END

@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (C) 2026 Luigi Grillo - doliFarm.com <info@dolifarm.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!--
+  Tracciato doliFarm del fascicolo aziendale, versione 1.0.
+
+  Non è un tracciato AGEA: AGEA non pubblica un formato di scambio del fascicolo (tra SIAN e OP si usano API REST).
+  Il contenuto ricalca le fonti ufficiali:
+  - [SV]  scheda di validazione del fascicolo, IO AGEA 122/2025 §6.8 (16 contenuti) e stampa SIAN della scheda;
+  - [IO]  Istruzioni operative AGEA 122/2025 (prot. 90535 dell'11/11/2025), §5.2 anagrafica, §5.3 consistenza
+          territoriale, §5.3.3 codici dei titoli di conduzione, §5.3.5 piano di coltivazione, §5.5 zootecnia;
+  - [TU]  Testo coordinato AGEA prot. 73919 del 25/09/2025, Sezione II §1 elementi costitutivi del fascicolo;
+  - [A3]  Circolare AGEA 2024, allegato 3, foglio 1 "da OP (Fascicolo Aziendale - PCG) verso Agricoltore".
+
+  Convenzioni:
+  - superfici in ettari, punto decimale, 4 decimali (la stampa SIAN usa Ha,Aa,Ca: 04,85,95 = 4.8595);
+  - date ISO (AAAA-MM-GG);
+  - i dati codificati riportano il codice SIAN nell'attributo "codice" e la descrizione come testo;
+  - i riferimenti interni (particella, isola...) usano xs:ID / xs:IDREF.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="urn:dolifarm:fascicolo:1"
+           xmlns:f="urn:dolifarm:fascicolo:1"
+           targetNamespace="urn:dolifarm:fascicolo:1"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1.0">
+
+	<!-- ===================================================================== -->
+	<!-- Tipi semplici                                                          -->
+	<!-- ===================================================================== -->
+
+	<xs:simpleType name="CuaaType">
+		<xs:annotation><xs:documentation>CUAA: codice fiscale di persona fisica (16) o di società (11 cifre).</xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-EHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]|[0-9]{11}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="PartitaIvaType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{11}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="EttariType">
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+			<xs:fractionDigits value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="SiNoType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="SI"/>
+			<xs:enumeration value="NO"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="IbanType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="ProvinciaType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="AtecoType">
+		<xs:annotation><xs:documentation>Codice ATECO con i punti: 01.28.00 (la stampa SIAN usa 01-28-00).</xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{2}(\.[0-9]{1,2}){0,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="OrganismoPagatoreType">
+		<xs:annotation><xs:documentation>Codice dell'organismo pagatore, come nel dizionario dolifarm_c_paying_agency (AGEA, AGREA, APPAG, ARCEA, ARGEA, ARPEA, ARTEA, AVEPA, OPLO, OPPAB...).</xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z][A-Z0-9_]{1,31}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="TipoAttoType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ISCRIZIONE"/>
+			<xs:enumeration value="AGGIORNAMENTO"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- ===================================================================== -->
+	<!-- Tipi complessi riusabili                                               -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="CodificatoType">
+		<xs:annotation><xs:documentation>Dato codificato: codice SIAN nell'attributo, descrizione come testo (facoltativa).</xs:documentation></xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="codice" type="xs:string" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="ComuneType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="codiceCatastale" use="optional">
+					<xs:annotation><xs:documentation>Codice Belfiore (es. F943 = Noto).</xs:documentation></xs:annotation>
+					<xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Z][0-9]{3}"/></xs:restriction></xs:simpleType>
+				</xs:attribute>
+				<xs:attribute name="istat" use="optional">
+					<xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[0-9]{6}"/></xs:restriction></xs:simpleType>
+				</xs:attribute>
+				<xs:attribute name="provincia" type="ProvinciaType" use="optional"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="RiferimentoCatastaleType">
+		<xs:sequence>
+			<xs:element name="comune" type="ComuneType"/>
+			<xs:element name="sezione" type="xs:string" minOccurs="0"/>
+			<xs:element name="foglio" type="xs:string"/>
+			<xs:element name="particella" type="xs:string"/>
+			<xs:element name="subalterno" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="SoggettoType">
+		<xs:annotation><xs:documentation>Soggetto identificato da codice fiscale (cedente, proprietario, organismo...).</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="codiceFiscale" type="CuaaType" minOccurs="0"/>
+			<xs:element name="denominazione" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="TitoloConduzioneType">
+		<xs:annotation><xs:documentation>
+			Titolo di conduzione [IO §5.3.1, §5.3.3]. Codice a due livelli della tabella §5.3.3:
+			5/2 proprietà, 5/17 usucapione, 5/30 nuda proprietà, 5/31 preliminare ad effetti anticipati,
+			5/32-5/33 usufrutto, 5/10 enfiteusi, 5/11 affrancazione, 5/8 mezzadria, 5/9 colonìa parziaria,
+			5/34 contitolarità, 5/16-5/21 irreperibilità, 5/20 comunione tra coniugi, 6/1 affitto scritto,
+			6/2 affitto verbale, 7/1 affitto giovane agricoltore, 6/4 affitto pascolamento indiviso,
+			5/14 comodato scritto, 5/15 comodato verbale, 5/18-5/12-5/13 contratti con la PA,
+			5/28 compartecipazione stagionale, 16/1 custodia giudiziaria, 17/1 deroga L. 116/2014,
+			18/1 uso oggettivo del suolo, 310/1281 contratto ISMEA.
+		</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="descrizione" type="xs:string" minOccurs="0"/>
+			<xs:element name="protocollo" type="xs:string" minOccurs="0"/>
+			<xs:element name="dataProtocollo" type="xs:date" minOccurs="0"/>
+			<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+			<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+			<xs:element name="cedente" type="SoggettoType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="registrazione" minOccurs="0">
+				<xs:annotation><xs:documentation>Estremi di registrazione del contratto all'Agenzia delle Entrate [IO §5.3.1 p. 7].</xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="ufficio" type="xs:string" minOccurs="0"/>
+						<xs:element name="numero" type="xs:string" minOccurs="0"/>
+						<xs:element name="data" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="codice" type="xs:positiveInteger" use="required"/>
+		<xs:attribute name="sottocodice" type="xs:positiveInteger" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="ImpiantoType">
+		<xs:annotation><xs:documentation>Coltivazioni permanenti [IO §5.3.5.1 F, A3 9.x].</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="annoImpianto" type="xs:gYear" minOccurs="0"/>
+			<xs:element name="faseAllevamento" minOccurs="0">
+				<xs:simpleType><xs:restriction base="xs:string">
+					<xs:enumeration value="PRODUTTIVO"/>
+					<xs:enumeration value="NON_PRODUTTIVO"/>
+				</xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="numeroPiante" type="xs:nonNegativeInteger" minOccurs="0"/>
+			<xs:element name="sestoFilaCm" type="xs:positiveInteger" minOccurs="0"/>
+			<xs:element name="sestoTraFileCm" type="xs:positiveInteger" minOccurs="0"/>
+			<xs:element name="formaAllevamento" type="CodificatoType" minOccurs="0"/>
+			<xs:element name="ultimoTurnoTaglio" type="xs:gYear" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ColtivazioneType">
+		<xs:annotation><xs:documentation>
+			Una coltivazione su un appezzamento o su una particella [IO §5.3.5.1, A3 4-12].
+			I codici di occupazione, destinazione, uso, qualità e varietà sono quelli del catalogo SIAN degli usi del suolo
+			(000 = non specificato).
+		</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="occupazione" type="CodificatoType"/>
+			<xs:element name="destinazione" type="CodificatoType" minOccurs="0"/>
+			<xs:element name="uso" type="CodificatoType" minOccurs="0"/>
+			<xs:element name="qualita" type="CodificatoType" minOccurs="0"/>
+			<xs:element name="varieta" type="CodificatoType" minOccurs="0"/>
+			<xs:element name="superficie" type="EttariType"/>
+			<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+			<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+			<xs:element name="epocaSemina" minOccurs="0">
+				<xs:simpleType><xs:restriction base="xs:string">
+					<xs:enumeration value="AUTUNNO_VERNINA"/>
+					<xs:enumeration value="PRIMAVERILE_ESTIVA"/>
+				</xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="tipoSemina" minOccurs="0">
+				<xs:simpleType><xs:restriction base="xs:string">
+					<xs:enumeration value="TRADIZIONALE"/>
+					<xs:enumeration value="SU_SODO"/>
+					<xs:enumeration value="MINIMUM_TILLAGE"/>
+					<xs:enumeration value="PRATICHE_EQUIVALENTI"/>
+				</xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="impianto" type="ImpiantoType" minOccurs="0"/>
+			<xs:element name="colturaPrincipale" type="SiNoType" minOccurs="0"/>
+			<xs:element name="rotazione" minOccurs="0">
+				<xs:annotation><xs:documentation>Rotazione colturale [IO §5.3.5.1 P]; ND = non determinata.</xs:documentation></xs:annotation>
+				<xs:simpleType><xs:restriction base="xs:string">
+					<xs:enumeration value="ND"/>
+					<xs:enumeration value="ASSENTE"/>
+					<xs:enumeration value="SEMINATIVO"/>
+					<xs:enumeration value="ORTIVE"/>
+				</xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="potenzialitaIrrigua" type="SiNoType" minOccurs="0"/>
+			<xs:element name="irrigazione" minOccurs="0">
+				<xs:annotation><xs:documentation>Gestione e metodo irriguo [IO §5.3.5.1 G, O].</xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="gestione" use="required">
+						<xs:simpleType><xs:restriction base="xs:string">
+							<xs:enumeration value="SOCCORSO"/>
+							<xs:enumeration value="IRRIGAZIONE"/>
+						</xs:restriction></xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="metodo" use="optional">
+						<xs:simpleType><xs:restriction base="xs:string">
+							<xs:enumeration value="SOMMERSIONE"/>
+							<xs:enumeration value="SCORRIMENTO"/>
+							<xs:enumeration value="ASPERSIONE"/>
+							<xs:enumeration value="GOCCIA"/>
+							<xs:enumeration value="SUBIRRIGAZIONE"/>
+						</xs:restriction></xs:simpleType>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="strutture" type="CodificatoType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>Strutture a protezione delle colture [IO §5.3.5.1 I, A3 11].</xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="criterioMantenimento" minOccurs="0">
+				<xs:annotation><xs:documentation>Codici 1-16 delle circolari ACIU.2015.141 e ACIU.2015.343 (riportati nella stampa SIAN).</xs:documentation></xs:annotation>
+				<xs:simpleType><xs:restriction base="xs:positiveInteger"><xs:maxInclusive value="16"/></xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="metodoProduzione" minOccurs="0">
+				<xs:annotation><xs:documentation>[IO §5.3.5.1 H, A3 10]; deve coincidere con il SIB.</xs:documentation></xs:annotation>
+				<xs:simpleType><xs:restriction base="xs:string">
+					<xs:enumeration value="BIOLOGICO"/>
+					<xs:enumeration value="IN_CONVERSIONE"/>
+					<xs:enumeration value="SQNPI"/>
+				</xs:restriction></xs:simpleType>
+			</xs:element>
+			<xs:element name="quotaM" type="xs:integer" minOccurs="0"/>
+			<xs:element name="pendenzaPerc" type="xs:decimal" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:string" use="optional">
+			<xs:annotation><xs:documentation>Identificativo coltivazione per appezzamento [A3 4.1].</xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- Radice                                                                 -->
+	<!-- ===================================================================== -->
+
+	<xs:element name="fascicolo">
+		<xs:annotation><xs:documentation>Fascicolo aziendale: una scheda di validazione [SV].</xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="scheda" type="SchedaType"/>
+				<xs:element name="anagrafica" type="AnagraficaType"/>
+				<xs:element name="ote" type="OteType" minOccurs="0"/>
+				<xs:element name="consistenzaTerreni" type="ConsistenzaTerreniType"/>
+				<xs:element name="vincoliTerreni" type="VincoliTerreniType" minOccurs="0"/>
+				<xs:element name="zootecnia" type="ZootecniaType" minOccurs="0"/>
+				<xs:element name="fabbricati" type="FabbricatiType" minOccurs="0"/>
+				<xs:element name="mezziProduzione" type="MezziProduzioneType" minOccurs="0"/>
+				<xs:element name="manodopera" type="ManodoperaType" minOccurs="0"/>
+				<xs:element name="vincoliAziendali" type="ElencoLiberoType" minOccurs="0"/>
+				<xs:element name="titoliAiuto" type="TitoliAiutoType" minOccurs="0"/>
+				<xs:element name="legamiAssociativi" type="LegamiAssociativiType" minOccurs="0"/>
+				<xs:element name="albiRegistri" type="ElencoLiberoType" minOccurs="0"/>
+				<xs:element name="documenti" type="DocumentiType" minOccurs="0"/>
+				<xs:element name="coordinateBancarie" type="CoordinateBancarieType" minOccurs="0"/>
+				<xs:element name="pianoColtivazione" type="PianoColtivazioneType" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="versione" type="xs:string" use="required" fixed="1.0"/>
+			<xs:attribute name="campagna" type="xs:gYear" use="required">
+				<xs:annotation><xs:documentation>Anno di domanda: la campagna 2026 va dall'11/11/2025 al 10/11/2026 [TU Sez. II].</xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="fonte" type="xs:string" use="optional">
+				<xs:annotation><xs:documentation>Origine dei dati (es. "trascrizione scheda di validazione SIAN").</xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="dataCreazione" type="xs:date" use="optional"/>
+		</xs:complexType>
+
+		<xs:key name="kParticella"><xs:selector xpath="f:consistenzaTerreni/f:particella"/><xs:field xpath="@id"/></xs:key>
+		<xs:keyref name="krVincolo" refer="kParticella"><xs:selector xpath="f:vincoliTerreni/f:vincolo"/><xs:field xpath="@particellaRef"/></xs:keyref>
+		<xs:keyref name="krRipartizione" refer="kParticella"><xs:selector xpath="f:pianoColtivazione/f:particelle/f:particella"/><xs:field xpath="@particellaRef"/></xs:keyref>
+		<xs:unique name="uAppezzamento"><xs:selector xpath="f:pianoColtivazione/f:isole/f:isola/f:appezzamento"/><xs:field xpath="@id"/></xs:unique>
+	</xs:element>
+
+	<!-- ===================================================================== -->
+	<!-- 0. Testata della scheda                                                -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="SchedaType">
+		<xs:sequence>
+			<xs:element name="numero" type="xs:string"/>
+			<xs:element name="protocollo" type="xs:string"/>
+			<xs:element name="tipoAtto" type="TipoAttoType" minOccurs="0"/>
+			<xs:element name="organismoPagatore" type="OrganismoPagatoreType"/>
+			<xs:element name="dataSottoscrizione" type="xs:date" minOccurs="0"/>
+			<xs:element name="dataRiferimentoConsistenza" type="xs:date" minOccurs="0"/>
+			<xs:element name="dataStampa" type="xs:date" minOccurs="0"/>
+			<xs:element name="mandato" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="caa" type="xs:string"/>
+						<xs:element name="ufficio" type="xs:string" minOccurs="0"/>
+						<xs:element name="operatore" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataSottoscrizione" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 1. Anagrafica [IO §5.2]                                                -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="AnagraficaType">
+		<xs:sequence>
+			<xs:element name="cuaa" type="CuaaType"/>
+			<xs:element name="partitaIva" type="PartitaIvaType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="denominazione" type="xs:string"/>
+			<xs:element name="formaGiuridica" type="xs:string" minOccurs="0"/>
+			<xs:element name="ateco" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="codice" type="AtecoType" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="rappresentanteLegale" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="codiceFiscale" type="CuaaType"/>
+						<xs:element name="cognome" type="xs:string"/>
+						<xs:element name="nome" type="xs:string"/>
+						<xs:element name="dataNascita" type="xs:date" minOccurs="0"/>
+						<xs:element name="comuneNascita" type="ComuneType" minOccurs="0"/>
+						<xs:element name="carica" type="xs:string" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="recapito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="indirizzo" type="xs:string" minOccurs="0"/>
+						<xs:element name="cap" minOccurs="0">
+							<xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[0-9]{5}"/></xs:restriction></xs:simpleType>
+						</xs:element>
+						<xs:element name="comune" type="ComuneType" minOccurs="0"/>
+						<xs:element name="pec" type="xs:string" minOccurs="0"/>
+						<xs:element name="email" type="xs:string" minOccurs="0"/>
+						<xs:element name="telefono" type="xs:string" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="registroImprese" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="numero" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataIscrizione" type="xs:date" minOccurs="0"/>
+						<xs:element name="sezione" type="xs:string" minOccurs="0"/>
+						<xs:element name="rea" type="xs:string" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="attivitaAgricola" minOccurs="0">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="codice" type="AtecoType" use="required"/>
+							<xs:attribute name="dataInizio" type="xs:date" use="optional"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="inps" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="matricola" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataIscrizione" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- OTE e dimensione economica                                             -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="OteType">
+		<xs:sequence>
+			<xs:element name="codice" type="xs:string"/>
+			<xs:element name="descrizione" type="xs:string" minOccurs="0"/>
+			<xs:element name="dimensioneEconomica" type="xs:decimal" minOccurs="0">
+				<xs:annotation><xs:documentation>Produzione standard totale in euro.</xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="voce" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="descrizione" type="xs:string"/>
+						<xs:element name="dimensione" type="xs:decimal"/>
+						<xs:element name="unita">
+							<xs:simpleType><xs:restriction base="xs:string">
+								<xs:enumeration value="HA"/>
+								<xs:enumeration value="N"/>
+							</xs:restriction></xs:simpleType>
+						</xs:element>
+						<xs:element name="produzioneStandard" type="xs:decimal"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 2. Consistenza terreni [IO §5.3, SV 2]                                 -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="ConsistenzaTerreniType">
+		<xs:sequence>
+			<xs:element name="particella" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:extension base="RiferimentoCatastaleType">
+							<xs:sequence>
+								<xs:element name="conduzione" type="TitoloConduzioneType"/>
+								<xs:element name="proprietario" type="SoggettoType" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:element name="conduzioneParziale" type="SiNoType" minOccurs="0"/>
+								<xs:element name="superficieCatastale" type="EttariType"/>
+								<xs:element name="superficieGrafica" type="EttariType" minOccurs="0"/>
+								<xs:element name="superficieCondotta" type="EttariType"/>
+							</xs:sequence>
+							<xs:attribute name="id" type="xs:ID" use="required"/>
+						</xs:extension>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 6. Vincoli sui terreni [IO §5.3.5.1 K, SV 6]                           -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="VincoliTerreniType">
+		<xs:sequence>
+			<xs:element name="vincolo" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="vincoloUsoSuolo" type="xs:string" minOccurs="0"/>
+						<xs:element name="sic" type="xs:string" minOccurs="0"/>
+						<xs:element name="zps" type="xs:string" minOccurs="0"/>
+						<xs:element name="zvn" type="SiNoType" minOccurs="0"/>
+						<xs:element name="zonaPsr" minOccurs="0">
+							<xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-D]"/></xs:restriction></xs:simpleType>
+						</xs:element>
+						<xs:element name="zonaSvantaggiata" type="xs:string" minOccurs="0"/>
+						<xs:element name="tematismiRegionali" type="xs:string" minOccurs="0"/>
+						<xs:element name="colturaBiologica" type="xs:string" minOccurs="0"/>
+						<xs:element name="produzioneIntegrata" type="xs:string" minOccurs="0"/>
+						<xs:element name="percorsoDaIncendi" type="SiNoType" minOccurs="0"/>
+						<xs:element name="confiscato" type="SiNoType" minOccurs="0"/>
+						<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+						<xs:element name="origine" type="xs:string" minOccurs="0"/>
+					</xs:sequence>
+					<xs:attribute name="particellaRef" type="xs:IDREF" use="required"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 7. Composizione zootecnica [IO §5.5]                                   -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="ZootecniaType">
+		<xs:sequence>
+			<xs:element name="allevamento" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="codiceAsl" type="xs:string"/>
+						<xs:element name="indirizzo" type="xs:string" minOccurs="0"/>
+						<xs:element name="comune" type="ComuneType" minOccurs="0"/>
+						<xs:element name="specie" type="xs:string"/>
+						<xs:element name="tipologia" type="xs:string" minOccurs="0"/>
+						<xs:element name="modalita" type="xs:string" minOccurs="0"/>
+						<xs:element name="tipoProduzione" type="xs:string" minOccurs="0"/>
+						<xs:element name="autoconsumoLatte" type="SiNoType" minOccurs="0"/>
+						<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+						<xs:element name="conduzione" minOccurs="0">
+							<xs:simpleType><xs:restriction base="xs:string">
+								<xs:enumeration value="PROPRIETARIO"/>
+								<xs:enumeration value="DETENTORE"/>
+								<xs:enumeration value="PROPRIETARIO_DETENTORE"/>
+							</xs:restriction></xs:simpleType>
+						</xs:element>
+						<xs:element name="proprietario" type="SoggettoType" minOccurs="0"/>
+						<xs:element name="soccida" type="SiNoType" minOccurs="0"/>
+						<xs:element name="dataAggiornamentoBdn" type="xs:date" minOccurs="0"/>
+						<xs:element name="metodoProduzione" minOccurs="0">
+							<xs:simpleType><xs:restriction base="xs:string">
+								<xs:enumeration value="BIOLOGICO"/>
+								<xs:enumeration value="IN_CONVERSIONE"/>
+							</xs:restriction></xs:simpleType>
+						</xs:element>
+						<xs:element name="capi" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:nonNegativeInteger">
+										<xs:attribute name="categoria" type="xs:string" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 8. Fabbricati [SV 8]                                                   -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="FabbricatiType">
+		<xs:sequence>
+			<xs:element name="fabbricato" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:extension base="RiferimentoCatastaleType">
+							<xs:sequence>
+								<xs:element name="tipologia" type="xs:string" minOccurs="0"/>
+								<xs:element name="conduzione" type="xs:string"/>
+								<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+								<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+								<xs:element name="superficieMq" type="xs:decimal" minOccurs="0"/>
+								<xs:element name="superficieCopertaMq" type="xs:decimal" minOccurs="0"/>
+								<xs:element name="superficieScopertaMq" type="xs:decimal" minOccurs="0"/>
+								<xs:element name="volumeMc" type="xs:decimal" minOccurs="0"/>
+								<xs:element name="posti" type="xs:nonNegativeInteger" minOccurs="0"/>
+							</xs:sequence>
+						</xs:extension>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 9. Mezzi di produzione (macchine) [SV 9, TU Sez. VII UMA]              -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="MezziProduzioneType">
+		<xs:sequence>
+			<xs:element name="macchina" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="tipo" type="xs:string"/>
+						<xs:element name="marca" type="xs:string" minOccurs="0"/>
+						<xs:element name="modello" type="xs:string" minOccurs="0"/>
+						<xs:element name="targa" type="xs:string" minOccurs="0"/>
+						<xs:element name="telaio" type="xs:string" minOccurs="0"/>
+						<xs:element name="annoCostruzione" type="xs:gYear" minOccurs="0"/>
+						<xs:element name="potenzaKw" type="xs:decimal" minOccurs="0"/>
+						<xs:element name="alimentazione" type="xs:string" minOccurs="0"/>
+						<xs:element name="possesso" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 10. Manodopera [SV 10]                                                 -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="ManodoperaType">
+		<xs:sequence>
+			<xs:element name="voce" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="forma" type="xs:string"/>
+						<xs:element name="unita" type="xs:nonNegativeInteger" minOccurs="0"/>
+						<xs:element name="giornate" type="xs:nonNegativeInteger" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 12. Titoli all'aiuto [IO §5.6]                                         -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="TitoliAiutoType">
+		<xs:sequence>
+			<xs:element name="nota" type="xs:string" minOccurs="0"/>
+			<xs:element name="titolo" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="identificativo" type="xs:string"/>
+						<xs:element name="valore" type="xs:decimal" minOccurs="0"/>
+						<xs:element name="superficie" type="EttariType" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 13. Legami associativi [SV 13]                                         -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="LegamiAssociativiType">
+		<xs:sequence>
+			<xs:element name="organismo" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:extension base="SoggettoType">
+							<xs:sequence>
+								<xs:element name="tipologia" type="xs:string"/>
+								<xs:element name="attivita" type="xs:string" minOccurs="0"/>
+								<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+								<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+							</xs:sequence>
+						</xs:extension>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Sezioni senza struttura definita nelle fonti (vincoli aziendali, albi e registri) -->
+	<xs:complexType name="ElencoLiberoType">
+		<xs:sequence>
+			<xs:element name="voce" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="tipologia" type="xs:string"/>
+						<xs:element name="descrizione" type="xs:string" minOccurs="0"/>
+						<xs:element name="numero" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataInizio" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataFine" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 15. Documenti del fascicolo cartaceo [SV 15]                           -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="DocumentiType">
+		<xs:sequence>
+			<xs:element name="documento" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="sezione" type="xs:string"/>
+						<xs:element name="tipologia" type="xs:string"/>
+						<xs:element name="protocollo" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataSottoscrizione" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataDecorrenza" type="xs:date" minOccurs="0"/>
+						<xs:element name="dataScadenza" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 16. Coordinate bancarie [SV 16]                                        -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="CoordinateBancarieType">
+		<xs:sequence>
+			<xs:element name="conto" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="iban" type="IbanType"/>
+						<xs:element name="nazione" type="xs:string" minOccurs="0"/>
+						<xs:element name="istituto" type="xs:string" minOccurs="0"/>
+						<xs:element name="agenzia" type="xs:string" minOccurs="0"/>
+						<xs:element name="dataRegistrazione" type="xs:date" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ===================================================================== -->
+	<!-- 3. Piano di coltivazione grafico [IO §5.3.5, A3 foglio 1]              -->
+	<!-- ===================================================================== -->
+
+	<xs:complexType name="PianoColtivazioneType">
+		<xs:annotation><xs:documentation>
+			Due viste dello stesso piano, come nella stampa SIAN:
+			- isole/appezzamenti: la dichiarazione grafica sulle parcelle di riferimento (A3 2-12);
+			- particelle: la stessa dichiarazione ripartita sulle particelle catastali (è la vista che serve
+			  a doliFarm, dove l'appezzamento è la particella).
+		</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="isole" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="isola" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="dataInizioConduzione" type="xs:date" minOccurs="0"/>
+									<xs:element name="dataFineConduzione" type="xs:date" minOccurs="0"/>
+									<xs:element name="appezzamento" maxOccurs="unbounded">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="parcellaRiferimento" type="xs:string" minOccurs="0"/>
+												<xs:element name="poligono" minOccurs="0">
+													<xs:annotation><xs:documentation>Geometria GeoJSON (EPSG:4326) inline, oppure href a un file.</xs:documentation></xs:annotation>
+													<xs:complexType>
+														<xs:simpleContent>
+															<xs:extension base="xs:string">
+																<xs:attribute name="formato" use="required">
+																	<xs:simpleType><xs:restriction base="xs:string">
+																		<xs:enumeration value="geojson"/>
+																		<xs:enumeration value="wkt"/>
+																	</xs:restriction></xs:simpleType>
+																</xs:attribute>
+																<xs:attribute name="srs" type="xs:string" default="EPSG:4326"/>
+																<xs:attribute name="href" type="xs:string" use="optional"/>
+															</xs:extension>
+														</xs:simpleContent>
+													</xs:complexType>
+												</xs:element>
+												<xs:element name="coltivazione" type="ColtivazioneType" maxOccurs="unbounded"/>
+											</xs:sequence>
+											<xs:attribute name="id" type="xs:string" use="required"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+								<xs:attribute name="id" type="xs:string" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="particelle" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="particella" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="coltivazione" type="ColtivazioneType" maxOccurs="unbounded"/>
+								</xs:sequence>
+								<xs:attribute name="particellaRef" type="xs:IDREF" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:string" use="optional">
+			<xs:annotation><xs:documentation>Identificativo del piano di coltivazione [A3 1]; non riportato nella stampa SIAN.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="dataInizio" type="xs:date" use="optional"/>
+		<xs:attribute name="dataFine" type="xs:date" use="optional"/>
+	</xs:complexType>
+
+</xs:schema>

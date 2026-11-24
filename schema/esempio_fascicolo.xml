@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (C) 2026 Luigi Grillo - doliFarm.com <info@dolifarm.com>
+  License: AGPL v3 or later (see COPYING)
+
+  Esempio del tracciato doliFarm del fascicolo aziendale (fascicolo-1.0.xsd).
+  Tutti i dati sono inventati (codici fiscali, partite IVA e IBAN hanno solo il carattere di controllo corretto).
+  Copre i casi principali: proprietà e affitto con cedente, vincoli, fabbricato, allevamento, macchina,
+  organismo di controllo biologico, conto bancario, piano di coltivazione per isole e per particelle.
+-->
+<fascicolo xmlns="urn:dolifarm:fascicolo:1" versione="1.0" campagna="2026"
+           fonte="esempio doliFarm" dataCreazione="2026-11-24">
+	<scheda>
+		<numero>99000000001</numero>
+		<protocollo>AGEA.CAA0000.2026.0000001</protocollo>
+		<tipoAtto>AGGIORNAMENTO</tipoAtto>
+		<organismoPagatore>AGEA</organismoPagatore>
+		<dataSottoscrizione>2026-03-02</dataSottoscrizione>
+		<dataRiferimentoConsistenza>2026-02-15</dataRiferimentoConsistenza>
+		<dataStampa>2026-03-02</dataStampa>
+		<mandato>
+			<caa>CAA ESEMPIO - CATANIA - 001</caa>
+			<ufficio>000000001</ufficio>
+			<operatore>VERDI PAOLO</operatore>
+			<dataSottoscrizione>2020-01-15</dataSottoscrizione>
+		</mandato>
+	</scheda>
+	<anagrafica>
+		<cuaa>02912345671</cuaa>
+		<partitaIva>02912345671</partitaIva>
+		<denominazione>AZIENDA AGRICOLA ESEMPIO SOCIETA' SEMPLICE</denominazione>
+		<formaGiuridica>SOCIETA' SEMPLICI, IRREGOLARI O DI FATTO</formaGiuridica>
+		<ateco codice="01.26.00">COLTIVAZIONE DI FRUTTI OLEOSI</ateco>
+		<rappresentanteLegale>
+			<codiceFiscale>RSSMRA80A01H501U</codiceFiscale>
+			<cognome>ROSSI</cognome>
+			<nome>MARIO</nome>
+			<dataNascita>1980-01-01</dataNascita>
+			<comuneNascita codiceCatastale="H501" provincia="RM">ROMA</comuneNascita>
+		</rappresentanteLegale>
+		<recapito>
+			<indirizzo>CONTRADA ESEMPIO SNC</indirizzo>
+			<cap>95041</cap>
+			<comune provincia="CT">CALTAGIRONE</comune>
+			<pec>aziendaesempio@pec.example.it</pec>
+			<email>info@example.it</email>
+		</recapito>
+		<registroImprese>
+			<dataIscrizione>2018-05-10</dataIscrizione>
+			<rea>CT 000001</rea>
+		</registroImprese>
+		<attivitaAgricola codice="01.26.00" dataInizio="2018-05-01">COLTIVAZIONE DI FRUTTI OLEOSI</attivitaAgricola>
+	</anagrafica>
+	<ote>
+		<codice>370</codice>
+		<descrizione>AZIENDE OLIVICOLE SPECIALIZZATE</descrizione>
+		<dimensioneEconomica>25400.00</dimensioneEconomica>
+	</ote>
+	<consistenzaTerreni>
+		<particella id="P-12-00045">
+			<comune provincia="CT">CALTAGIRONE</comune>
+			<foglio>12</foglio>
+			<particella>00045</particella>
+			<conduzione codice="5" sottocodice="2">
+				<descrizione>PROPRIETA'</descrizione>
+				<protocollo>AGEA.CAA0000.2018.0000010</protocollo>
+				<dataInizio>2018-05-01</dataInizio>
+			</conduzione>
+			<proprietario>
+				<codiceFiscale>02912345671</codiceFiscale>
+				<denominazione>AZIENDA AGRICOLA ESEMPIO SOCIETA' SEMPLICE</denominazione>
+			</proprietario>
+			<conduzioneParziale>NO</conduzioneParziale>
+			<superficieCatastale>2.5000</superficieCatastale>
+			<superficieGrafica>2.4870</superficieGrafica>
+			<superficieCondotta>2.4870</superficieCondotta>
+		</particella>
+		<particella id="P-12-00046">
+			<comune provincia="CT">CALTAGIRONE</comune>
+			<foglio>12</foglio>
+			<particella>00046</particella>
+			<conduzione codice="6" sottocodice="1">
+				<descrizione>AFFITTO - CONTRATTO SCRITTO</descrizione>
+				<protocollo>AGEA.CAA0000.2024.0000020</protocollo>
+				<dataInizio>2024-11-11</dataInizio>
+				<dataFine>2030-11-10</dataFine>
+				<cedente>
+					<codiceFiscale>BNCNNA75C41C351S</codiceFiscale>
+					<denominazione>BIANCHI ANNA</denominazione>
+				</cedente>
+				<registrazione>
+					<ufficio>CATANIA</ufficio>
+					<numero>1234 SERIE 3T</numero>
+					<data>2024-11-20</data>
+				</registrazione>
+			</conduzione>
+			<proprietario>
+				<codiceFiscale>BNCNNA75C41C351S</codiceFiscale>
+				<denominazione>BIANCHI ANNA</denominazione>
+			</proprietario>
+			<conduzioneParziale>NO</conduzioneParziale>
+			<superficieCatastale>1.2000</superficieCatastale>
+			<superficieGrafica>1.1950</superficieGrafica>
+			<superficieCondotta>1.1950</superficieCondotta>
+		</particella>
+	</consistenzaTerreni>
+	<vincoliTerreni>
+		<vincolo particellaRef="P-12-00045">
+			<zvn>SI</zvn>
+			<zonaPsr>C</zonaPsr>
+		</vincolo>
+	</vincoliTerreni>
+	<zootecnia>
+		<allevamento>
+			<codiceAsl>001CT123</codiceAsl>
+			<indirizzo>CONTRADA ESEMPIO SNC</indirizzo>
+			<comune provincia="CT">CALTAGIRONE</comune>
+			<specie>OVINI</specie>
+			<tipologia>ALLEVAMENTO DA RIPRODUZIONE</tipologia>
+			<tipoProduzione>LATTE</tipoProduzione>
+			<dataInizio>2019-03-01</dataInizio>
+			<conduzione>PROPRIETARIO_DETENTORE</conduzione>
+			<dataAggiornamentoBdn>2026-02-28</dataAggiornamentoBdn>
+			<capi categoria="PECORE">110</capi>
+			<capi categoria="ARIETI">4</capi>
+		</allevamento>
+	</zootecnia>
+	<fabbricati>
+		<fabbricato>
+			<comune provincia="CT">CALTAGIRONE</comune>
+			<foglio>12</foglio>
+			<particella>00045</particella>
+			<subalterno>1</subalterno>
+			<tipologia>MAGAZZINO</tipologia>
+			<conduzione>PROPRIETA'</conduzione>
+			<dataInizio>2018-05-01</dataInizio>
+			<superficieCopertaMq>120</superficieCopertaMq>
+			<volumeMc>480</volumeMc>
+		</fabbricato>
+	</fabbricati>
+	<mezziProduzione>
+		<macchina>
+			<tipo>TRATTRICE GOMMATA</tipo>
+			<marca>NEW HOLLAND</marca>
+			<modello>T5.100</modello>
+			<targa>AB123C</targa>
+			<annoCostruzione>2021</annoCostruzione>
+			<potenzaKw>73.5</potenzaKw>
+			<alimentazione>GASOLIO</alimentazione>
+			<possesso>PROPRIETA'</possesso>
+		</macchina>
+	</mezziProduzione>
+	<legamiAssociativi>
+		<organismo>
+			<codiceFiscale>04578901235</codiceFiscale>
+			<denominazione>ORGANISMO DI CONTROLLO ESEMPIO S.R.L.</denominazione>
+			<tipologia>ORGANISMO CONTROLLO BIOLOGICO</tipologia>
+			<dataInizio>2020-02-01</dataInizio>
+		</organismo>
+	</legamiAssociativi>
+	<documenti>
+		<documento>
+			<sezione>IDENTITA' DEL RAPPRESENTANTE LEGALE</sezione>
+			<tipologia>DOCUMENTO DI IDENTITA'</tipologia>
+			<protocollo>AGEA.CAA0000.2025.0000030</protocollo>
+			<dataDecorrenza>2025-01-10</dataDecorrenza>
+			<dataScadenza>2035-01-09</dataScadenza>
+		</documento>
+	</documenti>
+	<coordinateBancarie>
+		<conto>
+			<iban>IT60X0542811101000000123456</iban>
+			<nazione>ITALIA (AREA S.E.P.A.)</nazione>
+			<istituto>BANCA ESEMPIO SPA</istituto>
+			<agenzia>CALTAGIRONE CENTRO</agenzia>
+			<dataRegistrazione>2020-01-15</dataRegistrazione>
+		</conto>
+	</coordinateBancarie>
+	<pianoColtivazione dataInizio="2025-11-11" dataFine="2026-11-10">
+		<isole>
+			<isola id="10001">
+				<appezzamento id="2000000001">
+					<coltivazione>
+						<occupazione codice="420">OLIVO</occupazione>
+						<superficie>3.5000</superficie>
+						<dataInizio>2025-11-11</dataInizio>
+						<dataFine>2026-11-10</dataFine>
+						<impianto>
+							<annoImpianto>2005</annoImpianto>
+							<faseAllevamento>PRODUTTIVO</faseAllevamento>
+							<numeroPiante>980</numeroPiante>
+							<sestoFilaCm>600</sestoFilaCm>
+							<sestoTraFileCm>600</sestoTraFileCm>
+						</impianto>
+						<criterioMantenimento>9</criterioMantenimento>
+						<metodoProduzione>BIOLOGICO</metodoProduzione>
+					</coltivazione>
+				</appezzamento>
+				<appezzamento id="2000000002">
+					<coltivazione>
+						<occupazione codice="780">USO NON AGRICOLO - TARE</occupazione>
+						<superficie>0.1820</superficie>
+					</coltivazione>
+				</appezzamento>
+			</isola>
+		</isole>
+		<particelle>
+			<particella particellaRef="P-12-00045">
+				<coltivazione>
+					<occupazione codice="420">OLIVO</occupazione>
+					<superficie>2.3400</superficie>
+					<criterioMantenimento>9</criterioMantenimento>
+					<metodoProduzione>BIOLOGICO</metodoProduzione>
+				</coltivazione>
+				<coltivazione>
+					<occupazione codice="780">USO NON AGRICOLO - TARE</occupazione>
+					<superficie>0.1470</superficie>
+				</coltivazione>
+			</particella>
+			<particella particellaRef="P-12-00046">
+				<coltivazione>
+					<occupazione codice="420">OLIVO</occupazione>
+					<superficie>1.1600</superficie>
+					<criterioMantenimento>9</criterioMantenimento>
+					<metodoProduzione>BIOLOGICO</metodoProduzione>
+				</coltivazione>
+				<coltivazione>
+					<occupazione codice="780">USO NON AGRICOLO - TARE</occupazione>
+					<superficie>0.0350</superficie>
+				</coltivazione>
+			</particella>
+		</particelle>
+	</pianoColtivazione>
+</fascicolo>

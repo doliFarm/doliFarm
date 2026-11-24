@@ -1,406 +1,1294 @@
 <?php
-/* Copyright (C) 2026       Luigi Grillo - doliFarm.com	<info@dolifarm.com> */
+/* Copyright (C) 2026 Luigi Grillo - doliFarm.com <info@dolifarm.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
-require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
+/**
+ * \file        class/dolifarmimporter.class.php
+ * \ingroup     dolifarm
+ * \brief       Import of a farm dossier (fascicolo aziendale) into doliFarm
+ */
 
-// INCLUDE SINGOLARI (Assicurarsi che i percorsi siano corretti nel sistema finale)
+require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/companybankaccount.class.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 dol_include_once('/dolifarm/class/dolifarmfarmdossier.class.php');
 dol_include_once('/dolifarm/class/dolifarmplot.class.php');
 dol_include_once('/dolifarm/class/dolifarmmachine.class.php');
+dol_include_once('/dolifarm/class/dolifarmlivestock.class.php');
+dol_include_once('/dolifarm/class/dolifarmbuilding.class.php');
+dol_include_once('/dolifarm/class/dolifarmfascicoloxmlreader.class.php');
 dol_include_once('/dolifarm/lib/dolifarm.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
 
+/**
+ * Write a farm dossier, read by a reader (DoliFarmFascicoloXmlReader...), into the doliFarm objects.
+ *
+ * Every object is searched before being created, so that importing the same file twice, or the sheet of the next
+ * year, updates the existing records instead of duplicating them:
+ * - farm: CUAA (idprof4), then VAT number;
+ * - dossier: farm + number of the validation sheet;
+ * - plot: farm + comune, section, sheet, parcel, sub (the plot is moved to the latest dossier);
+ * - building: farm + cadastral reference; livestock: farm + BDN code + address;
+ * - machine: farm + plate, chassis or brand/model/year; bank account: farm + IBAN.
+ */
 class DoliFarmImporter
 {
-    private $db;
-    private $user;
-    public $error;
-    public $errors = array();
-    public $output_log = array();
-    public $picto;
+	/** @var DoliDB */
+	private $db;
 
-    public function __construct($db, $user)
-    {
-        $this->db = $db;
-        $this->user = $user;
+	/** @var User */
+	private $user;
 
-        dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
+	/** @var string Error message */
+	public $error = '';
+
+	/** @var string[] Detailed errors */
+	public $errors = array();
+
+	/** @var string[] Messages of the import, for the user */
+	public $output_log = array();
+
+	/** @var string[] Warnings: data not imported or to check */
+	public $warnings = array();
+
+	/** @var array<string,array{created:int,updated:int}> Counters by kind of object */
+	public $stats = array();
+
+	/** @var string Picto of the importer */
+	public $picto;
+
+	/** @var string Import key written on the records created or updated */
+	private $importKey = '';
+
+	/** @var int Id of the farm (third party) */
+	private $socid = 0;
+
+	/** @var string CUAA of the farm */
+	private $cuaa = '';
+
+	/** Land uses that are not agricultural area (SAU): wood, buildings, non agricultural use, landscape features */
+	const NON_SAU_LAND_USES = array('650', '660', '780', '785', '788');
+
+	/**
+	 * Constructor
+	 *
+	 * @param DoliDB	$db		Database handler
+	 * @param User		$user	User importing
+	 */
+	public function __construct($db, $user)
+	{
+		$this->db = $db;
+		$this->user = $user;
+
+		dol_include_once('/dolifarm/lib/dolifarm_icons.lib.php');
 		$this->picto = dolifarm_get_fa_icon('importer');
-    }
+	}
 
-    public function importFromXML($filepath)
-    {
-        global $conf, $langs;
+	/**
+	 * Read a file in the doliFarm XML format and import it
+	 *
+	 * @param	string	$filepath	Path of the file
+	 * @param	bool	$dryrun		true = simulate: everything is done then rolled back (preview)
+	 * @param	string	$filename	Original name of the file, stored on the dossier
+	 * @return	int					Id of the dossier (0 in dry run), <0 if KO
+	 */
+	public function importFromXML($filepath, $dryrun = false, $filename = '')
+	{
+		$reader = new DoliFarmFascicoloXmlReader();
+		$data = $reader->read($filepath);
+		if ($data === null) {
+			$this->error = $reader->error;
+			$this->errors = $reader->errors;
+			dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
+			return -1;
+		}
+		return $this->import($data, $dryrun, $filename !== '' ? $filename : basename($filepath));
+	}
 
-        $langs->loadLangs(array("errors", "dolifarm@dolifarm"));
-        if (!file_exists($filepath)) {
-            $this->error = $langs->transnoentitiesnoconv("ErrorFileNotFound", basename($filepath));
-            dol_syslog("DoliFarmImporter::importFromXML Error: " . $this->error, LOG_ERR);
-            return -1;
-        }
+	/**
+	 * Import a dossier read by a reader
+	 *
+	 * @param	array<string,mixed>	$data		Neutral structure returned by a reader
+	 * @param	bool				$dryrun		true = simulate and roll back
+	 * @param	string				$filename	Name of the source file
+	 * @return	int								Id of the dossier (0 in dry run), <0 if KO
+	 */
+	public function import(array $data, $dryrun = false, $filename = '')
+	{
+		global $langs;
 
-        $xml = simplexml_load_file($filepath);
-        if ($xml === false) {
-            $this->error = "XML non valido o malformato";
-            dol_syslog("DoliFarmImporter::importFromXML Error: " . $this->error, LOG_ERR);
-            return -1;
-        }
+		$langs->loadLangs(array('errors', 'companies', 'dolifarm@dolifarm'));
+		$this->output_log = array();
+		$this->warnings = array();
+		$this->stats = array();
+		$this->importKey = dol_print_date(dol_now(), 'dayhourlog');
 
-        $this->db->begin();
+		$this->db->begin();
+		try {
+			$this->socid = $this->importFarm($data['anagrafica']);
+			$this->importRepresentatives($data['anagrafica']['representatives']);
+			$caa = $this->importCaa($data['scheda']);
+			$bio = $this->importOrganisms($data['organismi']);
+			$dossier = $this->importDossier($data, $caa, $bio, $filename);
+			if ($caa['contactid'] > 0) {
+				$this->linkDossierContact($dossier, $caa['contactid'], 'CAAOPERATOR');
+			}
+			$plots = $this->importPlots($data['particelle'], $dossier->id);
+			$this->importBuildings($data['fabbricati'], $dossier->id, $plots);
+			$this->importLivestock($data['allevamenti'], $dossier->id);
+			$this->importMachines($data['macchine'], $dossier->id);
+			$this->importBankAccounts($data['anagrafica']['name'], $data['conti']);
+			$this->reportNotImported($data);
+		} catch (Exception $e) {
+			$this->db->rollback();
+			$this->error = $e->getMessage();
+			dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
+			return -1;
+		}
 
-        try {
-            // 1. Azienda (Soggetto)
-            $socId = $this->findOrCreateThirdparty($xml->Soggetto);
-            if ($socId < 0) throw new Exception("Errore gestione Azienda (CUAA: " . self::normalizeCuaa((string) $xml->Soggetto->CUAA) . ", P.IVA: " . (string) $xml->Soggetto->PartitaIVA . "): " . $this->error);
-            $this->log("Azienda ID processata: $socId");
+		if ($dryrun) {
+			$this->db->rollback();
+			return 0;
+		}
+		$this->db->commit();
+		dol_syslog(__METHOD__.' dossier '.$dossier->id.' imported from '.$filename, LOG_INFO);
+		return $dossier->id;
+	}
 
-            // 2. Fascicolo (Dossier)
-            $dossierId = $this->processDossier($xml->DatiFascicolo, $socId);
-            if ($dossierId < 0) throw new Exception("Errore gestione Fascicolo: " . $this->error);
-            $this->log("Fascicolo ID processato: $dossierId");
+	// ------------------------------------------------------------------------------------------------
+	// Farm and people
+	// ------------------------------------------------------------------------------------------------
 
-            // 3. Terreni (Plots)
-            if (isset($xml->Terreni->Appezzamento)) {
-                foreach ($xml->Terreni->Appezzamento as $plotNode) {
-                    $res = $this->processPlot($plotNode, $dossierId, $socId);
-                    if ($res < 0) {
-                        // Non blocchiamo tutto per un singolo terreno errato, ma logghiamo l'errore
-                        $msg = "Errore Import Terreno " . $plotNode->CodiceInterno . ": " . $this->error;
-                        $this->log($msg);
-                        dol_syslog("DoliFarmImporter: " . $msg, LOG_WARNING);
-                        // throw new Exception($msg); // Decommentare per strict mode
-                    }
-                }
-            }
+	/**
+	 * Find the farm by CUAA, then by VAT number; create it, or fill its empty fields
+	 *
+	 * @param	array<string,mixed>	$a	Section anagrafica
+	 * @return	int						Id of the third party
+	 */
+	private function importFarm(array $a)
+	{
+		global $langs;
 
-            // 4. Macchine (Machines)
-            if (isset($xml->Macchine->Macchina)) {
-                foreach ($xml->Macchine->Macchina as $machNode) {
-                    $res = $this->processMachine($machNode, $dossierId, $socId);
-                    if ($res < 0) {
-                         $msg = "Errore Import Macchina " . $machNode->Targa . ": " . $this->error;
-                         $this->log($msg);
-                         dol_syslog("DoliFarmImporter: " . $msg, LOG_WARNING);
-                    }
-                }
-            }
+		$cuaa = self::normalizeCuaa($a['cuaa']);
+		if (!self::isValidTaxCode($cuaa)) {
+			throw new Exception($langs->transnoentitiesnoconv('DossierImportCuaaInvalid', $cuaa));
+		}
+		$vat = '';
+		foreach ($a['vat'] as $v) {
+			if (!self::isValidVat($v)) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportVatInvalid', $v));
+			}
+			if ($vat === '') {
+				$vat = $v;
+			}
+		}
+		$this->cuaa = $cuaa;
 
-            $this->db->commit();
-            return $dossierId;
+		$socid = $this->findThirdparty($cuaa, $vat);
+		$multifarm = getDolGlobalInt('DOLIFARM_MULTIFARM');
+		if ($socid > 0 && !in_array($socid, dolifarmManagedFarmIds(true), true)) {
+			throw new Exception($langs->transnoentitiesnoconv($multifarm ? 'DossierImportFarmNotAffiliated' : 'DossierImportFarmNotConfigured', $a['name'], $cuaa));
+		}
+		if ($socid == 0 && !$multifarm) {
+			// Single-farm mode: the dossier must be the one of the farm of the installation
+			throw new Exception($langs->transnoentitiesnoconv('DossierImportFarmNotConfigured', $a['name'], $cuaa));
+		}
+		$soc = new Societe($this->db);
+		$new = ($socid == 0);
+		if (!$new) {
+			$soc->fetch($socid);
+		} else {
+			// Multi-farm mode: the new farm is affiliated, the trigger gives it a draft dossier and its warehouses
+			$soc->array_options['options_dolifarm_affiliated'] = 1;
+			$soc->name = $a['name'];
+			$soc->client = 1;
+			$soc->code_client = -1;
+			$soc->country_id = $this->countryId('IT');
+			$soc->status = 1;
+			$typentid = dolifarmGetTypentId($this->db, 'TE_FARM');
+			if ($typentid > 0) {
+				$soc->typent_id = $typentid;
+			}
+		}
 
-        } catch (Exception $e) {
-            $this->db->rollback();
-            $this->error = $e->getMessage();
-            dol_syslog("DoliFarmImporter::importFromXML Exception: " . $this->error, LOG_ERR);
-            return -1;
-        }
-    }
+		// Fill only the empty fields: the data typed in Dolibarr wins over the file
+		$changed = array();
+		$fill = function ($field, $value) use ($soc, &$changed) {
+			if ($value !== '' && $value !== null && empty($soc->$field)) {
+				$soc->$field = $value;
+				$changed[] = $field;
+			}
+		};
+		$fill('idprof4', $cuaa);
+		$fill('tva_intra', $vat);
+		$fill('address', $a['address']);
+		$fill('zip', $a['zip']);
+		$fill('town', $a['town']['name']);
+		$fill('state_id', $this->stateId($a['town']['province']));
+		$fill('email', $a['email'] !== '' ? $a['email'] : $a['pec']);
+		$fill('phone', $a['phone']);
+		$fill('forme_juridique_code', self::legalFormCode($a['legal_form']));
 
-    // --- HELPER METHODS ---
+		if ($new) {
+			$soc->import_key = $this->importKey;
+			if ($soc->create($this->user) < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportThirdPartyError', $a['name']).': '.$soc->error.' '.implode(', ', $soc->errors));
+			}
+			dolifarmManagedFarmIds(true);
+			$this->count('thirdparty', true);
+			$this->log($langs->transnoentitiesnoconv('DossierImportFarmCreated', $soc->name, $cuaa));
+			return (int) $soc->id;
+		}
+		if ($changed) {
+			if ($soc->update($soc->id, $this->user) < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportThirdPartyError', $soc->name).': '.$soc->error.' '.implode(', ', $soc->errors));
+			}
+			$this->count('thirdparty', false);
+		}
+		$this->log($langs->transnoentitiesnoconv('DossierImportFarmFound', $soc->name, $cuaa).($changed ? ' ('.implode(', ', $changed).')' : ''));
+		return (int) $soc->id;
+	}
 
-    /**
-     * Find the farm by CUAA (stored in idprof4, "Cod. Fisc." for Italy), then by VAT number; create it if not found
-     *
-     * @param   SimpleXMLElement    $node   Node Soggetto: CUAA (or CodiceFiscale), PartitaIVA, RagioneSociale, optional Nazione (ISO code)
-     * @return  int                         Id of the third party, <0 if KO
-     */
-    private function findOrCreateThirdparty($node)
-    {
-        global $langs;
+	/**
+	 * Create the legal representatives as contacts of the farm, when missing
+	 *
+	 * @param	array<int,array<string,mixed>>	$representatives	Representatives
+	 * @return	void
+	 */
+	private function importRepresentatives(array $representatives)
+	{
+		global $langs;
 
-        $cuaa = self::normalizeCuaa((string) $node->CUAA);
-        if ($cuaa === '') {
-            $cuaa = self::normalizeCuaa((string) $node->CodiceFiscale);
-        }
-        $vat = strtoupper(preg_replace('/\s+/', '', (string) $node->PartitaIVA));
-        $name = trim((string) $node->RagioneSociale);
+		foreach ($representatives as $r) {
+			$contactid = $this->findOrCreateContact($this->socid, $r['lastname'], $r['firstname'], $langs->transnoentitiesnoconv('DossierImportLegalRepresentative'), $r['birthday']);
+			if ($contactid > 0) {
+				$this->log($langs->transnoentitiesnoconv('DossierImportLegalRepresentative').': '.trim($r['firstname'].' '.$r['lastname']).' ('.$r['cf'].')');
+			}
+		}
+	}
 
-        if ($cuaa === '' && $vat === '') {
-            $this->error = "CUAA e partita IVA mancanti nel nodo Soggetto";
-            return -1;
-        }
-        // CUAA: tax code of a person (16 characters) or of a company (11 digits)
-        if ($cuaa !== '' && !preg_match('/^([A-Z0-9]{16}|[0-9]{11})$/', $cuaa)) {
-            $this->error = "CUAA non valido: ".$cuaa;
-            return -1;
-        }
+	/**
+	 * CAA of the mandate (third party of type TE_CAA) and its operator (contact)
+	 *
+	 * @param	array<string,string>	$s	Section scheda
+	 * @return	array{socid:int,contactid:int}
+	 */
+	private function importCaa(array $s)
+	{
+		global $langs;
 
-        $socid = 0;
-        if ($cuaa !== '') {
-            $socid = $this->findThirdpartyBy("s.idprof4 = '".$this->db->escape($cuaa)."'");
-        }
-        if (!$socid && $vat !== '') {
-            // VAT stored with or without the country prefix
-            $vatnum = preg_replace('/^[A-Z]{2}/', '', $vat);
-            $socid = $this->findThirdpartyBy("s.tva_intra IN ('".$this->db->escape($vatnum)."', '".$this->db->escape('IT'.$vatnum)."')");
-        }
-        if ($socid < 0) {
-            return -1;
-        }
+		$res = array('socid' => 0, 'contactid' => 0);
+		if ($s['caa'] === '') {
+			return $res;
+		}
+		$res['socid'] = $this->findOrCreateOrganisation($s['caa'], '', 'TE_CAA');
+		if ($s['caa_operator'] !== '') {
+			// The validation sheet prints "SURNAME NAME" in one field: it is kept as surname
+			$res['contactid'] = $this->findOrCreateContact($res['socid'], $s['caa_operator'], '', $langs->transnoentitiesnoconv('DossierImportCaaOperator'), '');
+		}
+		return $res;
+	}
 
-        if ($socid > 0) {
-            // Found by VAT number: complete the CUAA if it was missing
-            $soc = new Societe($this->db);
-            if ($cuaa !== '' && $soc->fetch($socid) > 0 && empty($soc->idprof4)) {
-                $soc->idprof4 = $cuaa;
-                if ($soc->update($socid, $this->user) < 0) {
-                    $this->error = $soc->error." ".implode(',', $soc->errors);
-                    return -1;
-                }
-                $this->log("CUAA ".$cuaa." aggiunto al soggetto terzo ".$soc->name);
-            }
-            return $socid;
-        }
+	/**
+	 * Associated organisations: the organic control body is linked to the dossier, the others are only reported
+	 *
+	 * @param	array<int,array<string,string>>	$organisms	Organisations
+	 * @return	array{socid:int,date:string}		Organic control body
+	 */
+	private function importOrganisms(array $organisms)
+	{
+		global $langs;
 
-        if ($name === '') {
-            $this->error = $langs->transnoentitiesnoconv("DossierImportNameMissing");
-            return -1;
-        }
+		$res = array('socid' => 0, 'date' => '');
+		foreach ($organisms as $o) {
+			if ($res['socid'] == 0 && stripos($o['type'], 'BIOLOGIC') !== false) {
+				$res['socid'] = $this->findOrCreateOrganisation($o['name'], $o['cf'], 'TE_BIOCTRL');
+				$res['date'] = $o['date_start'];
+			} else {
+				$this->warn($langs->transnoentitiesnoconv('DossierImportOrganismSkipped', $o['name'], $o['type']));
+			}
+		}
+		return $res;
+	}
 
-        $countrycode = strtoupper(trim((string) $node->Nazione));
-        if (!preg_match('/^[A-Z]{2}$/', $countrycode)) {
-            $countrycode = 'IT';
-        }
+	/**
+	 * Third party searched by tax code, then by name; created with the given type when missing
+	 *
+	 * @param	string	$name		Name
+	 * @param	string	$cf			Tax code, '' if unknown
+	 * @param	string	$typecode	Code of the type of third party (c_typent), '' for none
+	 * @return	int					Id of the third party
+	 */
+	private function findOrCreateOrganisation($name, $cf, $typecode)
+	{
+		global $langs;
 
-        $newSoc = new Societe($this->db);
-        $newSoc->name = $name;
-        $newSoc->idprof4 = $cuaa;
-        $newSoc->tva_intra = $vat;
-        $newSoc->client = 1; // Customer
-        $newSoc->code_client = -1; // Auto generate code
-        $newSoc->country_id = (int) dol_getIdFromCode($this->db, $countrycode, 'c_country', 'code', 'rowid');
-        $typentid = dolifarmGetTypentId($this->db, 'TE_FARM');
-        if ($typentid > 0) {
-            $newSoc->typent_id = $typentid;
-        }
+		$cf = self::normalizeCuaa($cf);
+		$socid = 0;
+		if ($cf !== '') {
+			$socid = $this->findThirdparty($cf, preg_match('/^[0-9]{11}$/', $cf) ? $cf : '');
+		}
+		if ($socid == 0) {
+			$sql = "SELECT s.rowid FROM ".$this->db->prefix()."societe as s";
+			$sql .= " WHERE UPPER(s.nom) = '".$this->db->escape(strtoupper($name))."' AND s.entity IN (".getEntity('societe').")";
+			$socid = $this->singleId($sql);
+		}
+		if ($socid > 0) {
+			return $socid;
+		}
 
-        $id = $newSoc->create($this->user);
-        if ($id < 0) {
-            $this->error = $newSoc->error . " " . implode(',', $newSoc->errors);
-            return -1;
-        }
-        $this->log("Creato il soggetto terzo ".$name.($cuaa !== '' ? " (CUAA ".$cuaa.")" : ""));
-        return $id;
-    }
+		$soc = new Societe($this->db);
+		$soc->name = $name;
+		$soc->idprof4 = $cf;
+		if (preg_match('/^[0-9]{11}$/', $cf)) {
+			$soc->tva_intra = $cf;
+		}
+		$soc->client = 0;
+		$soc->fournisseur = 0;
+		$soc->status = 1;
+		$soc->country_id = $this->countryId('IT');
+		$soc->import_key = $this->importKey;
+		if ($typecode !== '') {
+			$typentid = dolifarmGetTypentId($this->db, $typecode);
+			if ($typentid > 0) {
+				$soc->typent_id = $typentid;
+			}
+		}
+		if ($soc->create($this->user) < 0) {
+			throw new Exception($langs->transnoentitiesnoconv('DossierImportThirdPartyError', $name).': '.$soc->error.' '.implode(', ', $soc->errors));
+		}
+		$this->count('thirdparty', true);
+		$this->log($langs->transnoentitiesnoconv('DossierImportThirdPartyCreated', $name));
+		return (int) $soc->id;
+	}
 
-    /**
-     * Id of the third party of the current entities matching a condition
-     *
-     * @param   string  $where  SQL condition on the table societe (alias s), already escaped
-     * @return  int             Id, 0 if not found, <0 if KO or more than one match
-     */
-    private function findThirdpartyBy($where)
-    {
-        global $langs;
+	/**
+	 * Contact of a third party searched by name; created when missing
+	 *
+	 * @param	int		$socid		Third party
+	 * @param	string	$lastname	Surname
+	 * @param	string	$firstname	Name
+	 * @param	string	$job		Job position
+	 * @param	string	$birthday	Date of birth (YYYY-MM-DD), '' if unknown
+	 * @return	int					Id of the contact
+	 */
+	private function findOrCreateContact($socid, $lastname, $firstname, $job, $birthday)
+	{
+		global $langs;
 
-        $sql = "SELECT s.rowid FROM ".MAIN_DB_PREFIX."societe as s";
-        $sql .= " WHERE ".$where." AND s.entity IN (".getEntity('societe').")";
-        $resql = $this->db->query($sql);
-        if (!$resql) {
-            $this->error = $this->db->lasterror();
-            return -1;
-        }
-        $num = $this->db->num_rows($resql);
-        if ($num > 1) {
-            $this->error = $langs->transnoentitiesnoconv("DossierImportThirdPartyAmbiguous");
-            return -1;
-        }
-        if ($num == 1) {
-            $obj = $this->db->fetch_object($resql);
-            return (int) $obj->rowid;
-        }
-        return 0;
-    }
+		$sql = "SELECT c.rowid FROM ".$this->db->prefix()."socpeople as c";
+		$sql .= " WHERE c.fk_soc = ".((int) $socid);
+		$sql .= " AND UPPER(c.lastname) = '".$this->db->escape(strtoupper($lastname))."'";
+		$sql .= " AND UPPER(COALESCE(c.firstname, '')) = '".$this->db->escape(strtoupper($firstname))."'";
+		$sql .= " AND c.entity IN (".getEntity('contact').")";
+		$id = $this->singleId($sql);
+		if ($id > 0) {
+			return $id;
+		}
 
-    /**
-     * CUAA without spaces, in capitals
-     *
-     * @param   string  $value  Value read from the file
-     * @return  string
-     */
-    public static function normalizeCuaa($value)
-    {
-        return strtoupper(preg_replace('/\s+/', '', $value));
-    }
+		$contact = new Contact($this->db);
+		$contact->socid = $socid;
+		$contact->lastname = $lastname;
+		$contact->firstname = $firstname;
+		$contact->poste = $job;
+		// Empty strings: Contact::create() trims them
+		foreach (array('name_alias', 'email', 'phone_pro', 'phone_perso', 'phone_mobile', 'photo', 'fax') as $field) {
+			$contact->$field = '';
+		}
+		$contact->status = 1;
+		$contact->import_key = $this->importKey;
+		if ($birthday !== '') {
+			$contact->birthday = self::date($birthday);
+		}
+		$id = $contact->create($this->user);
+		if ($id < 0) {
+			throw new Exception($langs->transnoentitiesnoconv('DossierImportContactError', $lastname).': '.$contact->error.' '.implode(', ', $contact->errors));
+		}
+		$this->count('contact', true);
+		return (int) $id;
+	}
 
-    private function processDossier($node, $socId)
-    {
-        $dossier = new DoliFarmFarmDossier($this->db);
-        $ref = trim((string)$node->Identificativo);
-        $year = (int)$node->AnnoCampagna;
+	// ------------------------------------------------------------------------------------------------
+	// Dossier
+	// ------------------------------------------------------------------------------------------------
 
-        if (empty($ref)) {
-            $ref = 'DOSS-' . $year . '-' . $socId; // Fallback ref generation
-        }
+	/**
+	 * Create the dossier, or update the one with the same sheet number
+	 *
+	 * @param	array<string,mixed>			$data		Whole dossier
+	 * @param	array{socid:int,contactid:int}	$caa	CAA
+	 * @param	array{socid:int,date:string}	$bio	Organic control body
+	 * @param	string						$filename	Source file
+	 * @return	DoliFarmFarmDossier
+	 */
+	private function importDossier(array $data, array $caa, array $bio, $filename)
+	{
+		global $langs;
 
-        // Fetch by Ref (using 0 as ID to force ref search)
-        // Nota: Il metodo fetch standard di Dolibarr spesso richiede ID, usiamo fetchCommon o query diretta se necessario
-        $res = $dossier->fetch(0, $ref); 
+		$s = $data['scheda'];
+		$dossier = new DoliFarmFarmDossier($this->db);
+		$sql = "SELECT t.rowid FROM ".$this->db->prefix()."dolifarm_farmdossier as t";
+		$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.sheet_number = '".$this->db->escape($s['number'])."'";
+		$sql .= " AND t.entity IN (".getEntity($dossier->element).")";
+		$id = $this->singleId($sql);
+		if ($id == 0) {
+			// Draft dossier without sheet (e.g. created when the farm was affiliated): it becomes this one
+			$sql = "SELECT t.rowid FROM ".$this->db->prefix()."dolifarm_farmdossier as t";
+			$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.status = ".DoliFarmFarmDossier::STATUS_DRAFT;
+			$sql .= " AND (t.sheet_number IS NULL OR t.sheet_number = '') AND t.entity IN (".getEntity($dossier->element).")";
+			$sql .= " ORDER BY t.rowid DESC".$this->db->plimit(1);
+			$resql = $this->db->query($sql);
+			if ($resql && ($obj = $this->db->fetch_object($resql))) {
+				$id = (int) $obj->rowid;
+			}
+		}
+		if ($id > 0) {
+			$dossier->fetch($id);
+		}
 
-        if ($res > 0) {
-            // Update existing
-            $dossier->year_validity = $year;
-            if ($year > 0) {
-                $dossier->date_validity_end = dol_mktime(12, 0, 0, 12, 31, $year);
-            }
-            $dossier->fk_soc = $socId; // Ensure link is correct
-            if ($dossier->update($this->user) < 0) { 
-                $this->error = $dossier->error; 
-                return -1; 
-            }
-            return $dossier->id;
-        }
+		$dossier->fk_soc = $this->socid;
+		$dossier->sheet_number = $s['number'];
+		$dossier->protocol = $s['protocol'];
+		$dossier->act_type = ($s['act_type'] === 'ISCRIZIONE' ? 1 : ($s['act_type'] === 'AGGIORNAMENTO' ? 2 : null));
+		$dossier->paying_agency = $this->dictionaryCode('dolifarm_c_paying_agency', $s['paying_agency']);
+		if ($dossier->paying_agency === null) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportPayingAgencyUnknown', $s['paying_agency']));
+		}
+		$dossier->year_validity = (int) $data['campagna'];
+		$dossier->date_reference = self::date($s['date_reference']);
+		$dossier->fk_soc_caa = $caa['socid'] ?: null;
+		$dossier->date_mandate = self::date($s['date_mandate']);
+		$dossier->ote_code = $data['ote']['code'] !== '' ? $data['ote']['code'] : null;
+		$dossier->economic_size = $data['ote']['economic_size'];
+		if ($bio['socid'] > 0) {
+			$dossier->fk_soc_bio_body = $bio['socid'];
+			$dossier->date_bio_membership = self::date($bio['date']);
+		}
+		// The signature date is required: without it, the print date of the sheet, then today
+		if ($s['date_signature'] !== '') {
+			$dossier->date_signature = self::date($s['date_signature']);
+		} elseif (empty($dossier->date_signature)) {
+			$dossier->date_signature = $s['date_print'] !== '' ? self::date($s['date_print']) : dol_now();
+			$this->warn($langs->transnoentitiesnoconv('DossierImportNoSignatureDate', dol_print_date($dossier->date_signature, 'day')));
+		}
+		$dossier->date_import = dol_now();
+		$dossier->source_file = dol_trunc($filename, 250, 'right', 'UTF-8', 1);
+		$dossier->import_key = $this->importKey;
 
-        // Create new
-        $dossier->ref = $ref;
-        $dossier->fk_soc = $socId;
-        $dossier->year_validity = $year;
-        $dossier->status = 0; // DRAFT
-        $dossier->date_import = dol_now();
-        // Signature date of the validation sheet (required): optional node DataValidazione (YYYY-MM-DD)
-        $dateSignature = trim((string) $node->DataValidazione);
-        if ($dateSignature !== '' && strtotime($dateSignature) !== false) {
-            $dossier->date_signature = dol_stringtotime($dateSignature);
-        } else {
-            $dossier->date_signature = $dossier->date_import;
-            $this->log("Data di validazione assente nel file: usata la data di importazione");
-        }
-        if ($year > 0) {
-            $dossier->date_validity_end = dol_mktime(12, 0, 0, 12, 31, $year);
-        }
-        
-        $id = $dossier->create($this->user);
-        if ($id < 0) {
-            $this->error = $dossier->error . " " . implode(',', $dossier->errors);
-            return -1;
-        }
-        return $id;
-    }
+		if ($id > 0) {
+			if ($dossier->update($this->user) < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportDossierError').': '.$dossier->error.' '.implode(', ', $dossier->errors));
+			}
+			$this->count('dossier', false);
+			$this->log($langs->transnoentitiesnoconv('DossierImportDossierUpdated', $dossier->ref, $s['number']));
+		} else {
+			$dossier->status = DoliFarmFarmDossier::STATUS_DRAFT;
+			if ($dossier->create($this->user) < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportDossierError').': '.$dossier->error.' '.implode(', ', $dossier->errors));
+			}
+			$this->count('dossier', true);
+			$this->log($langs->transnoentitiesnoconv('DossierImportDossierCreated', $dossier->ref, $s['number']));
+		}
+		return $dossier;
+	}
 
-    private function processPlot($node, $dossierId, $socId)
-    {
-        $plot = new DoliFarmPlot($this->db);
-        
-        // Costruzione REF univoco robusto
-        $codice_interno = trim((string)$node->CodiceInterno);
-        if (empty($codice_interno)) $codice_interno = uniqid(); 
-        
-        $unique_ref = "PL-" . $dossierId . "-" . $codice_interno;
+	/**
+	 * Link a contact to the dossier with a role, if not already linked
+	 *
+	 * @param	DoliFarmFarmDossier	$dossier	Dossier
+	 * @param	int					$contactid	Contact
+	 * @param	string				$role		Code of the type of contact
+	 * @return	void
+	 */
+	private function linkDossierContact($dossier, $contactid, $role)
+	{
+		$linked = $dossier->liste_contact(-1, 'external');
+		foreach (is_array($linked) ? $linked : array() as $c) {
+			if ((int) $c['id'] == $contactid && $c['code'] == $role) {
+				return;
+			}
+		}
+		if ($dossier->add_contact($contactid, $role, 'external') < 0) {
+			$this->warn($dossier->error);
+		}
+	}
 
-        // Controllo esistenza SQL diretto (usando il nome tabella corretto del nuovo schema)
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "dolifarm_plot WHERE ref = '" . $this->db->escape($unique_ref) . "'";
-        $sql .= " AND entity IN (" . getEntity($plot->element) . ")";
-        $res = $this->db->query($sql);
-        
-        if ($this->db->num_rows($res) > 0) {
-            $obj = $this->db->fetch_object($res);
-            // Opzionale: Update logic here if data changed
-            return $obj->rowid; 
-        }
+	// ------------------------------------------------------------------------------------------------
+	// Land, buildings, livestock, machines, bank
+	// ------------------------------------------------------------------------------------------------
 
-        $plot->ref = $unique_ref;
-        $plot->label = (string)$node->Descrizione;
-        if (empty($plot->label)) $plot->label = "Appezzamento " . $codice_interno;
-        
-        $plot->fk_soc = $socId;
-        $plot->fk_dossier = $dossierId;
-        $plot->status = 1;
-        $plot->size_sau = (float)$node->SuperficieSAU;
-        $plot->fk_owner = $socId; // Default owner is the company
-        
-        // Mapping ownership semplice basato sul dizionario
-        $tipo = strtoupper(trim((string)$node->TitoloPossesso));
-        if ($tipo == 'AFFITTO') $plot->fk_ownership = 'RENTED';
-        elseif ($tipo == 'PROPRIETA' || $tipo == 'PROPRIETÀ') $plot->fk_ownership = 'OWNED';
-        elseif ($tipo == 'COMODATO') $plot->fk_ownership = 'COMODATO';
-        else $plot->fk_ownership = 'OWNED'; // Default fallback
+	/**
+	 * Cadastral parcels of the dossier, as plots
+	 *
+	 * @param	array<string,array<string,mixed>>	$parcels	Parcels by id
+	 * @param	int									$dossierid	Dossier
+	 * @return	array<string,int>							Id of the plot by cadastral key
+	 */
+	private function importPlots(array $parcels, $dossierid)
+	{
+		global $langs;
 
-        // Dati Catastali
-        $plot->cadastral_comune = (string)$node->ComuneCatastale;
-        $plot->cadastral_sheet = (string)$node->Foglio;
-        $plot->cadastral_parcel = (string)$node->Particella;
-        $plot->cadastral_sub = (string)$node->Subalterno;
+		$ids = array();
+		foreach ($parcels as $p) {
+			$key = self::cadastralKey($p['comune']['name'], $p['section'], $p['sheet'], $p['parcel'], $p['sub']);
+			$label = self::cadastralLabel($p['comune']['name'], $p['sheet'], $p['parcel'], $p['sub']);
+			$plot = new DoliFarmPlot($this->db);
+			$id = $this->findByCadastralKey('dolifarm_plot', $plot->element, $key);
+			$new = ($id == 0);
+			if (!$new) {
+				$plot->fetch($id);
+			} else {
+				$plot->label = $label;
+				$plot->status = 1;
+			}
 
-        $id = $plot->create($this->user);
-        if ($id < 0) {
-            $this->error = "Plot Create Error ($unique_ref): " . $plot->error . " " . implode(',', $plot->errors);
-            return -1;
-        }
-        return $id;
-    }
+			$plot->fk_soc = $this->socid;
+			$plot->fk_dossier = $dossierid;
+			$plot->cadastral_comune = $p['comune']['name'];
+			$plot->cadastral_section = $p['section'];
+			$plot->cadastral_sheet = $p['sheet'];
+			$plot->cadastral_parcel = $p['parcel'];
+			$plot->cadastral_sub = $p['sub'];
+			$plot->fk_ownership = $this->ownershipFromCode($p['conduction']['code'], $p['conduction']['subcode']);
+			if ($plot->fk_ownership === null) {
+				$this->warn($langs->transnoentitiesnoconv('DossierImportConductionUnknown', $label, $p['conduction']['code'].'/'.$p['conduction']['subcode'], $p['conduction']['label']));
+			}
+			$plot->conduction_protocol = $p['conduction']['protocol'];
+			$plot->conduction_partial = $p['partial'] ? 1 : 0;
+			$plot->date_conduction_start = self::date($p['conduction']['date_start']);
+			$plot->date_conduction_end = self::date($p['conduction']['date_end']);
+			$plot->fk_owner = $this->ownerId($p['owners']);
+			$plot->size_cadastral = $p['size_cadastral'];
+			$plot->size_total = $p['size_graphic'] !== null ? $p['size_graphic'] : $p['size_cadastral'];
+			$plot->size_conducted = $p['size_conducted'];
+			if ($p['cultivations']) {
+				$sau = 0.0;
+				foreach ($p['cultivations'] as $c) {
+					if (!in_array($c['land_use']['code'], self::NON_SAU_LAND_USES, true)) {
+						$sau += $c['size'];
+					}
+				}
+				$plot->size_sau = round($sau, 4);
+			}
+			$zvn = false;
+			$natura = array();
+			foreach ($p['constraints'] as $v) {
+				$zvn = $zvn || $v['zvn'];
+				foreach (array('sic', 'zps') as $k) {
+					if ($v[$k] !== '') {
+						$natura[] = stripos($v[$k], $k) === 0 ? $v[$k] : strtoupper($k).' '.$v[$k];
+					}
+				}
+			}
+			$plot->zone_zvn = $zvn ? 1 : 0;
+			$plot->zone_natura2000 = $natura ? dol_trunc(implode(', ', array_unique($natura)), 64, 'right', 'UTF-8', 1) : null;
+			$plot->import_key = $this->importKey;
 
-    private function processMachine($node, $dossierId, $socId)
-    {
-        $mach = new DoliFarmMachine($this->db);
-        $ref = trim((string)$node->Targa);
-        
-        // Se non c'è targa, usiamo il numero di telaio o un ID univoco
-        if (empty($ref)) {
-             $ref = trim((string)$node->Telaio);
-             if (empty($ref)) $ref = "MACH-" . uniqid();
-        }
+			$res = $new ? $plot->create($this->user) : $plot->update($this->user);
+			if ($res < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportPlotError', $label).': '.$plot->error.' '.implode(', ', $plot->errors));
+			}
+			$this->count('plot', $new);
+			$ids[$key] = (int) $plot->id;
+		}
+		$this->log($langs->transnoentitiesnoconv('DossierImportPlotsDone', count($ids), $this->stats['plot']['created'] ?? 0, $this->stats['plot']['updated'] ?? 0));
 
-        // Controllo SQL diretto (usando il nome tabella corretto del nuovo schema)
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "dolifarm_machine WHERE ref = '" . $this->db->escape($ref) . "'";
-        $sql .= " AND entity IN (" . getEntity($mach->element) . ")";
-        $res = $this->db->query($sql);
-        
-        if ($this->db->num_rows($res) > 0) {
-            // Esiste già! Recuperiamo ID e aggiorniamo il link dossier
-            $obj = $this->db->fetch_object($res);
-            $mach->fetch($obj->rowid);
-            
-            $mach->fk_dossier = $dossierId; // Aggiorna contesto
-            if ($mach->update($this->user) < 0) {
-                $this->error = $mach->error;
-                return -1;
-            }
-            return $mach->id;
-        }
+		// Plots of the farm missing from the dossier: never deleted, only reported
+		$sql = "SELECT t.rowid, t.ref, t.label, t.cadastral_comune, t.cadastral_section, t.cadastral_sheet, t.cadastral_parcel, t.cadastral_sub";
+		$sql .= " FROM ".$this->db->prefix()."dolifarm_plot as t";
+		$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.status <> 9 AND t.entity IN (".getEntity('dolifarmplot').")";
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$key = self::cadastralKey((string) $obj->cadastral_comune, (string) $obj->cadastral_section, (string) $obj->cadastral_sheet, (string) $obj->cadastral_parcel, (string) $obj->cadastral_sub);
+				if (!isset($ids[$key])) {
+					$this->warn($langs->transnoentitiesnoconv('DossierImportPlotMissing', $obj->ref, $obj->label));
+				}
+			}
+		}
+		return $ids;
+	}
 
-        // Creazione Nuova Macchina
-        $mach->ref = $ref;
-        $mach->label = (string)$node->Descrizione;
-        if (empty($mach->label)) $mach->label = "Macchina " . $ref;
+	/**
+	 * Buildings of the dossier
+	 *
+	 * @param	array<int,array<string,mixed>>	$buildings	Buildings
+	 * @param	int								$dossierid	Dossier
+	 * @param	array<string,int>				$plots		Plots by cadastral key
+	 * @return	void
+	 */
+	private function importBuildings(array $buildings, $dossierid, array $plots)
+	{
+		global $langs;
 
-        $mach->fk_soc = $socId;
-        $mach->fk_dossier = $dossierId;
-        $mach->status = 1;
-        
-        $mach->power_kw = (float)$node->PotenzaKW;
-        
-        // Mapping Fuel Type
-        $alim = strtoupper(trim((string)$node->Alimentazione));
-        if (strpos($alim, 'GASOLIO') !== false) $mach->fuel_type = 'DIESEL';
-        elseif (strpos($alim, 'BENZINA') !== false) $mach->fuel_type = 'GASOLINE';
-        elseif (strpos($alim, 'ELETTR') !== false) $mach->fuel_type = 'ELECTRIC';
-        else $mach->fuel_type = 'DIESEL'; // Default agricolo
-        
-        // Mapping Machine Type
-        $tipo = strtoupper(trim((string)$node->Tipo));
-        if (strpos($tipo, 'TRATTORE') !== false || strpos($tipo, 'TRATTRICE') !== false) {
-             $mach->fk_type = 'TRACTOR_WHEEL'; 
-             // Raffinamento Cingolato
-             if (strpos(strtoupper($mach->label), 'CINGOL') !== false) $mach->fk_type = 'TRACTOR_TRACK';
-        } elseif (strpos($tipo, 'RIMORCHIO') !== false) {
-             $mach->fk_type = 'TRAILER';
-        } else {
-             $mach->fk_type = 'TOOL_PLOW'; // Generico attrezzo, TODO: Logica più complessa per i vari tool
-        }
+		foreach ($buildings as $b) {
+			$key = self::cadastralKey($b['comune']['name'], $b['section'], $b['sheet'], $b['parcel'], $b['sub']);
+			$label = $langs->transnoentitiesnoconv('DossierImportBuildingLabel', self::cadastralLabel($b['comune']['name'], $b['sheet'], $b['parcel'], $b['sub']));
+			$building = new DoliFarmBuilding($this->db);
+			$id = $this->findByCadastralKey('dolifarm_building', $building->element, $key);
+			$new = ($id == 0);
+			if (!$new) {
+				$building->fetch($id);
+			} else {
+				$building->label = $label;
+				$building->status = 1;
+			}
+			$building->fk_soc = $this->socid;
+			$building->fk_dossier = $dossierid;
+			// The building is on the plot with the same cadastral reference, without the sub
+			$plotkey = self::cadastralKey($b['comune']['name'], $b['section'], $b['sheet'], $b['parcel'], '');
+			if (empty($building->fk_plot) && isset($plots[$plotkey])) {
+				$building->fk_plot = $plots[$plotkey];
+			}
+			if ($b['use'] !== '') {
+				$building->building_use = $b['use'];
+			}
+			$building->fk_ownership = self::ownershipFromText($b['conduction']);
+			$building->date_conduction_start = self::date($b['date_start']);
+			$building->date_conduction_end = self::date($b['date_end']);
+			$building->cadastral_comune = $b['comune']['name'];
+			$building->cadastral_section = $b['section'];
+			$building->cadastral_sheet = $b['sheet'];
+			$building->cadastral_parcel = $b['parcel'];
+			$building->cadastral_sub = $b['sub'];
+			// The sheet gives the total surface; the covered surface is used when present
+			$building->surface_covered = $b['surface_covered'] !== null ? $b['surface_covered'] : $b['surface'];
+			$building->surface_uncovered = $b['surface_uncovered'];
+			$building->volume = $b['volume'];
+			$building->nb_seats = $b['seats'];
+			$building->import_key = $this->importKey;
+			$res = $new ? $building->create($this->user) : $building->update($this->user);
+			if ($res < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportBuildingError', $label).': '.$building->error.' '.implode(', ', $building->errors));
+			}
+			$this->count('building', $new);
+		}
+		if ($buildings) {
+			$this->log($langs->transnoentitiesnoconv('DossierImportBuildingsDone', count($buildings)));
+		}
+	}
 
-        $id = $mach->create($this->user);
-        
-        if ($id < 0) {
-            $this->error = "Machine Create Error ($ref): " . $mach->error . " " . implode(',', $mach->errors);
-            return -1;
-        }
-        return $id;
-    }
+	/**
+	 * Livestock farms of the dossier (BDN)
+	 *
+	 * @param	array<int,array<string,mixed>>	$farms		Livestock farms
+	 * @param	int								$dossierid	Dossier
+	 * @return	void
+	 */
+	private function importLivestock(array $farms, $dossierid)
+	{
+		global $langs;
 
-    private function log($msg) {
-        $this->output_log[] = date('Y-m-d H:i:s') . " - " . $msg;
-        // Dolibarr system log for persistent debugging
-        dol_syslog("DoliFarmImporter: " . $msg, LOG_INFO);
-    }
+		foreach ($farms as $a) {
+			$livestock = new DoliFarmLivestock($this->db);
+			$sql = "SELECT t.rowid FROM ".$this->db->prefix()."dolifarm_livestock as t";
+			$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.bdn_code = '".$this->db->escape($a['bdn_code'])."'";
+			$sql .= " AND UPPER(COALESCE(t.address, '')) = '".$this->db->escape(strtoupper($a['address']))."'";
+			$sql .= " AND t.entity IN (".getEntity($livestock->element).")";
+			$id = $this->singleId($sql);
+			$new = ($id == 0);
+			if (!$new) {
+				$livestock->fetch($id);
+			} else {
+				$livestock->label = dol_trunc($a['species'].' '.$a['bdn_code'].($a['address'] !== '' ? ' - '.$a['address'] : ''), 250, 'right', 'UTF-8', 1);
+				$livestock->status = 1;
+			}
+			$livestock->fk_soc = $this->socid;
+			$livestock->fk_dossier = $dossierid;
+			$livestock->bdn_code = $a['bdn_code'];
+			$livestock->fk_species = $this->speciesCode($a['species']);
+			if ($a['heads'] !== null) {
+				$livestock->nb_heads = $a['heads'];
+			}
+			$livestock->production_type = $a['production_type'];
+			$livestock->breeding_type = $a['breeding_type'];
+			$livestock->breeding_mode = $a['breeding_mode'];
+			$livestock->milk_authorization = $a['milk'];
+			$livestock->organic = $a['organic'] ? 1 : 0;
+			$livestock->address = $a['address'];
+			$livestock->town = $a['town']['name'];
+			$livestock->holder = $a['holder'] !== '' ? $a['holder'] : $a['owner'];
+			$livestock->date_start = self::date($a['date_start']);
+			$livestock->date_end = self::date($a['date_end']);
+			$livestock->date_bdn_update = self::date($a['date_bdn']);
+			$livestock->import_key = $this->importKey;
+			$res = $new ? $livestock->create($this->user) : $livestock->update($this->user);
+			if ($res < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportLivestockError', $a['bdn_code']).': '.$livestock->error.' '.implode(', ', $livestock->errors));
+			}
+			$this->count('livestock', $new);
+		}
+		if ($farms) {
+			$this->log($langs->transnoentitiesnoconv('DossierImportLivestockDone', count($farms)));
+		}
+	}
+
+	/**
+	 * Machines of the dossier
+	 *
+	 * @param	array<int,array<string,mixed>>	$machines	Machines
+	 * @param	int								$dossierid	Dossier
+	 * @return	void
+	 */
+	private function importMachines(array $machines, $dossierid)
+	{
+		global $langs;
+
+		foreach ($machines as $m) {
+			$mach = new DoliFarmMachine($this->db);
+			$label = trim(implode(' ', array_filter(array($m['type'], $m['brand'], $m['model'], $m['year'] ? (string) $m['year'] : ''))));
+			$ref = $m['plate'] !== '' ? $m['plate'] : $m['chassis'];
+			$where = $ref !== '' ? "t.ref = '".$this->db->escape($ref)."'" : "UPPER(t.label) = '".$this->db->escape(strtoupper($label))."'";
+			$sql = "SELECT t.rowid FROM ".$this->db->prefix()."dolifarm_machine as t";
+			$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND ".$where." AND t.entity IN (".getEntity($mach->element).")";
+			$id = $this->singleId($sql);
+			$new = ($id == 0);
+			if (!$new) {
+				$mach->fetch($id);
+			} else {
+				$mach->ref = $ref;	// empty: the numbering module gives it
+				$mach->label = $label !== '' ? $label : $langs->transnoentitiesnoconv('Machine');
+				$mach->status = 1;
+				$mach->fk_type = self::machineType($m['type']);
+			}
+			$mach->fk_soc = $this->socid;
+			$mach->fk_dossier = $dossierid;
+			if ($m['power_kw'] !== null) {
+				$mach->power_kw = $m['power_kw'];
+			}
+			if ($m['year'] !== null) {
+				$mach->year_registration = $m['year'];
+			}
+			$fuel = self::fuelType($m['fuel']);
+			if ($fuel !== null) {
+				$mach->fuel_type = $fuel;
+			}
+			$res = $new ? $mach->create($this->user) : $mach->update($this->user);
+			if ($res < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportMachineError', $label).': '.$mach->error.' '.implode(', ', $mach->errors));
+			}
+			$this->count('machine', $new);
+		}
+		if ($machines) {
+			$this->log($langs->transnoentitiesnoconv('DossierImportMachinesDone', count($machines)));
+		}
+	}
+
+	/**
+	 * Bank accounts of the farm, added when the IBAN is not already known
+	 *
+	 * @param	string							$owner		Name of the account holder
+	 * @param	array<int,array<string,string>>	$accounts	Accounts
+	 * @return	void
+	 */
+	private function importBankAccounts($owner, array $accounts)
+	{
+		global $langs;
+
+		if (!$accounts) {
+			return;
+		}
+		// IBANs are stored encrypted: compare them after reading
+		$known = array();
+		$resql = $this->db->query("SELECT rowid FROM ".$this->db->prefix()."societe_rib WHERE fk_soc = ".((int) $this->socid)." AND type = 'ban'");
+		if ($resql) {
+			while ($obj = $this->db->fetch_object($resql)) {
+				$rib = new CompanyBankAccount($this->db);
+				if ($rib->fetch((int) $obj->rowid) > 0) {
+					$known[] = strtoupper(str_replace(' ', '', (string) $rib->iban));
+				}
+			}
+		}
+		foreach ($accounts as $c) {
+			$iban = strtoupper(str_replace(' ', '', $c['iban']));
+			if (in_array($iban, $known, true)) {
+				continue;
+			}
+			$rib = new CompanyBankAccount($this->db);
+			$rib->socid = $this->socid;
+			$rib->type = 'ban';
+			$rib->label = dol_trunc($c['bank'] !== '' ? $c['bank'] : $iban, 30, 'right', 'UTF-8', 1);
+			$rib->bank = $c['bank'];
+			$rib->iban = $iban;
+			$rib->address = $c['agency'];
+			$rib->owner_name = $owner;
+			$rib->status = 1;
+			$rib->fk_country = $this->countryId(substr($iban, 0, 2));
+			if ($rib->create($this->user) < 0 || $rib->update($this->user) <= 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportBankError').': '.$rib->error.' '.implode(', ', $rib->errors));
+			}
+			$known[] = $iban;
+			$this->count('bankaccount', true);
+			$this->log($langs->transnoentitiesnoconv('DossierImportBankAdded', substr($iban, 0, 4).'...'.substr($iban, -4)));
+		}
+	}
+
+	/**
+	 * Report the sections of the file that this version does not import
+	 *
+	 * @param	array<string,mixed>	$data	Whole dossier
+	 * @return	void
+	 */
+	private function reportNotImported(array $data)
+	{
+		global $langs;
+
+		if ($data['isole']['fields'] > 0) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportIslandsSkipped', $data['isole']['islands'], $data['isole']['fields']));
+		}
+		$cultivations = 0;
+		foreach ($data['particelle'] as $p) {
+			$cultivations += count($p['cultivations']);
+		}
+		if ($cultivations > 0) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportCultivationsSkipped', $cultivations));
+		}
+		foreach ($data['documenti'] as $d) {
+			if ($d['date_end'] !== '') {
+				$this->warn($langs->transnoentitiesnoconv('DossierImportDocumentExpiry', $d['type'], dol_print_date(self::date($d['date_end']), 'day')));
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------------------------------
+	// Lookups and mappings
+	// ------------------------------------------------------------------------------------------------
+
+	/**
+	 * Third party of the current entities with this tax code (idprof4) or VAT number
+	 *
+	 * @param	string	$cf		Tax code, '' if unknown
+	 * @param	string	$vat	VAT number (11 digits, with or without IT), '' if unknown
+	 * @return	int				Id, 0 if not found
+	 */
+	private function findThirdparty($cf, $vat)
+	{
+		$socid = 0;
+		if ($cf !== '') {
+			$socid = $this->singleId("SELECT s.rowid FROM ".$this->db->prefix()."societe as s WHERE s.idprof4 = '".$this->db->escape($cf)."' AND s.entity IN (".getEntity('societe').")");
+		}
+		if ($socid == 0 && $vat !== '') {
+			$vatnum = preg_replace('/^[A-Z]{2}/', '', strtoupper($vat));
+			$sql = "SELECT s.rowid FROM ".$this->db->prefix()."societe as s";
+			$sql .= " WHERE s.tva_intra IN ('".$this->db->escape($vatnum)."', '".$this->db->escape('IT'.$vatnum)."') AND s.entity IN (".getEntity('societe').")";
+			$socid = $this->singleId($sql);
+		}
+		return $socid;
+	}
+
+	/**
+	 * Id returned by a query that must match at most one row
+	 *
+	 * @param	string	$sql	Query on rowid
+	 * @return	int				Id, 0 if no row
+	 */
+	private function singleId($sql)
+	{
+		global $langs;
+
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			throw new Exception($this->db->lasterror());
+		}
+		$num = $this->db->num_rows($resql);
+		if ($num > 1) {
+			throw new Exception($langs->transnoentitiesnoconv('DossierImportAmbiguous'));
+		}
+		if ($num == 1) {
+			return (int) $this->db->fetch_object($resql)->rowid;
+		}
+		return 0;
+	}
+
+	/**
+	 * Id of the plot or building of the farm with this cadastral key
+	 *
+	 * @param	string	$table		Table without prefix
+	 * @param	string	$element	Element, for the entity filter
+	 * @param	string	$key		Cadastral key (see cadastralKey())
+	 * @return	int					Id, 0 if not found
+	 */
+	private function findByCadastralKey($table, $element, $key)
+	{
+		$sql = "SELECT t.rowid, t.cadastral_comune, t.cadastral_section, t.cadastral_sheet, t.cadastral_parcel, t.cadastral_sub";
+		$sql .= " FROM ".$this->db->prefix().$table." as t";
+		$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.entity IN (".getEntity($element).")";
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			throw new Exception($this->db->lasterror());
+		}
+		$found = 0;
+		while ($obj = $this->db->fetch_object($resql)) {
+			if (self::cadastralKey((string) $obj->cadastral_comune, (string) $obj->cadastral_section, (string) $obj->cadastral_sheet, (string) $obj->cadastral_parcel, (string) $obj->cadastral_sub) === $key) {
+				if ($found) {
+					global $langs;
+					throw new Exception($langs->transnoentitiesnoconv('DossierImportAmbiguous'));
+				}
+				$found = (int) $obj->rowid;
+			}
+		}
+		return $found;
+	}
+
+	/**
+	 * Comparison key of a cadastral reference: upper case, no leading zeros (00110 = 110)
+	 *
+	 * @param	string	$comune		Comune
+	 * @param	string	$section	Section
+	 * @param	string	$sheet		Sheet
+	 * @param	string	$parcel		Parcel
+	 * @param	string	$sub		Sub
+	 * @return	string
+	 */
+	public static function cadastralKey($comune, $section, $sheet, $parcel, $sub)
+	{
+		$n = function ($v) {
+			$v = strtoupper(trim($v));
+			return ltrim($v, '0') === '' && $v !== '' ? '0' : ltrim($v, '0');
+		};
+		return strtoupper(trim($comune)).'|'.$n($section).'|'.$n($sheet).'|'.$n($parcel).'|'.$n($sub);
+	}
+
+	/**
+	 * Readable cadastral reference
+	 *
+	 * @param	string	$comune		Comune
+	 * @param	string	$sheet		Sheet
+	 * @param	string	$parcel		Parcel
+	 * @param	string	$sub		Sub
+	 * @return	string
+	 */
+	private static function cadastralLabel($comune, $sheet, $parcel, $sub)
+	{
+		global $langs;
+		return $langs->transnoentitiesnoconv('DossierImportPlotLabel', $comune, $sheet, $parcel).($sub !== '' ? ' sub '.$sub : '');
+	}
+
+	/**
+	 * Owner of a plot: the farm itself, or a third party searched by tax code (created when missing)
+	 *
+	 * @param	array<int,array{cf:string,name:string}>	$owners	Owners
+	 * @return	int|null										Id, null if unknown
+	 */
+	private function ownerId(array $owners)
+	{
+		if (!$owners) {
+			return null;
+		}
+		$o = $owners[0];
+		$cf = self::normalizeCuaa($o['cf']);
+		if ($cf === '' || $cf === $this->cuaa) {
+			return $this->socid;
+		}
+		return $this->findOrCreateOrganisation($o['name'], $cf, '');
+	}
+
+	/**
+	 * Ownership (dictionary dolifarm_c_ownership) from the AGEA code of the title of conduction (IO 122/2025 §5.3.3)
+	 *
+	 * @param	int		$code		Code
+	 * @param	int		$subcode	Subcode
+	 * @return	string|null			Code of the dictionary, null if no match
+	 */
+	private function ownershipFromCode($code, $subcode)
+	{
+		$map = array(
+			'5/2' => 'OWNED', '5/17' => 'OWNED', '5/30' => 'OWNED', '5/31' => 'OWNED', '5/10' => 'OWNED', '5/11' => 'OWNED',
+			'5/34' => 'OWNED', '5/16' => 'OWNED', '5/21' => 'OWNED', '5/20' => 'OWNED',
+			'5/32' => 'USUFRUCT', '5/33' => 'USUFRUCT',
+			'6/1' => 'RENTED', '6/2' => 'RENTED', '7/1' => 'RENTED', '6/4' => 'RENTED',
+			'5/14' => 'COMODATO', '5/15' => 'COMODATO',
+		);
+		$k = ((int) $code).'/'.((int) $subcode);
+		return isset($map[$k]) ? $this->dictionaryCode('dolifarm_c_ownership', $map[$k]) : null;
+	}
+
+	/**
+	 * Ownership from the printed text (buildings)
+	 *
+	 * @param	string	$text	Text, e.g. "PROPRIETA'"
+	 * @return	string|null
+	 */
+	private static function ownershipFromText($text)
+	{
+		$t = strtoupper($text);
+		if (strpos($t, 'AFFITT') !== false) {
+			return 'RENTED';
+		}
+		if (strpos($t, 'COMODAT') !== false) {
+			return 'COMODATO';
+		}
+		if (strpos($t, 'USUFRUTT') !== false) {
+			return 'USUFRUCT';
+		}
+		if (strpos($t, 'PROPRIET') !== false) {
+			return 'OWNED';
+		}
+		return null;
+	}
+
+	/**
+	 * Species of the dictionary dolifarm_c_livestock_species from the BDN species
+	 *
+	 * @param	string	$species	Species, e.g. API, BOVINI
+	 * @return	string
+	 */
+	private function speciesCode($species)
+	{
+		$s = strtoupper(trim($species));
+		$aliases = array('BOVINO' => 'BOVINI', 'BUFALINO' => 'BUFALINI', 'OVINO' => 'OVINI', 'CAPRINO' => 'CAPRINI', 'SUINO' => 'SUINI',
+			'EQUINO' => 'EQUINI', 'ASININO' => 'ASININI', 'POLLAME' => 'AVICOLI', 'CONIGLI' => 'CUNICOLI', 'APE' => 'API');
+		if (isset($aliases[$s])) {
+			$s = $aliases[$s];
+		}
+		$code = $this->dictionaryCode('dolifarm_c_livestock_species', $s);
+		return $code !== null ? $code : 'ALTRO';
+	}
+
+	/**
+	 * Machine type (dictionary dolifarm_c_machinetype) from a free description
+	 *
+	 * @param	string	$type	Type, e.g. TRATTRICE, MIETITREBBIA
+	 * @return	string
+	 */
+	private static function machineType($type)
+	{
+		$t = strtoupper($type);
+		$map = array('CINGOL' => 'TRACTOR_TRACK', 'TRATT' => 'TRACTOR_WHEEL', 'MIETI' => 'HARVESTER', 'RACCOGL' => 'HARVESTER',
+			'ARATR' => 'TOOL_PLOW', 'ERPIC' => 'TOOL_HARROW', 'SEMINA' => 'TOOL_SOWER', 'ATOMIZZ' => 'TOOL_SPRAYER', 'IRRORAT' => 'TOOL_SPRAYER',
+			'BOTTE' => 'TOOL_SPRAYER', 'SPANDICONC' => 'TOOL_FERTILIZER', 'RIMORCH' => 'TRAILER', 'IRRIG' => 'IRRIGATION', 'DRONE' => 'DRONE');
+		foreach ($map as $needle => $code) {
+			if (strpos($t, $needle) !== false) {
+				return $code;
+			}
+		}
+		return 'OTHER';
+	}
+
+	/**
+	 * Fuel type (dictionary dolifarm_c_fueltype) from a free description
+	 *
+	 * @param	string	$fuel	Fuel, e.g. GASOLIO
+	 * @return	string|null
+	 */
+	private static function fuelType($fuel)
+	{
+		$f = strtoupper($fuel);
+		if ($f === '') {
+			return null;
+		}
+		if (strpos($f, 'GASOLIO') !== false || strpos($f, 'DIESEL') !== false) {
+			return 'DIESEL';
+		}
+		if (strpos($f, 'BENZINA') !== false) {
+			return 'GASOLINE';
+		}
+		if (strpos($f, 'ELETTR') !== false) {
+			return 'ELECTRIC';
+		}
+		return null;
+	}
+
+	/**
+	 * Legal form (c_forme_juridique of Italy) from the printed description
+	 *
+	 * @param	string	$text	Description, e.g. "SOCIETA' SEMPLICI, IRREGOLARI O DI FATTO"
+	 * @return	string			Code, '' if unknown
+	 */
+	private static function legalFormCode($text)
+	{
+		$t = strtoupper($text);
+		$map = array('COOPERATIVA AGRICOLA' => '322', 'COOPERATIVA' => '307', 'NOME COLLETTIVO' => '302', 'ACCOMANDITA PER AZIONI' => '306',
+			'ACCOMANDITA SEMPLICE' => '303', 'PER AZIONI' => '304', 'RESPONSABILITA' => '305', 'SEMPLIC' => '301', 'DI FATTO' => '313',
+			'CONSORTIL' => '308', 'FAMILIARE' => '318', 'CONIUGALE' => '317', 'INDIVIDUAL' => '316', 'DITTA' => '316');
+		foreach ($map as $needle => $code) {
+			if (strpos($t, $needle) !== false) {
+				return $code;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Active code of a dictionary of the module, null if not found
+	 *
+	 * @param	string	$table	Table without prefix
+	 * @param	string	$code	Code
+	 * @return	string|null
+	 */
+	private function dictionaryCode($table, $code)
+	{
+		if ($code === '' || $code === null) {
+			return null;
+		}
+		$resql = $this->db->query("SELECT code FROM ".$this->db->prefix().$table." WHERE code = '".$this->db->escape($code)."' AND active = 1");
+		if ($resql && ($obj = $this->db->fetch_object($resql))) {
+			return (string) $obj->code;
+		}
+		return null;
+	}
+
+	/**
+	 * Id of a country from its ISO code
+	 *
+	 * @param	string	$code	ISO code
+	 * @return	int
+	 */
+	private function countryId($code)
+	{
+		return (int) dol_getIdFromCode($this->db, $code, 'c_country', 'code', 'rowid');
+	}
+
+	/**
+	 * Id of an Italian province from its abbreviation (SR, TO...)
+	 *
+	 * @param	string	$province	Abbreviation
+	 * @return	int|string			Id, '' if not found
+	 */
+	private function stateId($province)
+	{
+		if ($province === '') {
+			return '';
+		}
+		$sql = "SELECT d.rowid FROM ".$this->db->prefix()."c_departements as d";
+		$sql .= " INNER JOIN ".$this->db->prefix()."c_regions as r ON r.code_region = d.fk_region";
+		$sql .= " INNER JOIN ".$this->db->prefix()."c_country as c ON c.rowid = r.fk_pays";
+		$sql .= " WHERE c.code = 'IT' AND d.code_departement = '".$this->db->escape($province)."' AND d.active = 1";
+		$resql = $this->db->query($sql);
+		if ($resql && ($obj = $this->db->fetch_object($resql))) {
+			return (int) $obj->rowid;
+		}
+		return '';
+	}
+
+	/**
+	 * Timestamp (noon) of an ISO date, '' if empty
+	 *
+	 * @param	string	$date	Date YYYY-MM-DD
+	 * @return	int|string
+	 */
+	public static function date($date)
+	{
+		if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string) $date, $m)) {
+			return '';
+		}
+		return dol_mktime(12, 0, 0, (int) $m[2], (int) $m[3], (int) $m[1]);
+	}
+
+	/**
+	 * CUAA without spaces, in capitals
+	 *
+	 * @param	string	$value	Value read from the file
+	 * @return	string
+	 */
+	public static function normalizeCuaa($value)
+	{
+		return strtoupper(preg_replace('/\s+/', '', (string) $value));
+	}
+
+	/**
+	 * Check a tax code: 11 digits (with the check digit of the VAT number) or 16 characters (with the check character)
+	 *
+	 * @param	string	$cf		Tax code, normalized
+	 * @return	bool
+	 */
+	public static function isValidTaxCode($cf)
+	{
+		if (preg_match('/^[0-9]{11}$/', $cf)) {
+			return self::isValidVat($cf);
+		}
+		if (!preg_match('/^[A-Z0-9]{16}$/', $cf)) {
+			return false;
+		}
+		$odd = array(1, 0, 5, 7, 9, 13, 15, 17, 19, 21, 2, 4, 18, 20, 11, 3, 6, 8, 12, 14, 16, 10, 22, 25, 24, 23);
+		$sum = 0;
+		for ($i = 0; $i < 15; $i++) {
+			$ch = $cf[$i];
+			$v = ctype_digit($ch) ? (int) $ch : ord($ch) - 65;
+			$sum += ($i % 2 == 0) ? $odd[$v] : $v;
+		}
+		return chr(65 + $sum % 26) === $cf[15];
+	}
+
+	/**
+	 * Check the check digit of an Italian VAT number
+	 *
+	 * @param	string	$vat	VAT number, 11 digits
+	 * @return	bool
+	 */
+	public static function isValidVat($vat)
+	{
+		if (!preg_match('/^[0-9]{11}$/', $vat)) {
+			return false;
+		}
+		$sum = 0;
+		for ($i = 0; $i < 10; $i++) {
+			$d = (int) $vat[$i];
+			if ($i % 2) {
+				$d *= 2;
+				if ($d > 9) {
+					$d -= 9;
+				}
+			}
+			$sum += $d;
+		}
+		return (10 - $sum % 10) % 10 === (int) $vat[10];
+	}
+
+	// ------------------------------------------------------------------------------------------------
+	// Messages
+	// ------------------------------------------------------------------------------------------------
+
+	/**
+	 * Count a created or updated object
+	 *
+	 * @param	string	$kind		Kind of object
+	 * @param	bool	$created	true = created, false = updated
+	 * @return	void
+	 */
+	private function count($kind, $created)
+	{
+		if (!isset($this->stats[$kind])) {
+			$this->stats[$kind] = array('created' => 0, 'updated' => 0);
+		}
+		$this->stats[$kind][$created ? 'created' : 'updated']++;
+	}
+
+	/**
+	 * Add a message to the log of the import
+	 *
+	 * @param	string	$msg	Message
+	 * @return	void
+	 */
+	private function log($msg)
+	{
+		$this->output_log[] = $msg;
+		dol_syslog('DoliFarmImporter: '.$msg, LOG_DEBUG);
+	}
+
+	/**
+	 * Add a warning: data not imported or to check
+	 *
+	 * @param	string	$msg	Message
+	 * @return	void
+	 */
+	private function warn($msg)
+	{
+		$this->warnings[] = $msg;
+		dol_syslog('DoliFarmImporter: '.$msg, LOG_DEBUG);
+	}
 }
-?>
