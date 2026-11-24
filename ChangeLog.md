@@ -2,11 +2,16 @@
 
 ## Non rilasciato
 
-Importazione del fascicolo aziendale. Nessuna riattivazione necessaria.
+Importazione del fascicolo aziendale. Dopo l'aggiornamento **riattivare doliFarm** (nuove tabelle e dizionario "Usi del suolo AGEA").
 
 - Nuovo formato XML del fascicolo (`schema/fascicolo-1.0.xsd`, namespace `urn:dolifarm:fascicolo:1`) basato sulla scheda di validazione AGEA (IO 122/2025) e sull'allegato 3 della circolare 2024; esempio con dati inventati in `schema/esempio_fascicolo.xml`. Il vecchio formato (Soggetto/DatiFascicolo/Terreni) non è più letto.
 - Importatore riscritto: file validato contro lo schema, controllo di CUAA e partita IVA, anteprima senza salvataggio e poi conferma. Importa azienda (nuova azienda affiliata), rappresentante legale, CAA e operatore, organismo bio, fascicolo, particelle (titolo di conduzione AGEA, superfici, ZVN e Natura 2000, SAU dal piano di coltivazione), fabbricati, allevamenti, macchine, conto bancario.
 - Reimportare lo stesso fascicolo o quello dell'anno dopo aggiorna i dati senza duplicarli; gli appezzamenti assenti dal fascicolo non vengono cancellati ma segnalati.
+- Importazione anche dal **PDF della scheda di validazione** stampata dal SIAN: estrazione del testo senza librerie esterne (`DoliFarmPdfText`) e lettore della stampa (`DoliFarmFascicoloPdfReader`) che restituisce la stessa struttura del lettore XML. Dal PDF non si leggono i codici di conduzione (solo la descrizione), il codice fiscale dei proprietari e le sezioni senza un esempio (mezzi di produzione, manodopera, vincoli aziendali, titoli, albi: segnalate nell'anteprima). Una scansione senza testo non è leggibile.
+- **Piano di coltivazione grafico** (isole, appezzamenti e coltivazioni) salvato nel fascicolo e mostrato nel nuovo tab "Dati SIAN"; a ogni importazione le righe della campagna sono sostituite.
+- **Documenti del fascicolo cartaceo** (documento d'identità, CCIAA, visura...) con decorrenza e scadenza, nel tab "Dati SIAN"; la scadenza entra nel widget e nel riepilogo delle scadenze e nell'agenda.
+- **Piani di produzione in bozza** di doliTrace dalle coltivazioni per particella: uno per appezzamento e coltura della campagna, mai due volte. Serve il collegamento uso del suolo AGEA → coltura nel nuovo dizionario "Usi del suolo AGEA", che si riempie da solo con i codici letti; gli usi non collegati sono segnalati.
+- Allevamenti riconosciuti per codice BDN e data di inizio (l'indirizzo è stampato in modo diverso nel PDF e nell'XML).
 
 ## 1.5.14 (2026-11-18)
 

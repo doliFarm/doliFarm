@@ -45,6 +45,9 @@ class DoliFarmFascicoloXmlReader
 	 */
 	public $errors = array();
 
+	/** @var array<int,string> Warnings on data of the file not read */
+	public $warnings = array();
+
 	/**
 	 * Path of the XSD of the format
 	 *
@@ -120,6 +123,7 @@ class DoliFarmFascicoloXmlReader
 			'organismi' => $this->readOrganismi($f->legamiAssociativi),
 			'documenti' => $this->readDocumenti($f->documenti),
 			'conti' => $this->readConti($f->coordinateBancarie),
+			'skipped' => array(),
 		);
 	}
 
@@ -378,25 +382,38 @@ class DoliFarmFascicoloXmlReader
 			'date_start' => self::t($c->dataInizio),
 			'date_end' => self::t($c->dataFine),
 			'organic' => self::t($c->metodoProduzione),
+			'maintenance' => self::t($c->criterioMantenimento),
 		);
 	}
 
 	/**
-	 * Islands of the graphic cultivation plan: not imported for now, only counted
+	 * Graphic cultivation plan: islands, their fields ("appezzamenti" of the SIAN) and the cultivations of each field
 	 *
 	 * @param	SimpleXMLElement|null	$node	Element pianoColtivazione
-	 * @return	array{islands:int,fields:int}
+	 * @return	array{date_start:string,date_end:string,islands:array<int,array<string,mixed>>}
 	 */
 	private function readIsole($node)
 	{
-		$res = array('islands' => 0, 'fields' => 0);
+		$res = array('date_start' => '', 'date_end' => '', 'islands' => array());
 		$plan = self::c($node);
-		if ($plan === null || !isset($plan->isole[0])) {
+		if ($plan === null) {
+			return $res;
+		}
+		$res['date_start'] = trim((string) self::a($node, 'dataInizio'));
+		$res['date_end'] = trim((string) self::a($node, 'dataFine'));
+		if (!isset($plan->isole[0])) {
 			return $res;
 		}
 		foreach (self::c($plan->isole)->isola as $isola) {
-			$res['islands']++;
-			$res['fields'] += count(self::c($isola)->appezzamento);
+			$island = array('id' => trim((string) self::a($isola, 'id')), 'fields' => array());
+			foreach (self::c($isola)->appezzamento as $app) {
+				$field = array('id' => trim((string) self::a($app, 'id')), 'cultivations' => array());
+				foreach (self::c($app)->coltivazione as $col) {
+					$field['cultivations'][] = $this->readColtivazione($col);
+				}
+				$island['fields'][] = $field;
+			}
+			$res['islands'][] = $island;
 		}
 		return $res;
 	}
@@ -544,6 +561,8 @@ class DoliFarmFascicoloXmlReader
 				'section' => self::t($dc->sezione),
 				'type' => self::t($dc->tipologia),
 				'protocol' => self::t($dc->protocollo),
+				'date_signature' => self::t($dc->dataSottoscrizione),
+				'date_start' => self::t($dc->dataDecorrenza),
 				'date_end' => self::t($dc->dataScadenza),
 			);
 		}

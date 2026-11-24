@@ -263,16 +263,17 @@ if ($action == 'import_xml' && $permissiontoadd) {
 			dol_delete_file($old['fullname'], 0, 0, 0, null, false, 0);
 		}
 		$importkey = bin2hex(random_bytes(8));
-		$importfile = $importdir.'/'.$importprefix.$importkey.'.xml';
+		$importext = (strtolower(pathinfo($_FILES['file_import']['name'], PATHINFO_EXTENSION)) == 'pdf') ? 'pdf' : 'xml';
+		$importfile = $importdir.'/'.$importprefix.$importkey.'.'.$importext;
 		$resmove = dol_move_uploaded_file($_FILES['file_import']['tmp_name'], $importfile, 1, 0, $_FILES['file_import']['error']);
 		if (is_numeric($resmove) && $resmove > 0) {
 			$importer = new DoliFarmImporter($db, $user);
 			$importname = dol_sanitizeFileName($_FILES['file_import']['name']);
-			if ($importer->importFromXML($importfile, true, $importname) < 0) {
+			if ($importer->importFromFile($importfile, true, $importname) < 0) {
 				setEventMessages($langs->trans("DossierImportError").': '.$importer->error, $importer->errors, 'errors');
 				dol_delete_file($importfile, 0, 0, 0, null, false, 0);
 			} else {
-				$importpreview = array('key' => $importkey, 'name' => $importname, 'importer' => $importer);
+				$importpreview = array('key' => $importkey, 'ext' => $importext, 'name' => $importname, 'importer' => $importer);
 			}
 		} else {
 			setEventMessages($langs->trans("ErrorFailedToSaveFile"), null, 'errors');
@@ -282,12 +283,13 @@ if ($action == 'import_xml' && $permissiontoadd) {
 }
 if ($action == 'confirm_import_xml' && $permissiontoadd) {
 	$importkey = GETPOST('importkey', 'aZ09');
-	$importfile = $importdir.'/'.$importprefix.$importkey.'.xml';
+	$importext = (GETPOST('importext', 'aZ09') == 'pdf') ? 'pdf' : 'xml';
+	$importfile = $importdir.'/'.$importprefix.$importkey.'.'.$importext;
 	if (!preg_match('/^[0-9a-f]{16}$/', $importkey) || !is_file($importfile)) {
 		setEventMessages($langs->trans("DossierImportFileExpired"), null, 'errors');
 	} else {
 		$importer = new DoliFarmImporter($db, $user);
-		$res = $importer->importFromXML($importfile, false, dol_sanitizeFileName(GETPOST('importname', 'alphanohtml')));
+		$res = $importer->importFromFile($importfile, false, dol_sanitizeFileName(GETPOST('importname', 'alphanohtml')));
 		dol_delete_file($importfile, 0, 0, 0, null, false, 0);
 		if ($res > 0) {
 			setEventMessages($langs->trans("DossierImportDone", $res), $importer->warnings, $importer->warnings ? 'warnings' : 'mesgs');
@@ -603,6 +605,7 @@ if ($permissiontoadd && $importpreview !== null) {
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="importkey" value="'.dol_escape_htmltag($importpreview['key']).'">';
 	print '<input type="hidden" name="importname" value="'.dol_escape_htmltag($importpreview['name']).'">';
+	print '<input type="hidden" name="importext" value="'.dol_escape_htmltag($importpreview['ext']).'">';
 	print '<button type="submit" class="button button-save" name="action" value="confirm_import_xml">'.$langs->trans('DossierImportConfirm').'</button> ';
 	print '<button type="submit" class="button button-cancel" name="action" value="cancel_import_xml">'.$langs->trans('Cancel').'</button>';
 	print '</form>';
@@ -619,7 +622,7 @@ if ($permissiontoadd && $importpreview !== null) {
 
 	print '<tr class="oddeven">';
 	print '<td class="titlefield">'.$form->textwithpicto($langs->trans('DossierImportXmlFile'), $langs->trans('DossierImportFormatHelp')).'</td>';
-	print '<td><input type="file" name="file_import" accept=".xml,text/xml,application/xml"></td>';
+	print '<td><input type="file" name="file_import" accept=".xml,.pdf,text/xml,application/xml,application/pdf"></td>';
 	print '<td class="right">';
 	print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('DossierImportButton')).'">';
 	print '</td>';

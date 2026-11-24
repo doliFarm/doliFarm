@@ -31,6 +31,10 @@ dol_include_once('/dolifarm/class/dolifarmmachine.class.php');
 dol_include_once('/dolifarm/class/dolifarmlivestock.class.php');
 dol_include_once('/dolifarm/class/dolifarmbuilding.class.php');
 dol_include_once('/dolifarm/class/dolifarmfascicoloxmlreader.class.php');
+dol_include_once('/dolifarm/class/dolifarmfascicolopdfreader.class.php');
+dol_include_once('/dolifarm/class/dolifarmdossierdoc.class.php');
+dol_include_once('/dolifarm/lib/dolifarm_landuse.lib.php');
+dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
 dol_include_once('/dolifarm/lib/dolifarm.lib.php');
 dol_include_once('/dolifarm/lib/dolifarm_farm.lib.php');
 
@@ -83,6 +87,9 @@ class DoliFarmImporter
 	/** Land uses that are not agricultural area (SAU): wood, buildings, non agricultural use, landscape features */
 	const NON_SAU_LAND_USES = array('650', '660', '780', '785', '788');
 
+	/** @var string Name of the farm in the file */
+	private $farmName = '';
+
 	/**
 	 * Constructor
 	 *
@@ -99,16 +106,17 @@ class DoliFarmImporter
 	}
 
 	/**
-	 * Read a file in the doliFarm XML format and import it
+	 * Read a dossier file and import it: XML in the doliFarm format, or PDF of the validation sheet printed by the SIAN
 	 *
 	 * @param	string	$filepath	Path of the file
 	 * @param	bool	$dryrun		true = simulate: everything is done then rolled back (preview)
 	 * @param	string	$filename	Original name of the file, stored on the dossier
 	 * @return	int					Id of the dossier (0 in dry run), <0 if KO
 	 */
-	public function importFromXML($filepath, $dryrun = false, $filename = '')
+	public function importFromFile($filepath, $dryrun = false, $filename = '')
 	{
-		$reader = new DoliFarmFascicoloXmlReader();
+		$head = (string) @file_get_contents($filepath, false, null, 0, 5);
+		$reader = ($head === '%PDF-') ? new DoliFarmFascicoloPdfReader() : new DoliFarmFascicoloXmlReader();
 		$data = $reader->read($filepath);
 		if ($data === null) {
 			$this->error = $reader->error;
@@ -116,7 +124,23 @@ class DoliFarmImporter
 			dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
 			return -1;
 		}
-		return $this->import($data, $dryrun, $filename !== '' ? $filename : basename($filepath));
+		$res = $this->import($data, $dryrun, $filename !== '' ? $filename : basename($filepath));
+		// Warnings of the reader (data of the file not read) first
+		$this->warnings = array_merge($reader->warnings, $this->warnings);
+		return $res;
+	}
+
+	/**
+	 * Read a file in the doliFarm XML format and import it (kept for the callers of older versions)
+	 *
+	 * @param	string	$filepath	Path of the file
+	 * @param	bool	$dryrun		true = simulate
+	 * @param	string	$filename	Original name of the file
+	 * @return	int					Id of the dossier (0 in dry run), <0 if KO
+	 */
+	public function importFromXML($filepath, $dryrun = false, $filename = '')
+	{
+		return $this->importFromFile($filepath, $dryrun, $filename);
 	}
 
 	/**
@@ -136,6 +160,7 @@ class DoliFarmImporter
 		$this->warnings = array();
 		$this->stats = array();
 		$this->importKey = dol_print_date(dol_now(), 'dayhourlog');
+		$this->farmName = (string) $data['anagrafica']['name'];
 
 		$this->db->begin();
 		try {
@@ -148,6 +173,9 @@ class DoliFarmImporter
 				$this->linkDossierContact($dossier, $caa['contactid'], 'CAAOPERATOR');
 			}
 			$plots = $this->importPlots($data['particelle'], $dossier->id);
+			$this->importGraphicPlan($data, $dossier->id);
+			$this->importDocuments($data['documenti'], $dossier->id);
+			$this->importCropPlans($data, $dossier, $plots);
 			$this->importBuildings($data['fabbricati'], $dossier->id, $plots);
 			$this->importLivestock($data['allevamenti'], $dossier->id);
 			$this->importMachines($data['macchine'], $dossier->id);
@@ -564,6 +592,11 @@ class DoliFarmImporter
 			$plot->cadastral_parcel = $p['parcel'];
 			$plot->cadastral_sub = $p['sub'];
 			$plot->fk_ownership = $this->ownershipFromCode($p['conduction']['code'], $p['conduction']['subcode']);
+			if ($plot->fk_ownership === null && empty($p['conduction']['code']) && $p['conduction']['label'] !== '') {
+				// Only the description (PDF of the SIAN)
+				$text = self::ownershipFromText($p['conduction']['label']);
+				$plot->fk_ownership = $text === null ? null : $this->dictionaryCode('dolifarm_c_ownership', $text);
+			}
 			if ($plot->fk_ownership === null) {
 				$this->warn($langs->transnoentitiesnoconv('DossierImportConductionUnknown', $label, $p['conduction']['code'].'/'.$p['conduction']['subcode'], $p['conduction']['label']));
 			}
@@ -697,8 +730,15 @@ class DoliFarmImporter
 			$livestock = new DoliFarmLivestock($this->db);
 			$sql = "SELECT t.rowid FROM ".$this->db->prefix()."dolifarm_livestock as t";
 			$sql .= " WHERE t.fk_soc = ".((int) $this->socid)." AND t.bdn_code = '".$this->db->escape($a['bdn_code'])."'";
-			$sql .= " AND UPPER(COALESCE(t.address, '')) = '".$this->db->escape(strtoupper($a['address']))."'";
 			$sql .= " AND t.entity IN (".getEntity($livestock->element).")";
+			// Several sites can have the same BDN code (apiaries): the start date tells them apart, as the address
+			// is not printed the same way in the XML and in the PDF
+			$start = self::date($a['date_start']);
+			if ($start) {
+				$sql .= " AND t.date_start = '".$this->db->escape(dol_print_date($start, '%Y-%m-%d'))."'";
+			} else {
+				$sql .= " AND UPPER(COALESCE(t.address, '')) = '".$this->db->escape(strtoupper($a['address']))."'";
+			}
 			$id = $this->singleId($sql);
 			$new = ($id == 0);
 			if (!$new) {
@@ -720,7 +760,9 @@ class DoliFarmImporter
 			$livestock->milk_authorization = $a['milk'];
 			$livestock->organic = $a['organic'] ? 1 : 0;
 			$livestock->address = $a['address'];
-			$livestock->town = $a['town']['name'];
+			if ($a['town']['name'] !== '' || $new) {
+				$livestock->town = $a['town']['name'];
+			}
 			$livestock->holder = $a['holder'] !== '' ? $a['holder'] : $a['owner'];
 			$livestock->date_start = self::date($a['date_start']);
 			$livestock->date_end = self::date($a['date_end']);
@@ -837,6 +879,260 @@ class DoliFarmImporter
 		}
 	}
 
+	// ------------------------------------------------------------------------------------------------
+	// Graphic plan, documents, production plans
+	// ------------------------------------------------------------------------------------------------
+
+	/**
+	 * Graphic cultivation plan (islands, fields, cultivations): the rows of the campaign are replaced
+	 *
+	 * @param	array<string,mixed>	$data		Data
+	 * @param	int					$dossierid	Dossier
+	 * @return	void
+	 */
+	private function importGraphicPlan(array $data, $dossierid)
+	{
+		global $langs;
+
+		$plan = $data['isole'];
+		if (empty($plan['islands'])) {
+			return;
+		}
+		$campaign = (int) $data['campagna'];
+		$table = $this->db->prefix().'dolifarm_dossierpcg';
+		$sql = "DELETE FROM ".$table." WHERE fk_dossier = ".((int) $dossierid)." AND (campaign = ".$campaign." OR campaign IS NULL)";
+		if (!$this->db->query($sql)) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportReactivate', $this->db->lasterror()));
+			return;
+		}
+		$fields = 0;
+		$rows = 0;
+		foreach ($plan['islands'] as $island) {
+			foreach ($island['fields'] as $field) {
+				$fields++;
+				foreach ($field['cultivations'] as $c) {
+					$start = self::date($c['date_start'] !== '' ? $c['date_start'] : $plan['date_start']);
+					$end = self::date($c['date_end'] !== '' ? $c['date_end'] : $plan['date_end']);
+					$sql = "INSERT INTO ".$table." (entity, fk_dossier, fk_soc, campaign, island, field_ref, land_use_code, land_use, destination, land_use_detail, quality, variety,";
+					$sql .= " size, date_start, date_end, maintenance, production_method, import_key) VALUES (";
+					$sql .= ((int) getEntity('dolifarmfarmdossier', 0)).", ".((int) $dossierid).", ".((int) $this->socid).", ".($campaign > 0 ? $campaign : "NULL").", ";
+					$sql .= $this->sqlText($island['id'], 32).", ".$this->sqlText($field['id'], 32).", ".$this->sqlText($c['land_use']['code'], 16).", ";
+					$sql .= $this->sqlText($c['land_use']['label'], 255).", ".$this->sqlText(self::codedText($c['destination']), 255).", ";
+					$sql .= $this->sqlText(self::codedText($c['use']), 255).", ".$this->sqlText(self::codedText($c['quality']), 255).", ";
+					$sql .= $this->sqlText(self::codedText($c['variety']), 255).", ".((float) $c['size']).", ";
+					$sql .= ($start ? "'".$this->db->idate($start)."'" : "NULL").", ".($end ? "'".$this->db->idate($end)."'" : "NULL").", ";
+					$sql .= $this->sqlText((string) ($c['maintenance'] ?? ''), 8).", ".$this->sqlText((string) $c['organic'], 32).", '".$this->db->escape($this->importKey)."')";
+					if (!$this->db->query($sql)) {
+						throw new Exception($langs->transnoentitiesnoconv('DossierImportGraphicPlanError').': '.$this->db->lasterror());
+					}
+					$rows++;
+				}
+			}
+		}
+		$this->stats['pcg'] = array('created' => $rows, 'updated' => 0);
+		$this->log($langs->transnoentitiesnoconv('DossierImportGraphicPlanDone', count($plan['islands']), $fields, $rows));
+	}
+
+	/**
+	 * Documents of the paper dossier, with their expiry (one per farm, protocol and type)
+	 *
+	 * @param	array<int,array<string,string>>	$docs		Documents
+	 * @param	int								$dossierid	Dossier
+	 * @return	void
+	 */
+	private function importDocuments(array $docs, $dossierid)
+	{
+		global $langs;
+
+		foreach ($docs as $d) {
+			$type = dol_trunc($d['type'] !== '' ? $d['type'] : $d['section'], 255, 'right', 'UTF-8', 1);
+			if ($type === '') {
+				continue;
+			}
+			$sql = "SELECT rowid FROM ".$this->db->prefix()."dolifarm_dossierdoc";
+			$sql .= " WHERE fk_soc = ".((int) $this->socid)." AND label = '".$this->db->escape($type)."'";
+			$sql .= " AND COALESCE(protocol, '') = '".$this->db->escape($d['protocol'])."' AND entity IN (".getEntity('dolifarmfarmdossier').")";
+			$resql = $this->db->query($sql);
+			if (!$resql) {
+				$this->warn($langs->transnoentitiesnoconv('DossierImportReactivate', $this->db->lasterror()));
+				return;
+			}
+			$obj = $this->db->fetch_object($resql);
+			$doc = new DoliFarmDossierDoc($this->db);
+			$new = !$obj;
+			if (!$new) {
+				$doc->fetch((int) $obj->rowid);
+			} else {
+				$doc->entity = (int) getEntity('dolifarmfarmdossier', 0);
+				$doc->status = 1;
+				$doc->date_creation = dol_now();
+			}
+			$doc->ref = $d['protocol'] !== '' ? $d['protocol'] : $type;
+			$doc->label = $type;
+			$doc->section = $d['section'];
+			$doc->fk_dossier = (int) $dossierid;
+			$doc->fk_soc = $this->socid;
+			$doc->protocol = $d['protocol'];
+			$doc->date_signature = self::date($d['date_signature'] ?? '');
+			$doc->date_start = self::date($d['date_start'] ?? '');
+			$doc->date_end = self::date($d['date_end']);
+			$doc->import_key = $this->importKey;
+			$res = $new ? $doc->create($this->user) : $doc->update($this->user);
+			if ($res < 0) {
+				throw new Exception($langs->transnoentitiesnoconv('DossierImportDocumentError', $type).': '.$doc->error);
+			}
+			if (dolifarmExpirySyncEvents($this->db, $doc, $this->user) < 0) {
+				dol_syslog(__METHOD__.' agenda event of the document '.$doc->id, LOG_ERR);
+			}
+			$this->count('document', $new);
+			if ($doc->date_end) {
+				$this->log($langs->transnoentitiesnoconv('DossierImportDocumentExpiry', $type, dol_print_date($doc->date_end, 'day')));
+			}
+		}
+	}
+
+	/**
+	 * Draft production plans of doliTrace from the cultivations of each parcel: one per plot and crop of the campaign,
+	 * only for the AGEA land uses linked to a crop (dictionary of the land uses); never twice
+	 *
+	 * @param	array<string,mixed>		$data		Data
+	 * @param	DoliFarmFarmDossier		$dossier	Dossier
+	 * @param	array<string,int>		$plots		Id of the plot by cadastral key
+	 * @return	void
+	 */
+	private function importCropPlans(array $data, $dossier, array $plots)
+	{
+		global $langs;
+
+		$hascultivations = false;
+		foreach ($data['particelle'] as $p) {
+			$hascultivations = $hascultivations || !empty($p['cultivations']);
+		}
+		if (!$hascultivations) {
+			return;
+		}
+		if (!isModEnabled('dolitrace')) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportCropPlansNoTrace'));
+			return;
+		}
+		dol_include_once('/dolitrace/class/dolitracecropplan.class.php');
+		$langs->load('dolitrace@dolitrace');
+		$campaign = (int) $data['campagna'];
+		$unlinked = array();
+		$crops = array();
+		foreach ($data['particelle'] as $p) {
+			$key = self::cadastralKey($p['comune']['name'], $p['section'], $p['sheet'], $p['parcel'], $p['sub']);
+			if (empty($plots[$key])) {
+				continue;
+			}
+			$groups = array();
+			foreach ($p['cultivations'] as $c) {
+				$code = $c['land_use']['code'];
+				if ($code === '' || in_array($code, self::NON_SAU_LAND_USES, true)) {
+					continue;
+				}
+				$cropid = dolifarmLandUseCrop($this->db, $langs, $code, $c['land_use']['label']);
+				if ($cropid < 0) {
+					$this->warn($langs->transnoentitiesnoconv('DossierImportReactivate', $this->db->lasterror()));
+					return;
+				}
+				if ($cropid == 0) {
+					$unlinked[$code] = $code.' '.$c['land_use']['label'];
+					continue;
+				}
+				if (!isset($groups[$cropid])) {
+					$groups[$cropid] = array('size' => 0.0, 'start' => null, 'end' => null, 'uses' => array());
+				}
+				$start = self::date($c['date_start'] !== '' ? $c['date_start'] : $data['isole']['date_start']);
+				$end = self::date($c['date_end'] !== '' ? $c['date_end'] : $data['isole']['date_end']);
+				$g = $groups[$cropid];
+				$g['size'] += (float) $c['size'];
+				$g['start'] = ($start && (!$g['start'] || $start < $g['start'])) ? $start : $g['start'];
+				$g['end'] = ($end && (!$g['end'] || $end > $g['end'])) ? $end : $g['end'];
+				$g['uses'][$code] = $code.' '.$c['land_use']['label'];
+				$groups[$cropid] = $g;
+			}
+
+			$plotlabel = self::cadastralLabel($p['comune']['name'], $p['sheet'], $p['parcel'], $p['sub']);
+			foreach ($groups as $cropid => $g) {
+				if (!isset($crops[$cropid])) {
+					$resql = $this->db->query("SELECT label FROM ".$this->db->prefix()."dolifarm_crops WHERE rowid = ".((int) $cropid));
+					$obj = $resql ? $this->db->fetch_object($resql) : null;
+					$crops[$cropid] = $obj ? $langs->transnoentitiesnoconv((string) $obj->label) : (string) $cropid;
+				}
+				$sql = "SELECT rowid FROM ".$this->db->prefix()."dolitrace_cropplan WHERE fk_plot = ".((int) $plots[$key])." AND fk_crop = ".((int) $cropid);
+				$sql .= " AND season = ".$campaign." AND entity IN (".getEntity('dolitracecropplan').")";
+				if ($this->singleId($sql) > 0) {
+					$this->log($langs->transnoentitiesnoconv('DossierImportCropPlanExists', $crops[$cropid], $plotlabel, $campaign));
+					continue;
+				}
+				$plan = new DoliTraceCropPlan($this->db);
+				$plan->label = dol_trunc($crops[$cropid].' - '.$plotlabel, 255, 'right', 'UTF-8', 1);
+				$plan->fk_soc = $this->socid;
+				$plan->fk_dossier = (int) $dossier->id;
+				$plan->fk_plot = (int) $plots[$key];
+				$plan->fk_crop = (int) $cropid;
+				$plan->season = $campaign;
+				$plan->date_start = $g['start'];
+				$plan->date_end = $g['end'];
+				$plan->status = 0;
+				$plan->note_public = $langs->transnoentitiesnoconv('DossierImportCropPlanNote', $dossier->sheet_number, implode(', ', $g['uses']), price2num($g['size'], 4));
+				$plan->import_key = $this->importKey;
+				if ($plan->create($this->user) < 0) {
+					throw new Exception($langs->transnoentitiesnoconv('DossierImportCropPlanError', $plan->label).': '.$plan->error.' '.implode(', ', $plan->errors));
+				}
+				$this->count('cropplan', true);
+				$this->log($langs->transnoentitiesnoconv('DossierImportCropPlanCreated', $crops[$cropid], $plotlabel, $campaign));
+			}
+		}
+		if ($unlinked) {
+			ksort($unlinked);
+			$this->warn($langs->transnoentitiesnoconv('DossierImportLandUseUnlinked', implode('; ', $unlinked)));
+		}
+	}
+
+	/**
+	 * Escaped and quoted text for SQL, NULL when empty
+	 *
+	 * @param	string	$text	Text
+	 * @param	int		$max	Max length
+	 * @return	string
+	 */
+	private function sqlText($text, $max)
+	{
+		$text = trim((string) $text);
+		return $text === '' ? "NULL" : "'".$this->db->escape(dol_trunc($text, $max, 'right', 'UTF-8', 1))."'";
+	}
+
+	/**
+	 * "code label" of a coded value, '' for the empty code 000
+	 *
+	 * @param	array{code:string,label:string}	$c	Coded value
+	 * @return	string
+	 */
+	private static function codedText($c)
+	{
+		if (($c['code'] === '' || $c['code'] === '000') && $c['label'] === '') {
+			return '';
+		}
+		return trim($c['code'].' '.$c['label']);
+	}
+
+	/**
+	 * Two names of a third party are the same, ignoring case, punctuation and spaces
+	 *
+	 * @param	string	$a	Name
+	 * @param	string	$b	Name
+	 * @return	bool
+	 */
+	private static function sameName($a, $b)
+	{
+		$n = function ($s) {
+			return preg_replace('/[^A-Z0-9]/', '', strtoupper(dol_string_unaccent((string) $s)));
+		};
+		return $n($a) !== '' && $n($a) === $n($b);
+	}
+
 	/**
 	 * Report the sections of the file that this version does not import
 	 *
@@ -847,20 +1143,8 @@ class DoliFarmImporter
 	{
 		global $langs;
 
-		if ($data['isole']['fields'] > 0) {
-			$this->warn($langs->transnoentitiesnoconv('DossierImportIslandsSkipped', $data['isole']['islands'], $data['isole']['fields']));
-		}
-		$cultivations = 0;
-		foreach ($data['particelle'] as $p) {
-			$cultivations += count($p['cultivations']);
-		}
-		if ($cultivations > 0) {
-			$this->warn($langs->transnoentitiesnoconv('DossierImportCultivationsSkipped', $cultivations));
-		}
-		foreach ($data['documenti'] as $d) {
-			if ($d['date_end'] !== '') {
-				$this->warn($langs->transnoentitiesnoconv('DossierImportDocumentExpiry', $d['type'], dol_print_date(self::date($d['date_end']), 'day')));
-			}
+		if (!empty($data['skipped'])) {
+			$this->warn($langs->transnoentitiesnoconv('DossierImportSectionsSkipped', implode(', ', $data['skipped'])));
 		}
 	}
 
@@ -991,7 +1275,7 @@ class DoliFarmImporter
 		}
 		$o = $owners[0];
 		$cf = self::normalizeCuaa($o['cf']);
-		if ($cf === '' || $cf === $this->cuaa) {
+		if ($cf === $this->cuaa || ($cf === '' && ($o['name'] === '' || self::sameName($o['name'], $this->farmName)))) {
 			return $this->socid;
 		}
 		return $this->findOrCreateOrganisation($o['name'], $cf, '');
