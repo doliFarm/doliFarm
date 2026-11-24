@@ -280,7 +280,7 @@ function dolifarmSingleFarmSocid()
  */
 function dolifarmMenuTitles(bool $multifarm): array
 {
-	return $multifarm ? array('top' => 'Dolifarm', 'dossier' => 'DoliFarmFarmDossiers') : array('top' => 'DolifarmSingle', 'dossier' => 'DoliFarmFarmDossierMenu');
+	return $multifarm ? array('top' => 'DolifarmTopMenu', 'dossier' => 'DoliFarmFarmDossiers') : array('top' => 'DolifarmTopMenu', 'dossier' => 'DoliFarmFarmDossierMenu');
 }
 
 /**
@@ -296,7 +296,7 @@ function dolifarmSyncMenuTitles($db): int
 	$titles = dolifarmMenuTitles((bool) getDolGlobalInt('DOLIFARM_MULTIFARM'));
 	$nb = 0;
 	$where = array(
-		'top' => "type = 'top' AND mainmenu = 'dolifarm' AND titre IN ('Dolifarm', 'DolifarmSingle')",
+		'top' => "type = 'top' AND mainmenu = 'dolifarm' AND titre IN ('Dolifarm', 'DolifarmSingle', 'DolifarmTopMenu')",
 		'dossier' => "type = 'left' AND mainmenu = 'dolifarm' AND leftmenu = 'dolifarmfarmdossier' AND titre IN ('DoliFarmFarmDossiers', 'DoliFarmFarmDossierMenu')",
 	);
 	foreach ($where as $key => $cond) {

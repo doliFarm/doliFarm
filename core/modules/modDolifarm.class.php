@@ -117,6 +117,7 @@ class modDolifarm extends DolibarrModules
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
 				'/dolifarm/js/dolifarm_tour.js.php',	// Guided tours, active only on the pages that have one
+				'/dolifarm/js/dolifarm_menu.js',	// Top menu of the suite right after Home
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
@@ -125,6 +126,7 @@ class modDolifarm extends DolibarrModules
 				       'login',	// After the login: flag to open the page "Getting started"
 				       'main',	// First page after the login: open the page "Getting started"
 				       'index',	// Home page: farm group of the dashboard of open elements
+				       'leftblock',	// Left menu: only the section of the current page is open (menuLeftMenuItems)
 				   ),
 				   'entity' => '0',
 			),
@@ -644,13 +646,13 @@ class modDolifarm extends DolibarrModules
 		$this->menu[$r++] = array(
 			'fk_menu' => '', // Will be stored into mainmenu + leftmenu. Use '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type' => 'top', // This is a Top menu entry
-			'titre' => (getDolGlobalInt('DOLIFARM_MULTIFARM') ? 'Dolifarm' : 'DolifarmSingle'),	// Singular with one farm (dolifarmMenuTitles())
+			'titre' => 'DolifarmTopMenu',	// Only top menu of the suite (doliTrace and doliField add their sections to its left menu)
 			'prefix' => img_picto('', dolifarm_get_fa_icon('dolifarm'), 'class="pictofixedwidth valignmiddle"'),
 			'mainmenu' => 'dolifarm',
 			'leftmenu' => '',
 			'url' => '/dolifarm/dolifarmindex.php',
 			'langs' => 'dolifarm@dolifarm', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1001,	// Top menu of the suite: Farm dossiers (1001), Field notebook of doliTrace (1002), Field of doliField (1003)
+			'position' => 1001,	// Moved after Home by js/dolifarm_menu.js
 			'enabled' => "isModEnabled('dolifarm')", // Define condition to show or hide menu entry. Use "isModEnabled('dolifarm')" if entry must be visible if module is enabled (those quote marks are importants).
 			'perms' => '1', // Use 'perms'=>'$user->hasRight("dolifarm", "dolifarmplot", "read")' if you want your menu with a permission rules
 			'target' => '',
@@ -691,6 +693,9 @@ class modDolifarm extends DolibarrModules
 			'user' => 2,
 		);
 
+		// Left menu of the suite, the same in doliFarm, doliTrace and doliField under the only top menu "dolifarm": three sections
+		// in the order of the work, Farm dossier (doliFarm, positions 1100+), Field notebook (doliTrace, 2000+), Field data
+		// (doliField, 3000+), then "Help me" (9010). Only the section of the current page is open (ActionsDolifarm::menuLeftMenuItems).
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMFARMDOSSIER */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=dolifarm',
@@ -701,9 +706,9 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmfarmdossier',
 			'url' => '/dolifarm/dolifarmfarmdossier_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
-			'perms' => '$user->hasRight("dolifarm", "dolifarmfarmdossier", "read")',
+			'perms' => '$user->hasRight("dolifarm", "dolifarmfarmdossier", "read") || $user->hasRight("dolifarm", "dolifarmplot", "read") || $user->hasRight("dolifarm", "dolifarmlivestock", "read") || $user->hasRight("dolifarm", "dolifarmbuilding", "read") || $user->hasRight("dolifarm", "dolifarmmachine", "read") || $user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read") || $user->hasRight("dolifarm", "dolifarmoperator", "read") || $user->hasRight("dolifarm", "dolifarmcrops", "read") || $user->hasRight("dolifarm", "dolifarmestimatecosts", "read")',	// Head of the section: Dolibarr shows the entries under it only if it is enabled
 			'target' => '',
 			'user' => 2,
 			'object' => 'DoliFarmFarmDossier'
@@ -717,7 +722,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_farmdossier_list',
 			'url' => '/dolifarm/dolifarmfarmdossier_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmfarmdossier", "read")',
 			'target' => '',
@@ -732,7 +737,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_farmdossier_new',
 			'url' => '/dolifarm/dolifarmfarmdossier_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmfarmdossier", "write")',
 			'target' => '',
@@ -743,7 +748,7 @@ class modDolifarm extends DolibarrModules
 		
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMPLOT */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmPlots',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('plot'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -751,7 +756,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmplot',
 			'url' => '/dolifarm/dolifarmplot_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "read")',
 			'target' => '',
@@ -767,7 +772,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_plot_list',
 			'url' => '/dolifarm/dolifarmplot_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "read")',
 			'target' => '',
@@ -782,7 +787,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_plot_new',
 			'url' => '/dolifarm/dolifarmplot_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "write")',
 			'target' => '',
@@ -792,7 +797,7 @@ class modDolifarm extends DolibarrModules
 		 */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMLIVESTOCK */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmLivestocks',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('livestock'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -800,7 +805,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmlivestock',
 			'url' => '/dolifarm/dolifarmlivestock_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmlivestock", "read")',
 			'target' => '',
@@ -810,7 +815,7 @@ class modDolifarm extends DolibarrModules
 		/* END MODULEBUILDER LEFTMENU DOLIFARMLIVESTOCK */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMBUILDING */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmBuildings',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('building'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -818,7 +823,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmbuilding',
 			'url' => '/dolifarm/dolifarmbuilding_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmbuilding", "read")',
 			'target' => '',
@@ -828,7 +833,7 @@ class modDolifarm extends DolibarrModules
 		/* END MODULEBUILDER LEFTMENU DOLIFARMBUILDING */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMMACHINE */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmMachines',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('machine'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -836,7 +841,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmmachine',
 			'url' => '/dolifarm/dolifarmmachine_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmmachine", "read")',
 			'target' => '',
@@ -852,7 +857,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_machine_list',
 			'url' => '/dolifarm/dolifarmmachine_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmmachine", "read")',
 			'target' => '',
@@ -867,7 +872,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_machine_new',
 			'url' => '/dolifarm/dolifarmmachine_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmmachine", "write")',
 			'target' => '',
@@ -877,7 +882,7 @@ class modDolifarm extends DolibarrModules
 		 */
 		// Technical inputs: register (organic check), plant protection products, fertilisers, qualified operators
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'MenuTechnicalInputs',
 			'prefix' => img_picto('', 'fa-leaf', 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -885,7 +890,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarminputs',
 			'url' => '/dolifarm/dolifarm_inputs.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read") || $user->hasRight("dolifarm", "dolifarmoperator", "read")',
 			'target' => '',
@@ -899,7 +904,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarminputs_register',
 			'url' => '/dolifarm/dolifarm_inputs.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read") || $user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
 			'target' => '',
@@ -914,7 +919,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmagrodrug',
 			'url' => '/dolifarm/dolifarmagrodrug_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmagrodrug", "read")',
 			'target' => '',
@@ -931,7 +936,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmfertilizer',
 			'url' => '/dolifarm/dolifarmfertilizer_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmfertilizer", "read")',
 			'target' => '',
@@ -948,7 +953,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmoperator',
 			'url' => '/dolifarm/dolifarmoperator_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmoperator", "read")',
 			'target' => '',
@@ -958,7 +963,7 @@ class modDolifarm extends DolibarrModules
 		/* END MODULEBUILDER LEFTMENU DOLIFARMOPERATOR */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMCROPS */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmCrops',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('crops'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -966,7 +971,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmcrops',
 			'url' => '/dolifarm/dolifarmcrops_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmcrops", "read")',
 			'target' => '',
@@ -982,7 +987,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_crops_list',
 			'url' => '/dolifarm/dolifarmcrops_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmcrops", "read")',
 			'target' => '',
@@ -997,7 +1002,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_crops_new',
 			'url' => '/dolifarm/dolifarmcrops_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmcrops", "write")',
 			'target' => '',
@@ -1007,7 +1012,7 @@ class modDolifarm extends DolibarrModules
 		 */
 		/* BEGIN MODULEBUILDER LEFTMENU DOLIFARMESTIMATECOSTS */
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',
 			'type' => 'left',
 			'titre' => 'DoliFarmEstimateCosts',
 			'prefix' => img_picto('', dolifarm_get_fa_icon('estimatecosts'), 'class="paddingright pictofixedwidth valignmiddle"'),
@@ -1015,7 +1020,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmestimatecosts',
 			'url' => '/dolifarm/dolifarmestimatecosts_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmestimatecosts", "read")',
 			'target' => '',
@@ -1031,7 +1036,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_estimatecosts_list',
 			'url' => '/dolifarm/dolifarmestimatecosts_list.php',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmestimatecosts", "read")',
 			'target' => '',
@@ -1046,7 +1051,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_estimatecosts_new',
 			'url' => '/dolifarm/dolifarmestimatecosts_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => 'isModEnabled("dolifarm")',
 			'perms' => '$user->hasRight("dolifarm", "dolifarmestimatecosts", "write")',
 			'target' => '',
@@ -1057,7 +1062,7 @@ class modDolifarm extends DolibarrModules
 		/* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
 		/*
 		$this->menu[$r++]=array(
-			'fk_menu' => 'fk_mainmenu=dolifarm',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'fk_menu' => 'fk_mainmenu=dolifarm,fk_leftmenu=dolifarmfarmdossier',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type' => 'left',                          // This is a Left menu entry
 			'titre' => 'DoliFarmPlot',
 			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
@@ -1065,7 +1070,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarmplot',
 			'url' => '/dolifarm/dolifarmindex.php',
 			'langs' => 'dolifarm@dolifarm',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => "isModEnabled('dolifarm')", // Define condition to show or hide menu entry. Use isModEnabled("dolifarm") if entry must be visible if module is enabled.
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "read")',
 			'target' => '',
@@ -1080,7 +1085,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_plot_new',
 			'url' => '/dolifarm/dolifarmplot_card.php?action=create',
 			'langs' => 'dolifarm@dolifarm',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => "isModEnabled('dolifarm')", // Define condition to show or hide menu entry. Use isModEnabled("dolifarm") if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "write")'
 			'target' => '',
@@ -1095,7 +1100,7 @@ class modDolifarm extends DolibarrModules
 			'leftmenu' => 'dolifarm_plot_list',
 			'url' => '/dolifarm/dolifarmplot_list.php',
 			'langs' => 'dolifarm@dolifarm',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
+			'position' => 1100 + $r,
 			'enabled' => "isModEnabled('dolifarm')", // Define condition to show or hide menu entry. Use isModEnabled("dolifarm") if entry must be visible if module is enabled.
 			'perms' => '$user->hasRight("dolifarm", "dolifarmplot", "read")'
 			'target' => '',

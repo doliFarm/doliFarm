@@ -1,5 +1,12 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## Non rilasciato
+
+Menu della suite. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu, hook e JavaScript del modulo).
+
+- Un solo top menu, **doliFarm** (chiave `DolifarmTopMenu`), subito dopo Home (`js/dolifarm_menu.js`): doliTrace e doliField non hanno più un top menu.
+- Menu a sinistra uguale in tutta la suite, nell'ordine del lavoro: **Fascicolo aziendale** (appezzamenti, allevamenti, fabbricati, macchine, mezzi tecnici, colture, stime dei costi), **Quaderno di campagna** (doliTrace), **Dati di campo** (doliField), poi Aiutami. Si apre solo la sezione della pagina corrente (hook `menuLeftMenuItems`).
+
 ## 1.6.0 (2026-11-24)
 
 Importazione del fascicolo aziendale. Dopo l'aggiornamento **riattivare doliFarm** (nuove tabelle e dizionario "Usi del suolo AGEA").
