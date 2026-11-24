@@ -123,3 +123,40 @@ a.vsmenu[href*="/dolitrace/dolitrace_pwa.php"]::before {
 	font-style: normal;
 	-webkit-font-smoothing: antialiased;
 }
+
+/* Area of doliFarm (dolifarmindex.php): box with the three areas Farm dossier, Field notebook, Field data, one under the other on a phone */
+.dolifarm-area {
+	margin-bottom: 15px;
+}
+.dolifarm-area td.dolifarm-area-cell {
+	width: 33%;
+	padding: 8px 12px;
+}
+.dolifarm-area td.dolifarm-area-cell + td.dolifarm-area-cell {
+	border-left: 1px solid var(--colortopbordertitle1, rgba(128, 128, 128, 0.3));
+}
+.dolifarm-area-title {
+	font-weight: bold;
+	margin-bottom: 4px;
+}
+.dolifarm-area-title .badge {
+	margin-left: 4px;
+	font-weight: normal;
+}
+ul.dolifarm-area-list {
+	margin: 6px 0 0 0;
+	padding-left: 18px;
+}
+ul.dolifarm-area-list li {
+	margin-bottom: 2px;
+}
+@media only screen and (max-width: 767px) {
+	.dolifarm-area td.dolifarm-area-cell {
+		display: block;
+		width: auto;
+	}
+	.dolifarm-area td.dolifarm-area-cell + td.dolifarm-area-cell {
+		border-left: none;
+		border-top: 1px solid var(--colortopbordertitle1, rgba(128, 128, 128, 0.3));
+	}
+}

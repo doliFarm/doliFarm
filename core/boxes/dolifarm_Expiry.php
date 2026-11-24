@@ -48,6 +48,11 @@ class dolifarm_Expiry extends ModeleBoxes
 	}
 
 	/**
+	 * @var array<string,int>	Filters of dolifarmExpiryList() ('fk_soc'): set by the area of doliFarm for the scope of one farm
+	 */
+	public $filters = array();
+
+	/**
 	 * Load data into info_box_contents array to show array later
 	 *
 	 * @param	int		$max	Maximum number of records to load
@@ -61,7 +66,7 @@ class dolifarm_Expiry extends ModeleBoxes
 		dol_include_once('/dolifarm/lib/dolifarm_expiry.lib.php');
 
 		$this->max = $max;
-		$all = dolifarmExpiryList($this->db, $user);
+		$all = dolifarmExpiryList($this->db, $user, 0, $this->filters);
 		$nboverdue = 0;
 		foreach ($all as $row) {
 			if ($row['state'] == 'overdue') {

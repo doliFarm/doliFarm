@@ -77,7 +77,7 @@ class modDolifarm extends DolibarrModules
 		$this->editor_squarred_logo = '';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@dolifarm'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.6.1';
+		$this->version = '1.7.0';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -420,6 +420,9 @@ class modDolifarm extends DolibarrModules
                 'note' => $langs->trans('BoxExpiryDescription'),
                 'enabledbydefaulton' => 'Home',
             ),
+			6 => array('file' => 'dolifarm_AreaSituation.php@dolifarm', 'note' => $langs->trans('BoxAreaSituationDescription'), 'enabledbydefaulton' => 'Home'),
+			7 => array('file' => 'dolifarm_AreaAlerts.php@dolifarm', 'note' => $langs->trans('BoxAreaAlertsDescription'), 'enabledbydefaulton' => 'Home'),
+			8 => array('file' => 'dolifarm_AreaExternal.php@dolifarm', 'note' => $langs->trans('BoxAreaExternalDescription'), 'enabledbydefaulton' => 'dolifarm'),
         );
         /* END MODULEBUILDER WIDGETS */
 
