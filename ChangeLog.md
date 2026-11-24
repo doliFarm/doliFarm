@@ -1,6 +1,6 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## Non rilasciato
+## 1.7.0 (2026-11-24)
 
 Dashboard dell'area doliFarm. Dopo l'aggiornamento **riattivare doliFarm** (nuovi widget).
 
