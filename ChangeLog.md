@@ -1,6 +1,6 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
-## Non rilasciato
+## 1.6.0 (2026-11-24)
 
 Importazione del fascicolo aziendale. Dopo l'aggiornamento **riattivare doliFarm** (nuove tabelle e dizionario "Usi del suolo AGEA").
 
