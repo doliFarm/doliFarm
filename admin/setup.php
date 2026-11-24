@@ -119,6 +119,16 @@ $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_DAYSHelp');
 $item = $formSetup->newItem('DOLIFARM_EXPIRY_AGENDA')->setAsYesNo();
 $item->helpText = $langs->transnoentities('DOLIFARM_EXPIRY_AGENDAHelp');
 
+// Page opened after the login: Help me, the area of doliFarm, or Help me until the setup is complete (dolifarmLoginPageUrl())
+$formSetup->newItem('LoginPageTitle')->setAsTitle();
+$item = $formSetup->newItem('DOLIFARM_LOGIN_PAGE')->setAsSelect(array(
+	'start' => $langs->transnoentities('LoginPageStart'),
+	'area' => $langs->transnoentities('LoginPageArea'),
+	'auto' => $langs->transnoentities('LoginPageAuto'),
+));
+$item->defaultFieldValue = 'start';
+$item->helpText = $langs->transnoentities('DOLIFARM_LOGIN_PAGEHelp');
+
 // Managed farms: the farm of the setup (single-farm mode) or the affiliated farms (multi-farm mode)
 $formSetup->newItem('FarmMode')->setAsTitle();
 $item = $formSetup->newItem('DOLIFARM_MULTIFARM')->setAsYesNo();

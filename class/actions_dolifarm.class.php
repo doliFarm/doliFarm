@@ -174,8 +174,10 @@ class ActionsDolifarm extends CommonHookActions
 			return 0;
 		}
 		dol_include_once('/dolifarm/lib/dolifarm_start.lib.php');
+		dol_include_once('/dolifarm/lib/dolifarm_area.lib.php');
 
-		$startpage = dol_buildpath('/dolifarm/dolifarm_start.php', 1);
+		// Help me or the area of doliFarm, as chosen in the setup (DOLIFARM_LOGIN_PAGE)
+		$startpage = dolifarmLoginPageUrl($this->db, $user);
 		if (!($user instanceof User) || !dolifarmStartAtLogin($user) || (isset($_SERVER['PHP_SELF']) && $_SERVER['PHP_SELF'] === $startpage)) {
 			unset($_SESSION['dolifarm_start_pending']);
 			return 0;
@@ -194,7 +196,7 @@ class ActionsDolifarm extends CommonHookActions
 	 * Left menu of the suite: only the section of the current page (Farm dossier, Field notebook, Field data) shows its entries
 	 *
 	 * The three sections are the entries of level 0 of the top menu "dolifarm" (doliFarm, doliTrace and doliField);
-	 * the section of a page is the module of its folder. On the other pages, "Help me" included, the sections are closed.
+	 * the section of a page is the module of its folder. On the other pages, "Help me" and the area of doliFarm included, the sections are closed.
 	 *
 	 * @param	array<string,mixed>				$parameters	Hook metadatas, with 'mainmenu'
 	 * @param	array<int,array<string,mixed>>	$object		Entries of the left menu
@@ -210,7 +212,7 @@ class ActionsDolifarm extends CommonHookActions
 		}
 		$sections = array('dolifarm' => 'dolifarmfarmdossier', 'dolitrace' => 'dolitrace', 'dolifield' => 'dolifield');
 		$current = '';
-		if (preg_match('#/(dolifarm|dolitrace|dolifield)/([^/]+)$#', (string) ($_SERVER['PHP_SELF'] ?? ''), $reg) && $reg[2] !== 'dolifarm_start.php') {
+		if (preg_match('#/(dolifarm|dolitrace|dolifield)/([^/]+)$#', (string) ($_SERVER['PHP_SELF'] ?? ''), $reg) && !in_array($reg[2], array('dolifarm_start.php', 'dolifarmindex.php'), true)) {
 			$current = $sections[$reg[1]];
 		}
 		$entries = array();

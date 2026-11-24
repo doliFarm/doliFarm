@@ -1,5 +1,22 @@
 # CHANGELOG MODULE DOLIFARM FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## Non rilasciato
+
+Dashboard dell'area doliFarm. Dopo l'aggiornamento **riattivare doliFarm** (nuovi widget).
+
+- L'area doliFarm (`dolifarmindex.php`, la pagina del top menu) diventa una dashboard, con un'azienda sola o con più aziende. In multi-azienda si sceglie l'ambito, **tutte le aziende** o **una azienda** (e il filtro commerciale); tutti i riquadri si calcolano sull'ambito e con le sole aziende che l'utente vede.
+- **Situazione**: tre blocchi nell'ordine del lavoro, Fascicolo aziendale, Quaderno di campagna (doliTrace), Dati di campo (doliField), con il badge di stato (a posto, qualcosa da fare, da iniziare, non disponibile) e i numeri principali.
+- **Da configurare** (solo se c'è qualcosa): passi obbligatori di Aiutami non fatti, aziende senza fascicolo, fascicoli senza magazzini, usi del suolo senza coltura (link ai dizionari solo per l'amministratore), appezzamenti senza meteo.
+- **Avvisi**, dal più grave: agrofarmaci revocati o in revoca ancora nel magazzino dei mezzi tecnici, trattamenti e operazioni con lo scarico di magazzino da regolarizzare, trattamenti in bozza da più di 30 giorni, stazioni meteo in errore o senza dati da 3 giorni.
+- **Scadenze**: il widget esistente, filtrato sull'azienda scelta.
+- **Attività della campagna**: piani senza avvio o in bozza, operazioni del mese e dell'anno, trattamenti in bozza e convalidati, raccolte dell'anno; con un'azienda anche le ultime registrazioni.
+- **Aziende** (ambito "tutte"): una riga per azienda con i tre badge, avvisi e scadenze, prima quelle con problemi; il nome restringe l'ambito.
+- **Basi di dati esterne**: catalogo fitosanitari, codici EPPO, meteo rilevato e previsioni, con la data dei dati, l'ultima e la prossima esecuzione del lavoro pianificato e lo stato (aggiornato, in ritardo, errore, non configurato). Visibile a tutti; i link al setup e ai lavori pianificati solo per l'amministratore.
+- Tolti dall'area i widget doppioni (totali di fascicoli, appezzamenti, macchine); restano monitoraggio dei piani e prodotti pianificati.
+- Nuovi widget per la Home di Dolibarr: **Situazione delle aziende** e **Avvisi delle aziende** (aggiunti alla Home all'attivazione), **Basi di dati esterne** (da aggiungere a mano).
+- Setup, nuova opzione "Pagina che si apre dopo l'accesso": Aiutami (come prima, predefinita), Area doliFarm, oppure Aiutami finché la configurazione non è completa e poi Area doliFarm.
+- Sull'area doliFarm e su Aiutami le tre sezioni del menu a sinistra sono chiuse.
+
 ## 1.6.1 (2026-11-24)
 
 Menu della suite. Dopo l'aggiornamento **riattivare doliFarm, doliTrace e doliField** (menu, hook e JavaScript del modulo).

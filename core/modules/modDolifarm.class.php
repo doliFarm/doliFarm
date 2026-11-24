@@ -420,6 +420,9 @@ class modDolifarm extends DolibarrModules
                 'note' => $langs->trans('BoxExpiryDescription'),
                 'enabledbydefaulton' => 'Home',
             ),
+			6 => array('file' => 'dolifarm_AreaSituation.php@dolifarm', 'note' => $langs->trans('BoxAreaSituationDescription'), 'enabledbydefaulton' => 'Home'),
+			7 => array('file' => 'dolifarm_AreaAlerts.php@dolifarm', 'note' => $langs->trans('BoxAreaAlertsDescription'), 'enabledbydefaulton' => 'Home'),
+			8 => array('file' => 'dolifarm_AreaExternal.php@dolifarm', 'note' => $langs->trans('BoxAreaExternalDescription'), 'enabledbydefaulton' => 'dolifarm'),
         );
         /* END MODULEBUILDER WIDGETS */
 
