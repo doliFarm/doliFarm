@@ -1284,3 +1284,6 @@ PlotSignCrop = Culture : %s
 PlotSignSheet = Feuille %s
 PlotSignParcel = Parcelle %s
 PlotSignScan = Scannez le QR code pour ouvrir la fiche de la parcelle
+
+# Menu of the suite (24/11/2026)
+DolifarmTopMenu = doliFarm

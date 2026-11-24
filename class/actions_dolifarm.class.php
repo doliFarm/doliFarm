@@ -189,4 +189,44 @@ class ActionsDolifarm extends CommonHookActions
 		header('Location: '.$startpage);
 		exit;
 	}
+
+	/**
+	 * Left menu of the suite: only the section of the current page (Farm dossier, Field notebook, Field data) shows its entries
+	 *
+	 * The three sections are the entries of level 0 of the top menu "dolifarm" (doliFarm, doliTrace and doliField);
+	 * the section of a page is the module of its folder. On the other pages, "Help me" included, the sections are closed.
+	 *
+	 * @param	array<string,mixed>				$parameters	Hook metadatas, with 'mainmenu'
+	 * @param	array<int,array<string,mixed>>	$object		Entries of the left menu
+	 * @param	?string							$action		Current action
+	 * @param	HookManager						$hookmanager	Hook manager propagated to allow calling another hook
+	 * @return	int											0 if nothing to do, 1 to replace the entries by $this->results
+	 */
+	public function menuLeftMenuItems($parameters, &$object, &$action, $hookmanager)
+	{
+		$this->results = array();	// With 0, Dolibarr would add the results of a previous hook as a menu entry
+		if (($parameters['mainmenu'] ?? '') !== 'dolifarm' || !is_array($object) || getDolGlobalInt('DOLIFARM_MENU_ALL_OPEN')) {
+			return 0;
+		}
+		$sections = array('dolifarm' => 'dolifarmfarmdossier', 'dolitrace' => 'dolitrace', 'dolifield' => 'dolifield');
+		$current = '';
+		if (preg_match('#/(dolifarm|dolitrace|dolifield)/([^/]+)$#', (string) ($_SERVER['PHP_SELF'] ?? ''), $reg) && $reg[2] !== 'dolifarm_start.php') {
+			$current = $sections[$reg[1]];
+		}
+		$entries = array();
+		$open = true;
+		foreach ($object as $entry) {
+			if (empty($entry['level'])) {
+				$open = !in_array((string) ($entry['leftmenu'] ?? ''), $sections, true) || $entry['leftmenu'] === $current;
+				$entries[] = $entry;
+			} elseif ($open) {
+				$entries[] = $entry;
+			}
+		}
+		if (count($entries) == count($object)) {
+			return 0;
+		}
+		$this->results = $entries;
+		return 1;
+	}
 }

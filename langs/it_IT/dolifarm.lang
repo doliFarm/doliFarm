@@ -1358,3 +1358,6 @@ PlotSignCrop = Coltura: %s
 PlotSignSheet = Fg. %s
 PlotSignParcel = Part. %s
 PlotSignScan = Inquadra il QR per aprire la scheda dell'appezzamento
+
+# Menu of the suite (24/11/2026)
+DolifarmTopMenu = doliFarm

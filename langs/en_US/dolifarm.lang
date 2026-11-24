@@ -1308,3 +1308,6 @@ PlotSignCrop = Crop: %s
 PlotSignSheet = Sheet %s
 PlotSignParcel = Parcel %s
 PlotSignScan = Scan the QR code to open the card of the plot
+
+# Menu of the suite (24/11/2026)
+DolifarmTopMenu = doliFarm
